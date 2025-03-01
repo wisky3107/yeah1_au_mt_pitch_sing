@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getMinSize = exports.setMinSize = void 0;
+let minWidth = 0;
+let minHeight = 0;
+function setMinSize(width, height) {
+    minWidth = width;
+    minHeight = height;
+}
+exports.setMinSize = setMinSize;
+function getMinSize() {
+    return {
+        width: minWidth,
+        height: minHeight,
+    };
+}
+exports.getMinSize = getMinSize;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29uc3QuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi8uLi8uLi8uLi9zcmMvcGFuZWxzL3NoYWRlci1ncmFwaC9jb21wb25lbnRzL2Zsb2F0LXdpbmRvdy9iYXNlL2NvbnN0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLElBQUksUUFBUSxHQUFHLENBQUMsQ0FBQztBQUNqQixJQUFJLFNBQVMsR0FBRyxDQUFDLENBQUM7QUFFbEIsU0FBZ0IsVUFBVSxDQUFDLEtBQWEsRUFBRSxNQUFjO0lBQ3BELFFBQVEsR0FBRyxLQUFLLENBQUM7SUFDakIsU0FBUyxHQUFHLE1BQU0sQ0FBQztBQUN2QixDQUFDO0FBSEQsZ0NBR0M7QUFFRCxTQUFnQixVQUFVO0lBQ3RCLE9BQU87UUFDSCxLQUFLLEVBQUUsUUFBUTtRQUNmLE1BQU0sRUFBRSxTQUFTO0tBQ3BCLENBQUM7QUFDTixDQUFDO0FBTEQsZ0NBS0MiLCJzb3VyY2VzQ29udGVudCI6WyJsZXQgbWluV2lkdGggPSAwO1xubGV0IG1pbkhlaWdodCA9IDA7XG5cbmV4cG9ydCBmdW5jdGlvbiBzZXRNaW5TaXplKHdpZHRoOiBudW1iZXIsIGhlaWdodDogbnVtYmVyKSB7XG4gICAgbWluV2lkdGggPSB3aWR0aDtcbiAgICBtaW5IZWlnaHQgPSBoZWlnaHQ7XG59XG5cbmV4cG9ydCBmdW5jdGlvbiBnZXRNaW5TaXplKCkge1xuICAgIHJldHVybiB7XG4gICAgICAgIHdpZHRoOiBtaW5XaWR0aCxcbiAgICAgICAgaGVpZ2h0OiBtaW5IZWlnaHQsXG4gICAgfTtcbn1cbiJdfQ==

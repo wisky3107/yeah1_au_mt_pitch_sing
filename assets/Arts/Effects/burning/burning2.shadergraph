@@ -1,0 +1,1344 @@
+type: Graph
+name: burning2
+nodes:
+  t_171812741555515609804:
+    type: UnlitMasterNode
+    position:
+      x: 862.3203944535944
+      'y': -72.10272741561825
+    details:
+      inputPins:
+        - dataType: vec3
+          value:
+            x: 0
+            'y': 0
+            z: 0
+          details: {}
+        - dataType: vec3
+          value:
+            x: 0
+            'y': 0
+            z: 0
+          details: {}
+        - dataType: vec3
+          value:
+            x: 0
+            'y': 0
+            z: 0
+          details: {}
+        - dataType: color
+          value:
+            x: 0.5
+            'y': 0.5
+            z: 0.5
+            w: 0.5
+          details: {}
+        - dataType: float
+          value: 1
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+      outputPins: []
+  t_1718127534995840234794:
+    type: PropertyNode
+    position:
+      x: -2089.7631618284554
+      'y': 1201.170139615534
+    details:
+      propertyID: p_171812747062093466413
+      baseType: Texture2D
+      title: Texture2D
+      outputPins:
+        - dataType: texture2D
+          value:
+            uuid: e14a3ad4-9907-49a2-88ff-ef1963cc5170@6c48a
+          details:
+            connectType: texture2D
+      inputPins: []
+  t_1718127541544971539984:
+    type: SampleTexture2D
+    position:
+      x: -1765.4628837932376
+      'y': 1233.8670812281384
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+      inputPins:
+        - dataType: texture2D
+          value:
+            uuid: ''
+          details: {}
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+        - dataType: enum
+          value: 0
+          details: {}
+        - dataType: enum
+          value: 0
+          details: {}
+  t_171812774244260443015:
+    type: TillingAndOffset
+    position:
+      x: -2082.271611561934
+      'y': 1352.3023271410366
+    details:
+      outputPins:
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+      inputPins:
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+        - dataType: vec2
+          value:
+            x: 1
+            'y': 1
+          details: {}
+        - dataType: vec2
+          value:
+            x: 0
+            'y': -0.02
+          details: {}
+  t_171812780549485338152:
+    type: PropertyNode
+    position:
+      x: -2080.3188152375446
+      'y': -556.2108532316541
+    details:
+      propertyID: p_171812747062093466413
+      baseType: Texture2D
+      title: Texture2D
+      outputPins:
+        - dataType: texture2D
+          value:
+            uuid: e14a3ad4-9907-49a2-88ff-ef1963cc5170@6c48a
+          details:
+            connectType: texture2D
+      inputPins: []
+  t_171812780549496911623:
+    type: SampleTexture2D
+    position:
+      x: -1773.7963149801046
+      'y': -521.2916893968276
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+      inputPins:
+        - dataType: texture2D
+          value:
+            uuid: ''
+          details: {}
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+        - dataType: enum
+          value: 0
+          details: {}
+        - dataType: enum
+          value: 1
+          details: {}
+  t_1718127867234115009406:
+    type: PropertyNode
+    position:
+      x: -2081.3069535199343
+      'y': 1689.691365556115
+    details:
+      propertyID: p_171812747062093466413
+      baseType: Texture2D
+      title: Texture2D
+      outputPins:
+        - dataType: texture2D
+          value:
+            uuid: e14a3ad4-9907-49a2-88ff-ef1963cc5170@6c48a
+          details:
+            connectType: texture2D
+      inputPins: []
+  t_17181278672347943900373:
+    type: SampleTexture2D
+    position:
+      x: -1768.2969980653615
+      'y': 1727.2270168461387
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+      inputPins:
+        - dataType: texture2D
+          value:
+            uuid: ''
+          details: {}
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+        - dataType: enum
+          value: 0
+          details: {}
+        - dataType: enum
+          value: 0
+          details: {}
+  t_171812786723448108042:
+    type: TillingAndOffset
+    position:
+      x: -2073.8154032534135
+      'y': 1840.8235530816178
+    details:
+      outputPins:
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+      inputPins:
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+        - dataType: vec2
+          value:
+            x: 1
+            'y': 1
+          details: {}
+        - dataType: vec2
+          value:
+            x: -0.01
+            'y': -0.02
+          details: {}
+  t_171812789938053971145:
+    type: PropertyNode
+    position:
+      x: -2082.382222337139
+      'y': 2147.755881685147
+    details:
+      propertyID: p_171812747062093466413
+      baseType: Texture2D
+      title: Texture2D
+      outputPins:
+        - dataType: texture2D
+          value:
+            uuid: e14a3ad4-9907-49a2-88ff-ef1963cc5170@6c48a
+          details:
+            connectType: texture2D
+      inputPins: []
+  t_17181278993817223786482:
+    type: SampleTexture2D
+    position:
+      x: -1769.3722668825662
+      'y': 2185.2915329751704
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+      inputPins:
+        - dataType: texture2D
+          value:
+            uuid: ''
+          details: {}
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+        - dataType: enum
+          value: 0
+          details: {}
+        - dataType: enum
+          value: 0
+          details: {}
+  t_1718127899381743505057:
+    type: TillingAndOffset
+    position:
+      x: -2104.3778515577974
+      'y': 2288.63165895424
+    details:
+      outputPins:
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+      inputPins:
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+        - dataType: vec2
+          value:
+            x: 1
+            'y': 1
+          details: {}
+        - dataType: vec2
+          value:
+            x: 0.01
+            'y': -0.02
+          details: {}
+  t_171812801156862485447:
+    type: Multiply
+    position:
+      x: -1539.336032837161
+      'y': 1568.038224507763
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_17181280236621970829:
+    type: Multiply
+    position:
+      x: -1371.4313868601532
+      'y': 1824.684129429892
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_171812804063637732288:
+    type: OneMinus
+    position:
+      x: -1413.1309900771876
+      'y': 1137.0263795302544
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_17181281263969700821:
+    type: OneMinus
+    position:
+      x: -1565.0036075036076
+      'y': -308.2215007215007
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_17181281347969799654:
+    type: Substract
+    position:
+      x: -1122.528874476354
+      'y': 1092.3191404654185
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_171812826448012058526:
+    type: PropertyNode
+    position:
+      x: -3120.0726247500515
+      'y': 1766.2503823827853
+    details:
+      propertyID: p_171812822287222900963
+      baseType: Float
+      title: BorderThickness
+      outputPins: &ref_0
+        - dataType: float
+          value: 0.005
+          details:
+            connectType: vector
+      inputPins: []
+  t_171812826998842146179:
+    type: Vector2
+    position:
+      x: -2366.82769726248
+      'y': 1465.780998389694
+    details:
+      outputPins:
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+      inputPins:
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+  t_171812827357964620084:
+    type: Vector2
+    position:
+      x: -2342.91465378422
+      'y': 1963.7681159420288
+    details:
+      outputPins:
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+      inputPins:
+        - dataType: float
+          value: -0.01
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+  t_1718128274367681080186:
+    type: Vector2
+    position:
+      x: -2340.9017713365542
+      'y': 2414.412238325281
+    details:
+      outputPins:
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+      inputPins:
+        - dataType: float
+          value: 0.01
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+  t_1718128288337926822509:
+    type: Multiply
+    position:
+      x: -2793.367688955924
+      'y': 1726.2820512820513
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: -1
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_171812839609306443694:
+    type: Multiply
+    position:
+      x: -2689.5770895770893
+      'y': 1998.8518330984084
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: -1
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_171812842961983411747:
+    type: PropertyNode
+    position:
+      x: -2953.846153846154
+      'y': 2044.8717948717951
+    details:
+      propertyID: p_171812822287222900963
+      baseType: Float
+      title: BorderThickness
+      outputPins: *ref_0
+      inputPins: []
+  t_171812878869183577819:
+    type: PropertyNode
+    position:
+      x: -876.3478854463043
+      'y': 1179.8950316170083
+    details:
+      propertyID: p_17181287806096446296
+      baseType: Color
+      title: BorderColor
+      outputPins:
+        - dataType: color
+          value:
+            r: 255
+            g: 0
+            b: 0
+            a: 255
+          details:
+            connectType: vector
+      inputPins: []
+  t_171812879858519015785:
+    type: Multiply
+    position:
+      x: -657.5775966560758
+      'y': 1040.3709157928101
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_1718131270251497450224:
+    type: Absolute
+    position:
+      x: -879.7150779466217
+      'y': 1066.533342594939
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_1718131714728171704783:
+    type: Multiply
+    position:
+      x: 285.5986240183605
+      'y': 127.90519249063725
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_171813181725488959351:
+    type: Texture2D
+    position:
+      x: -1291.7808219178082
+      'y': -749.3150684931506
+    details:
+      propertyID: p_171813181053100452704
+      baseType: Texture2D
+      title: Burning
+      outputPins: []
+      inputPins: []
+  t_17181318453524933469914:
+    type: SampleTexture2D
+    position:
+      x: -1009.5890410958905
+      'y': -712.3287671232877
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+        - dataType: float
+          value: 0
+          details: {}
+      inputPins:
+        - dataType: texture2D
+          value:
+            uuid: ''
+          details: {}
+        - dataType: vec2
+          value:
+            x: 0
+            'y': 0
+          details: {}
+        - dataType: enum
+          value: 0
+          details: {}
+        - dataType: enum
+          value: 0
+          details: {}
+  t_1718131902281399944083:
+    type: Multiply
+    position:
+      x: -680.9427880741339
+      'y': -442.5261885576148
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_171813195511351694419:
+    type: PropertyNode
+    position:
+      x: -1332.3529411764703
+      'y': -672.0588235294117
+    details:
+      propertyID: p_171813194899703292186
+      baseType: Texture2D
+      title: Burning
+      outputPins: &ref_1
+        - dataType: texture2D
+          value:
+            uuid: e373476b-31fc-4a5d-b795-512917c41076@6c48a
+          details:
+            connectType: texture2D
+      inputPins: []
+  t_171813227851329821746:
+    type: PropertyNode
+    position:
+      x: -1561.6666666666667
+      'y': -631.6666666666667
+    details:
+      propertyID: p_171813226526586543121
+      baseType: Color
+      title: TintColor
+      outputPins: &ref_2
+        - dataType: color
+          value:
+            r: 202
+            g: 162
+            b: 162
+            a: 255
+          details:
+            connectType: vector
+      inputPins: []
+  t_171813228300415702332:
+    type: Multiply
+    position:
+      x: -1300
+      'y': -481.66666666666663
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_1718156309079224949364:
+    type: Multiply
+    position:
+      x: 281.35689841710376
+      'y': 258.8102700096432
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+  t_17181563511081518055:
+    type: Add
+    position:
+      x: 552.3543694697225
+      'y': 161.5150800145058
+    details:
+      outputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+      inputPins:
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+        - dataType: vec4
+          value:
+            x: 0
+            'y': 0
+            z: 0
+            w: 0
+          details: {}
+graphs: {}
+lines:
+  t_1718127705077551218534:
+    type: curve
+    details: {}
+    input:
+      node: t_1718127534995840234794
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_1718127541544971539984
+      param: input_SampleTexture2D_texture2D_Texture
+  t_171812774466298404731:
+    type: curve
+    details: {}
+    input:
+      node: t_171812774244260443015
+      param: out_TillingAndOffset_vec2_Out
+    output:
+      node: t_1718127541544971539984
+      param: input_SampleTexture2D_vec2_UV
+  t_171812781668540357934:
+    type: curve
+    details: {}
+    input:
+      node: t_171812780549485338152
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_171812780549496911623
+      param: input_SampleTexture2D_texture2D_Texture
+  t_171812787288625224131:
+    type: curve
+    details: {}
+    input:
+      node: t_1718127867234115009406
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_17181278672347943900373
+      param: input_SampleTexture2D_texture2D_Texture
+  t_171812787509093096001:
+    type: curve
+    details: {}
+    input:
+      node: t_171812786723448108042
+      param: out_TillingAndOffset_vec2_Out
+    output:
+      node: t_17181278672347943900373
+      param: input_SampleTexture2D_vec2_UV
+  t_171812795812885471249:
+    type: curve
+    details: {}
+    input:
+      node: t_171812789938053971145
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_17181278993817223786482
+      param: input_SampleTexture2D_texture2D_Texture
+  t_1718127961939277791527:
+    type: curve
+    details: {}
+    input:
+      node: t_1718127899381743505057
+      param: out_TillingAndOffset_vec2_Out
+    output:
+      node: t_17181278993817223786482
+      param: input_SampleTexture2D_vec2_UV
+  t_1718128030864032906515:
+    type: curve
+    details: {}
+    input:
+      node: t_171812801156862485447
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_17181280236621970829
+      param: input_Multiply_vec4_A
+  t_17181280456479538966:
+    type: curve
+    details: {}
+    input:
+      node: t_17181280236621970829
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_171812804063637732288
+      param: input_OneMinus_vec4_In
+  t_171812813025091269846:
+    type: curve
+    details: {}
+    input:
+      node: t_171812780549496911623
+      param: out_SampleTexture2D_float_A
+    output:
+      node: t_17181281263969700821
+      param: input_OneMinus_vec4_In
+  t_171812813807722027085:
+    type: curve
+    details: {}
+    input:
+      node: t_17181281263969700821
+      param: out_OneMinus_vec4_Out
+    output:
+      node: t_17181281347969799654
+      param: input_Substract_vec4_A
+  t_1718128141960022442494:
+    type: curve
+    details: {}
+    input:
+      node: t_171812804063637732288
+      param: out_OneMinus_vec4_Out
+    output:
+      node: t_17181281347969799654
+      param: input_Substract_vec4_B
+  t_171812829299938273561:
+    type: curve
+    details: {}
+    input:
+      node: t_171812826448012058526
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_1718128288337926822509
+      param: input_Multiply_vec4_A
+  t_171812830023802619751:
+    type: curve
+    details: {}
+    input:
+      node: t_1718128288337926822509
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_171812826998842146179
+      param: input_Vector2_float_Y
+  t_171812830227845209283:
+    type: curve
+    details: {}
+    input:
+      node: t_1718128288337926822509
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_171812827357964620084
+      param: input_Vector2_float_Y
+  t_171812830413818932651:
+    type: curve
+    details: {}
+    input:
+      node: t_1718128288337926822509
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_1718128274367681080186
+      param: input_Vector2_float_Y
+  t_17181283213462135762:
+    type: curve
+    details: {}
+    input:
+      node: t_171812826998842146179
+      param: out_Vector2_vec2_Out
+    output:
+      node: t_171812774244260443015
+      param: input_TillingAndOffset_vec2_offset
+  t_1718128323127869444305:
+    type: curve
+    details: {}
+    input:
+      node: t_171812827357964620084
+      param: out_Vector2_vec2_Out
+    output:
+      node: t_171812786723448108042
+      param: input_TillingAndOffset_vec2_offset
+  t_17181283303921762519:
+    type: curve
+    details: {}
+    input:
+      node: t_1718128274367681080186
+      param: out_Vector2_vec2_Out
+    output:
+      node: t_1718127899381743505057
+      param: input_TillingAndOffset_vec2_offset
+  t_171812841639489399853:
+    type: curve
+    details: {}
+    input:
+      node: t_171812839609306443694
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_171812827357964620084
+      param: input_Vector2_float_X
+  t_17181284317774629717:
+    type: curve
+    details: {}
+    input:
+      node: t_171812842961983411747
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_171812839609306443694
+      param: input_Multiply_vec4_A
+  t_1718128490140781496658:
+    type: curve
+    details: {}
+    input:
+      node: t_171812780549496911623
+      param: out_SampleTexture2D_float_A
+    output:
+      node: t_171812741555515609804
+      param: input_UnlitMasterNode_float_Alpha
+  t_171812880125610357209:
+    type: curve
+    details: {}
+    input:
+      node: t_171812878869183577819
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_171812879858519015785
+      param: input_Multiply_vec4_B
+  t_171812963032143173279:
+    type: curve
+    details: {}
+    input:
+      node: t_1718127541544971539984
+      param: out_SampleTexture2D_float_A
+    output:
+      node: t_171812801156862485447
+      param: input_Multiply_vec4_A
+  t_171812963358412070115:
+    type: curve
+    details: {}
+    input:
+      node: t_17181278672347943900373
+      param: out_SampleTexture2D_float_A
+    output:
+      node: t_171812801156862485447
+      param: input_Multiply_vec4_B
+  t_171812963566785708102:
+    type: curve
+    details: {}
+    input:
+      node: t_17181278993817223786482
+      param: out_SampleTexture2D_float_A
+    output:
+      node: t_17181280236621970829
+      param: input_Multiply_vec4_B
+  t_17181312962323621892:
+    type: curve
+    details: {}
+    input:
+      node: t_17181281347969799654
+      param: out_Substract_vec4_Out
+    output:
+      node: t_1718131270251497450224
+      param: input_Absolute_vec4_In
+  t_17181313160507429337:
+    type: curve
+    details: {}
+    input:
+      node: t_1718131270251497450224
+      param: out_Absolute_vec4_Out
+    output:
+      node: t_171812879858519015785
+      param: input_Multiply_vec4_A
+  t_1718131739984468002918:
+    type: curve
+    details: {}
+    input:
+      node: t_171812879858519015785
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_1718131714728171704783
+      param: input_Multiply_vec4_B
+  t_171813190513589646324:
+    type: curve
+    details: {}
+    input:
+      node: t_17181318453524933469914
+      param: out_SampleTexture2D_vec4_RGBA
+    output:
+      node: t_1718131902281399944083
+      param: input_Multiply_vec4_A
+  t_171813195811877654907:
+    type: curve
+    details: {}
+    input:
+      node: t_171813195511351694419
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_17181318453524933469914
+      param: input_SampleTexture2D_texture2D_Texture
+  t_17181322872832556083995:
+    type: curve
+    details: {}
+    input:
+      node: t_171812780549496911623
+      param: out_SampleTexture2D_vec4_RGBA
+    output:
+      node: t_171813228300415702332
+      param: input_Multiply_vec4_A
+  t_171813228909381577775:
+    type: curve
+    details: {}
+    input:
+      node: t_171813227851329821746
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_171813228300415702332
+      param: input_Multiply_vec4_B
+  t_171813229290289825615:
+    type: curve
+    details: {}
+    input:
+      node: t_171813228300415702332
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_1718131902281399944083
+      param: input_Multiply_vec4_B
+  t_1718155882322626102936:
+    type: curve
+    details: {}
+    input:
+      node: t_171812780549496911623
+      param: out_SampleTexture2D_float_A
+    output:
+      node: t_1718131714728171704783
+      param: input_Multiply_vec4_A
+  t_1718156313753167437335:
+    type: curve
+    details: {}
+    input:
+      node: t_1718131902281399944083
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_1718156309079224949364
+      param: input_Multiply_vec4_A
+  t_1718156317523925058776:
+    type: curve
+    details: {}
+    input:
+      node: t_17181280236621970829
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_1718156309079224949364
+      param: input_Multiply_vec4_B
+  t_1718156354489036184223:
+    type: curve
+    details: {}
+    input:
+      node: t_1718131714728171704783
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_17181563511081518055
+      param: input_Add_vec4_A
+  t_171815635987484556618:
+    type: curve
+    details: {}
+    input:
+      node: t_1718156309079224949364
+      param: out_Multiply_vec4_Out
+    output:
+      node: t_17181563511081518055
+      param: input_Add_vec4_B
+  t_171815636285406027706:
+    type: curve
+    details: {}
+    input:
+      node: t_17181563511081518055
+      param: out_Add_vec4_Out
+    output:
+      node: t_171812741555515609804
+      param: input_UnlitMasterNode_color_BaseColor
+  t_171812844030841828507:
+    type: curve
+    details: {}
+    input:
+      node: t_171812842961983411747
+      param: out_PropertyNode_any_Out
+    output:
+      node: t_1718128274367681080186
+      param: input_Vector2_float_X
+details:
+  properties:
+    - id: p_171812747062093466413
+      name: Texture2D
+      type: Texture2D
+      declareType: PropertyNode
+      outputPins:
+        - dataType: texture2D
+          value:
+            uuid: e14a3ad4-9907-49a2-88ff-ef1963cc5170@6c48a
+          details:
+            connectType: texture2D
+    - id: p_171812822287222900963
+      name: BorderThickness
+      type: Float
+      declareType: PropertyNode
+      outputPins: *ref_0
+    - id: p_17181287806096446296
+      name: BorderColor
+      type: Color
+      declareType: PropertyNode
+      outputPins:
+        - dataType: color
+          value:
+            r: 255
+            g: 0
+            b: 0
+            a: 255
+          details:
+            connectType: vector
+    - id: p_171813194899703292186
+      name: Burning
+      type: Texture2D
+      declareType: PropertyNode
+      outputPins: *ref_1
+    - id: p_171813226526586543121
+      name: TintColor
+      type: Color
+      declareType: PropertyNode
+      outputPins: *ref_2

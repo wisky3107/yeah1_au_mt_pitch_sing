@@ -1,0 +1,92 @@
+sipher-chart:
+  deploys:
+    - name: cannonswar
+      replicasCount: 1
+      resources:
+        requests:
+          memory: 150Mi
+          cpu: 20m
+        limits:
+          memory: 256Mi
+          cpu: 100m
+      services:
+        - name: http
+          containerPort:
+            game: 8080
+        - name: health
+          type: ClusterIP
+          containerPort:
+            health: 8080
+          health:
+            live: /
+            livenessPort: 8080
+            ready: /
+            readinessPort: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+    # - name: cannonswar-arm64
+    #   nodeSelector:
+    #     kind: mono-arm
+    #   tolerations:
+    #   - key: type
+    #     operator: Equal
+    #     value: mono-arm
+    #     effect: NoSchedule
+    #   - key: type
+    #     operator: Equal
+    #     value: mono-arm
+    #     effect: NoExecute
+    #   replicasCount: 1
+    #   resources:
+    #     requests:
+    #       memory: 150Mi
+    #       cpu: 40m
+    #     limits:
+    #       memory: 512Mi
+    #       cpu: 200m
+    #   services:
+    #     - name: http
+    #       containerPort:
+    #         game: 8080
+    #     - name: health
+    #       type: ClusterIP
+    #       containerPort:
+    #         health: 8080
+    #       health:
+    #         live: /
+    #         livenessPort: 8080
+    #         ready: /
+    #         readinessPort: 8080
+    #         initialDelaySeconds: 15
+    #         periodSeconds: 10
+    #         successThreshold: 1
+    #         timeoutSeconds: 10
+  env:
+    API_ENDPOINT: https://api-cannonswar.sipher.gg/
+  ingress:
+    enabled: true
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      kubernetes.io/ingress.class: alb
+      service.beta.kubernetes.io/aws-load-balancer-internal: 'true'
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-southeast-1:127395585441:certificate/44df9f71-a827-4a85-971d-070bca73a786
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/group.name: public
+      alb.ingress.kubernetes.io/healthcheck-path: /
+    rules:
+      - host: game-cannonswar.sipher.gg
+        paths:
+          - path: /*
+            serviceName: game-cannonswar-http
+            servicePort: 8080
+            pathType: ImplementationSpecific
+      - host: game-cannonswar-arm64.sipher.gg
+        paths:
+          - path: /*
+            serviceName: game-cannonswar-arm64-http
+            servicePort: 8080
+            pathType: ImplementationSpecific

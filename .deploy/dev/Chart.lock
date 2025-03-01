@@ -1,0 +1,6 @@
+dependencies:
+- name: sipher-chart
+  repository: https://sipherxyz.github.io/helm-chart/
+  version: 0.1.0
+digest: sha256:848dd82db6b276cf9dacb9950797605e6eb245675f18a8cec27e36d09d8e0c3c
+generated: "2024-01-25T15:49:52.930397+07:00"

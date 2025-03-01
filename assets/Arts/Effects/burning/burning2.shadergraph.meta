@@ -1,0 +1,12 @@
+{
+  "ver": "1.0.0",
+  "importer": "*",
+  "imported": true,
+  "uuid": "8e2700a7-90d3-4205-be52-f8b43b73a5b7",
+  "files": [
+    ".json",
+    ".shadergraph"
+  ],
+  "subMetas": {},
+  "userData": {}
+}

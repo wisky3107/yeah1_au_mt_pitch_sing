@@ -1,0 +1,37 @@
+'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.declareGraph = exports.getDeclareGraph = exports.hasDeclareGraph = exports.graphMap = void 0;
+const ui_graph_1 = require("@itharbors/ui-graph");
+const manager_1 = require("@itharbors/ui-graph/dist/manager");
+exports.graphMap = new Map();
+class GraphObject {
+}
+const hasDeclareGraph = function (type) {
+    return exports.graphMap.has(type);
+};
+exports.hasDeclareGraph = hasDeclareGraph;
+const getDeclareGraph = function (type) {
+    return exports.graphMap.get(type);
+};
+exports.getDeclareGraph = getDeclareGraph;
+/**
+ * 注册一个 graph 类型
+ * @param graph
+ */
+function declareGraph(graph) {
+    if ((0, exports.hasDeclareGraph)(graph.type)) {
+        console.warn(`Cannot declare duplicate graph types: ${graph.type}`);
+        return;
+    }
+    // 在底层注册一个渲染图类型
+    const config = Object.assign({}, graph.style, graph.feature);
+    (0, ui_graph_1.registerGraphOption)(graph.type, config);
+    (0, manager_1.registerGraphFilter)(graph.type, {
+        lineFilter: graph.validator?.dataLink,
+    });
+    exports.graphMap.set(graph.type, {
+        graph: graph,
+    });
+}
+exports.declareGraph = declareGraph;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ3JhcGguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvYmxvY2stZm9yZ2UvZ3JhcGgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsWUFBWSxDQUFDOzs7QUFHYixrREFBMEQ7QUFDMUQsOERBQXVFO0FBSzFELFFBQUEsUUFBUSxHQUEyQixJQUFJLEdBQUcsRUFBRSxDQUFDO0FBRTFELE1BQU0sV0FBVztDQUVoQjtBQUVNLE1BQU0sZUFBZSxHQUFHLFVBQVMsSUFBWTtJQUNoRCxPQUFPLGdCQUFRLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDO0FBQzlCLENBQUMsQ0FBQztBQUZXLFFBQUEsZUFBZSxtQkFFMUI7QUFFSyxNQUFNLGVBQWUsR0FBRyxVQUFTLElBQVk7SUFDaEQsT0FBTyxnQkFBUSxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsQ0FBQztBQUM5QixDQUFDLENBQUM7QUFGVyxRQUFBLGVBQWUsbUJBRTFCO0FBRUY7OztHQUdHO0FBQ0gsU0FBZ0IsWUFBWSxDQUFDLEtBQXdCO0lBQ2pELElBQUksSUFBQSx1QkFBZSxFQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsRUFBRTtRQUM3QixPQUFPLENBQUMsSUFBSSxDQUFDLHlDQUF5QyxLQUFLLENBQUMsSUFBSSxFQUFFLENBQUMsQ0FBQztRQUNwRSxPQUFPO0tBQ1Y7SUFFRCxlQUFlO0lBQ2YsTUFBTSxNQUFNLEdBQUcsTUFBTSxDQUFDLE1BQU0sQ0FBQyxFQUFFLEVBQUUsS0FBSyxDQUFDLEtBQUssRUFBRSxLQUFLLENBQUMsT0FBTyxDQUFDLENBQUM7SUFDN0QsSUFBQSw4QkFBbUIsRUFBQyxLQUFLLENBQUMsSUFBSSxFQUFFLE1BQU0sQ0FBQyxDQUFDO0lBQ3hDLElBQUEsNkJBQW1CLEVBQUMsS0FBSyxDQUFDLElBQUksRUFBRTtRQUM1QixVQUFVLEVBQUUsS0FBSyxDQUFDLFNBQVMsRUFBRSxRQUFRO0tBQ3hDLENBQUMsQ0FBQztJQUVILGdCQUFRLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxJQUFJLEVBQUU7UUFDckIsS0FBSyxFQUFFLEtBQUs7S0FDZixDQUFDLENBQUM7QUFDUCxDQUFDO0FBaEJELG9DQWdCQyIsInNvdXJjZXNDb250ZW50IjpbIid1c2Ugc3RyaWN0JztcblxuaW1wb3J0IHR5cGUgeyBJR3JhcGhEZXNjcmlwdGlvbiB9IGZyb20gJy4vaW50ZXJmYWNlJztcbmltcG9ydCB7IHJlZ2lzdGVyR3JhcGhPcHRpb24gfSBmcm9tICdAaXRoYXJib3JzL3VpLWdyYXBoJztcbmltcG9ydCB7IHJlZ2lzdGVyR3JhcGhGaWx0ZXIgfSBmcm9tICdAaXRoYXJib3JzL3VpLWdyYXBoL2Rpc3QvbWFuYWdlcic7XG5cbmludGVyZmFjZSBHcmFwaEluZm8ge1xuICAgIGdyYXBoOiBJR3JhcGhEZXNjcmlwdGlvbjtcbn1cbmV4cG9ydCBjb25zdCBncmFwaE1hcDogTWFwPHN0cmluZywgR3JhcGhJbmZvPiA9IG5ldyBNYXAoKTtcblxuY2xhc3MgR3JhcGhPYmplY3Qge1xuXG59XG5cbmV4cG9ydCBjb25zdCBoYXNEZWNsYXJlR3JhcGggPSBmdW5jdGlvbih0eXBlOiBzdHJpbmcpIHtcbiAgICByZXR1cm4gZ3JhcGhNYXAuaGFzKHR5cGUpO1xufTtcblxuZXhwb3J0IGNvbnN0IGdldERlY2xhcmVHcmFwaCA9IGZ1bmN0aW9uKHR5cGU6IHN0cmluZykge1xuICAgIHJldHVybiBncmFwaE1hcC5nZXQodHlwZSk7XG59O1xuXG4vKipcbiAqIOazqOWGjOS4gOS4qiBncmFwaCDnsbvlnotcbiAqIEBwYXJhbSBncmFwaFxuICovXG5leHBvcnQgZnVuY3Rpb24gZGVjbGFyZUdyYXBoKGdyYXBoOiBJR3JhcGhEZXNjcmlwdGlvbikge1xuICAgIGlmIChoYXNEZWNsYXJlR3JhcGgoZ3JhcGgudHlwZSkpIHtcbiAgICAgICAgY29uc29sZS53YXJuKGBDYW5ub3QgZGVjbGFyZSBkdXBsaWNhdGUgZ3JhcGggdHlwZXM6ICR7Z3JhcGgudHlwZX1gKTtcbiAgICAgICAgcmV0dXJuO1xuICAgIH1cblxuICAgIC8vIOWcqOW6leWxguazqOWGjOS4gOS4qua4suafk+Wbvuexu+Wei1xuICAgIGNvbnN0IGNvbmZpZyA9IE9iamVjdC5hc3NpZ24oe30sIGdyYXBoLnN0eWxlLCBncmFwaC5mZWF0dXJlKTtcbiAgICByZWdpc3RlckdyYXBoT3B0aW9uKGdyYXBoLnR5cGUsIGNvbmZpZyk7XG4gICAgcmVnaXN0ZXJHcmFwaEZpbHRlcihncmFwaC50eXBlLCB7XG4gICAgICAgIGxpbmVGaWx0ZXI6IGdyYXBoLnZhbGlkYXRvcj8uZGF0YUxpbmssXG4gICAgfSk7XG5cbiAgICBncmFwaE1hcC5zZXQoZ3JhcGgudHlwZSwge1xuICAgICAgICBncmFwaDogZ3JhcGgsXG4gICAgfSk7XG59XG5cbiJdfQ==

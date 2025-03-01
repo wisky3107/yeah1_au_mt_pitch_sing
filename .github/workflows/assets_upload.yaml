@@ -1,0 +1,92 @@
+name: Assests upload
+
+on:
+  push:
+    branches: [ develop, main ]
+    paths:
+      - 'build/cannonswar/**'
+      - 'build/capytalwar/**'
+  workflow_dispatch:
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.LINODE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.LINODE_SECRET_ACCESS_KEY }}
+
+jobs:
+  assets-upload:
+    if: (github.event_name == 'push' && github.ref_name == 'develop') || (github.event_name == 'workflow_dispatch' && github.ref_name == 'develop')
+    runs-on: self-hosted
+    container:
+      image: public.ecr.aws/n1f4u6r8/ci:gameserver-1.0.5
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Encript source code
+        shell: bash
+        run: |
+          npm install -g yarn
+          yarn
+          node build/obfuscate.js /cannonswar 
+      - name: Upload assets
+        shell: bash
+        run: |
+          aws s3 sync build/cannonswar s3://incubation-cannonswar/dev/cannonswar \
+            --endpoint=https://ap-south-1.linodeobjects.com \
+            --delete --acl public-read
+      - name: Purge Cache
+        uses: jdmevo123/akamai-purge-action@1.7
+        env:
+          EDGERC: ${{ secrets.EDGERC }}
+        with:
+          command: 'invalidate' 
+          type: 'url'
+          ref: 'https://cannons-dev.capytalism.com/dev/cannonswar/index.html'
+          network: 'production'
+
+  assets-upload-main:
+    if: (github.event_name == 'push' && github.ref_name == 'main') || (github.event_name == 'workflow_dispatch' && github.ref_name == 'main')
+    runs-on: self-hosted
+    container:
+      image: public.ecr.aws/n1f4u6r8/ci:gameserver-1.0.5
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Encript source code
+        shell: bash
+        run: |
+          npm install -g yarn
+          yarn
+          node build/obfuscate.js /capytalwar
+
+      - name: Upload assets
+        shell: bash
+        run: |
+          aws s3 sync build/capytalwar s3://incubation-cannonswar-prod/capytalwar \
+            --endpoint=https://ap-south-1.linodeobjects.com \
+            --delete --acl public-read
+
+      - name: Purge Cache
+        uses: jdmevo123/akamai-purge-action@1.7
+        env:
+          EDGERC: ${{ secrets.EDGERC }}
+        with:
+          command: 'invalidate' 
+          type: 'url'
+          ref: 'https://cannons.capytalism.com/capytalwar/index.html'
+          network: 'production'

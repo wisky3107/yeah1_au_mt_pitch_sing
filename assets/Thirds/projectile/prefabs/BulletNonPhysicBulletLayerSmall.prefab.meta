@@ -1,0 +1,13 @@
+{
+  "ver": "1.1.50",
+  "importer": "prefab",
+  "imported": true,
+  "uuid": "a83fbfea-6eaa-4cf6-9d4d-263d5a70ef47",
+  "files": [
+    ".json"
+  ],
+  "subMetas": {},
+  "userData": {
+    "syncNodeName": "BulletNonPhysicBulletLayerSmall"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "__type__": "cc.Material",
+  "_name": "",
+  "_objFlags": 0,
+  "__editorExtras__": {},
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "77bd14b7-d695-4e58-924f-344726253ba4",
+    "__expectedType__": "cc.EffectAsset"
+  },
+  "_techIdx": 1,
+  "_defines": [
+    {},
+    {}
+  ],
+  "_states": [
+    {
+      "rasterizerState": {},
+      "depthStencilState": {},
+      "blendState": {
+        "targets": [
+          {}
+        ]
+      }
+    },
+    {
+      "rasterizerState": {},
+      "depthStencilState": {},
+      "blendState": {
+        "targets": [
+          {}
+        ]
+      }
+    }
+  ],
+  "_props": [
+    {
+      "Color": {
+        "__type__": "cc.Color",
+        "r": 15,
+        "g": 15,
+        "b": 15,
+        "a": 255
+      },
+      "Texture2D": {
+        "__uuid__": "9aca3b33-2675-4f6a-a255-8d94fc28af09@6c48a",
+        "__expectedType__": "cc.Texture2D"
+      },
+      "DissoveAmount": 0.8,
+      "OutlineThickness": 0.03,
+      "GradientTexture": {
+        "__uuid__": "8f3c1a66-38be-4d98-ac2a-f7626b7095ef@6c48a",
+        "__expectedType__": "cc.Texture2D"
+      },
+      "DissolveScale": 51.7
+    },
+    {}
+  ]
+}

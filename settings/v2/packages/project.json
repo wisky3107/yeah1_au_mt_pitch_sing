@@ -1,0 +1,51 @@
+{
+  "__version__": "1.0.6",
+  "general": {
+    "designResolution": {
+      "width": 1080,
+      "height": 1920,
+      "fitHeight": true,
+      "fitWidth": false
+    }
+  },
+  "physics": {
+    "collisionGroups": [],
+    "collisionMatrix": {
+      "0": 1,
+      "1": 0,
+      "2": 8,
+      "3": 28,
+      "4": 8
+    },
+    "gravity": {
+      "y": -18
+    },
+    "defaultMaterial": "",
+    "allowSleep": true,
+    "sleepThreshold": 0.1
+  },
+  "fbx": {
+    "legacyFbxImporter": {
+      "visible": true
+    }
+  },
+  "custom_joint_texture_layouts": [],
+  "script": {
+    "preserveSymlinks": true,
+    "loose": true
+  },
+  "layer": [
+    {
+      "name": "Bullet",
+      "value": 1
+    },
+    {
+      "name": "GunMine",
+      "value": 2
+    },
+    {
+      "name": "GunOpponent",
+      "value": 4
+    }
+  ]
+}

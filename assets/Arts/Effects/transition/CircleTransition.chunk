@@ -1,0 +1,16 @@
+
+float rule(vec2 coord)
+{
+    vec2 uv2 = coord - vec2(0.5, 0.5);
+    float angle = atan(uv2.x, uv2.y);
+    return angle / 2.0 / 3.1416 + 0.5;
+}
+
+vec4 CircleTransition(vec4 color,vec4 mixcolor, vec2 uv, float progression) {
+  float rule = rule(uv);
+  float vague = 0.2;
+  float phase = progression * (1.0 + vague);
+  float p0 = smoothstep(rule, rule + vague, phase);
+  color = color * (1.0 - p0) + mixcolor * p0;
+  return color;
+}

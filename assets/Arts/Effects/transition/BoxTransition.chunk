@@ -1,0 +1,17 @@
+// you can write GLSL code directly in here
+
+#include <builtin/uniforms/cc-global>
+
+const float tranSize = 36.;
+
+vec4 BoxTransition(vec4 color,vec4 mixcolor, vec2 uv, float progression) {
+  vec2 fragCoord = gl_FragCoord.xy;
+  vec2 blockPos = vec2(progression) * cc_screenSize.xy;
+  vec2 p = ceil(fragCoord / tranSize) * tranSize; 
+  float progress = (p.x + p.y) / (blockPos.x + blockPos.y);
+  vec2 v = abs(fragCoord - p + vec2(tranSize/2.));
+  if (max(v.x, v.y) * progress < tranSize/2.) {
+      color = mixcolor;
+  }
+  return color;
+}

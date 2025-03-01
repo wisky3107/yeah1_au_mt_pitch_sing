@@ -1,0 +1,72 @@
+sipher-chart:
+  pdb:
+    enabled: true
+    deployName: game-cannonswar
+  deploys:
+    - name: cannonswar
+      replicasCount: 2
+      autoScale:
+        version: autoscaling/v2
+        min: 2
+        max: 10
+      resources:
+        requests:
+          memory: 150Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+          cpu: 300m
+      services:
+        - name: http
+          containerPort:
+            game: 8080
+        - name: health
+          type: ClusterIP
+          containerPort:
+            health: 8080
+          health:
+            live: /
+            livenessPort: 8080
+            ready: /
+            readinessPort: 8080
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/instance
+                      operator: In
+                      values:
+                        - game-cannonswar
+                topologyKey: kubernetes.io/hostname
+              weight: 50
+  env:
+    API_ENDPOINT: https://api.capytalwar.com/    
+    DD_LOGS_INJECTION: 'true'
+    DD_TRACE_ENABLED: 'true'
+    DD_RUNTIME_METRICS_ENABLED: 'true'
+    DD_SERVICE: 'game-cannonswar'
+  ingress:
+    enabled: true
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      kubernetes.io/ingress.class: alb
+      service.beta.kubernetes.io/aws-load-balancer-internal: 'true'
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:023626379544:certificate/7eb7e51e-b81d-42b7-84ed-e5a071f7b907
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/group.name: public
+      alb.ingress.kubernetes.io/healthcheck-path: /
+    rules:
+      - host: game.capytalwar.com
+        paths:
+          - path: /*
+            serviceName: game-cannonswar-http
+            servicePort: 8080
+            pathType: ImplementationSpecific

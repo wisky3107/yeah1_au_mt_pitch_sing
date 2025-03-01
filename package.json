@@ -1,0 +1,18 @@
+{
+  "creator": {
+    "version": "3.8.5"
+  },
+  "name": "CannonsWar",
+  "type": "3d",
+  "uuid": "4168f23a-eac0-4722-805f-fdb409782256",
+  "version": "3.3.2",
+  "_sourceId": "9319d30a-d99d-4630-ab45-15172d588af7",
+  "_storeId": "2455a0753d565bf343b3b8c09efccd8e",
+  "dependencies": {
+    "@tonconnect/sdk": "^3.0.2",
+    "@tonconnect/ui": "^2.0.2"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.1"
+  }
+}

@@ -1,0 +1,9 @@
+
+const float tranSize = 0.1; 
+vec4 LinearTransition(vec4 color,vec4 mixcolor, vec2 uv, float progression,bool isUVX) {
+  float dir = isUVX?uv.x:uv.y;
+  float f = dir*(1.0-tranSize) + tranSize - (progression * (1.0 + tranSize));
+  float m = smoothstep(0., -tranSize,f);
+  color = mix(color,mixcolor,m);
+  return color;
+}

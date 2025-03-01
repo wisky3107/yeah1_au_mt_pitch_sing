@@ -1,0 +1,52 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getFloatWindowMap = exports.FloatWindow = exports.updateFloatWindowConfigs = exports.getFloatWindowConfigByName = exports.floatWindowConfigs = void 0;
+const tslib_1 = require("tslib");
+const base_1 = tslib_1.__importDefault(require("./base"));
+exports.FloatWindow = base_1.default;
+const GraphProperty = tslib_1.__importStar(require("./graph-property"));
+const CustomNodes = tslib_1.__importStar(require("./custom-nodes"));
+const CreateNode = tslib_1.__importStar(require("./create-node"));
+const Preview = tslib_1.__importStar(require("./preview"));
+tslib_1.__exportStar(require("./internal"), exports);
+const floatWindowMap = new Map([
+    [
+        GraphProperty.DefaultConfig.key,
+        GraphProperty.component,
+    ],
+    [
+        CreateNode.DefaultConfig.key,
+        CreateNode.component,
+    ],
+    [
+        Preview.DefaultConfig.key,
+        Preview.component,
+    ],
+    [
+        CustomNodes.DefaultConfig.key,
+        CustomNodes.component,
+    ],
+]);
+exports.floatWindowConfigs = new Map();
+function getFloatWindowConfigByName(name) {
+    return exports.floatWindowConfigs.get(name);
+}
+exports.getFloatWindowConfigByName = getFloatWindowConfigByName;
+async function updateFloatWindowConfigs() {
+    const configs = [
+        GraphProperty.getConfig(),
+        Preview.getConfig(),
+        CreateNode.getConfig(),
+        CustomNodes.getConfig(),
+    ];
+    configs.forEach(config => {
+        exports.floatWindowConfigs.set(config.key, config);
+    });
+    return configs;
+}
+exports.updateFloatWindowConfigs = updateFloatWindowConfigs;
+function getFloatWindowMap() {
+    return floatWindowMap;
+}
+exports.getFloatWindowMap = getFloatWindowMap;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi8uLi8uLi9zcmMvcGFuZWxzL3NoYWRlci1ncmFwaC9jb21wb25lbnRzL2Zsb2F0LXdpbmRvdy9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7O0FBRUEsMERBQWlDO0FBbUQ3QixzQkFuREcsY0FBVyxDQW1ESDtBQWxEZix3RUFBa0Q7QUFDbEQsb0VBQThDO0FBQzlDLGtFQUE0QztBQUM1QywyREFBcUM7QUFFckMscURBQTJCO0FBRTNCLE1BQU0sY0FBYyxHQUFHLElBQUksR0FBRyxDQUFpQztJQUMzRDtRQUNJLGFBQWEsQ0FBQyxhQUFhLENBQUMsR0FBRztRQUMvQixhQUFhLENBQUMsU0FBUztLQUMxQjtJQUNEO1FBQ0ksVUFBVSxDQUFDLGFBQWEsQ0FBQyxHQUFHO1FBQzVCLFVBQVUsQ0FBQyxTQUFTO0tBQ3ZCO0lBQ0Q7UUFDSSxPQUFPLENBQUMsYUFBYSxDQUFDLEdBQUc7UUFDekIsT0FBTyxDQUFDLFNBQVM7S0FDcEI7SUFDRDtRQUNJLFdBQVcsQ0FBQyxhQUFhLENBQUMsR0FBRztRQUM3QixXQUFXLENBQUMsU0FBUztLQUN4QjtDQUNKLENBQUMsQ0FBQztBQUVVLFFBQUEsa0JBQWtCLEdBQW1DLElBQUksR0FBRyxFQUFFLENBQUM7QUFFNUUsU0FBZ0IsMEJBQTBCLENBQUMsSUFBWTtJQUNuRCxPQUFPLDBCQUFrQixDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsQ0FBQztBQUN4QyxDQUFDO0FBRkQsZ0VBRUM7QUFFTSxLQUFLLFVBQVUsd0JBQXdCO0lBQzFDLE1BQU0sT0FBTyxHQUFHO1FBQ1osYUFBYSxDQUFDLFNBQVMsRUFBRTtRQUN6QixPQUFPLENBQUMsU0FBUyxFQUFFO1FBQ25CLFVBQVUsQ0FBQyxTQUFTLEVBQUU7UUFDdEIsV0FBVyxDQUFDLFNBQVMsRUFBRTtLQUMxQixDQUFDO0lBQ0YsT0FBTyxDQUFDLE9BQU8sQ0FBQyxNQUFNLENBQUMsRUFBRTtRQUNyQiwwQkFBa0IsQ0FBQyxHQUFHLENBQUMsTUFBTSxDQUFDLEdBQUcsRUFBRSxNQUFNLENBQUMsQ0FBQztJQUMvQyxDQUFDLENBQUMsQ0FBQztJQUNILE9BQU8sT0FBTyxDQUFDO0FBQ25CLENBQUM7QUFYRCw0REFXQztBQUVELFNBQVMsaUJBQWlCO0lBQ3RCLE9BQU8sY0FBYyxDQUFDO0FBQzFCLENBQUM7QUFJRyw4Q0FBaUIiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgdHlwZSB7IEZsb2F0V2luZG93Q29uZmlnIH0gZnJvbSAnLi9pbnRlcm5hbCc7XG5cbmltcG9ydCBGbG9hdFdpbmRvdyBmcm9tICcuL2Jhc2UnO1xuaW1wb3J0ICogYXMgR3JhcGhQcm9wZXJ0eSBmcm9tICcuL2dyYXBoLXByb3BlcnR5JztcbmltcG9ydCAqIGFzIEN1c3RvbU5vZGVzIGZyb20gJy4vY3VzdG9tLW5vZGVzJztcbmltcG9ydCAqIGFzIENyZWF0ZU5vZGUgZnJvbSAnLi9jcmVhdGUtbm9kZSc7XG5pbXBvcnQgKiBhcyBQcmV2aWV3IGZyb20gJy4vcHJldmlldyc7XG5cbmV4cG9ydCAqIGZyb20gJy4vaW50ZXJuYWwnO1xuXG5jb25zdCBmbG9hdFdpbmRvd01hcCA9IG5ldyBNYXA8c3RyaW5nLCBhbnkvKkRlZmluZUNvbXBvbmVudCovPihbXG4gICAgW1xuICAgICAgICBHcmFwaFByb3BlcnR5LkRlZmF1bHRDb25maWcua2V5LFxuICAgICAgICBHcmFwaFByb3BlcnR5LmNvbXBvbmVudCxcbiAgICBdLFxuICAgIFtcbiAgICAgICAgQ3JlYXRlTm9kZS5EZWZhdWx0Q29uZmlnLmtleSxcbiAgICAgICAgQ3JlYXRlTm9kZS5jb21wb25lbnQsXG4gICAgXSxcbiAgICBbXG4gICAgICAgIFByZXZpZXcuRGVmYXVsdENvbmZpZy5rZXksXG4gICAgICAgIFByZXZpZXcuY29tcG9uZW50LFxuICAgIF0sXG4gICAgW1xuICAgICAgICBDdXN0b21Ob2Rlcy5EZWZhdWx0Q29uZmlnLmtleSxcbiAgICAgICAgQ3VzdG9tTm9kZXMuY29tcG9uZW50LFxuICAgIF0sXG5dKTtcblxuZXhwb3J0IGNvbnN0IGZsb2F0V2luZG93Q29uZmlnczogTWFwPHN0cmluZywgRmxvYXRXaW5kb3dDb25maWc+ID0gbmV3IE1hcCgpO1xuXG5leHBvcnQgZnVuY3Rpb24gZ2V0RmxvYXRXaW5kb3dDb25maWdCeU5hbWUobmFtZTogc3RyaW5nKTogRmxvYXRXaW5kb3dDb25maWcgfCB1bmRlZmluZWQge1xuICAgIHJldHVybiBmbG9hdFdpbmRvd0NvbmZpZ3MuZ2V0KG5hbWUpO1xufVxuXG5leHBvcnQgYXN5bmMgZnVuY3Rpb24gdXBkYXRlRmxvYXRXaW5kb3dDb25maWdzKCkge1xuICAgIGNvbnN0IGNvbmZpZ3MgPSBbXG4gICAgICAgIEdyYXBoUHJvcGVydHkuZ2V0Q29uZmlnKCksXG4gICAgICAgIFByZXZpZXcuZ2V0Q29uZmlnKCksXG4gICAgICAgIENyZWF0ZU5vZGUuZ2V0Q29uZmlnKCksXG4gICAgICAgIEN1c3RvbU5vZGVzLmdldENvbmZpZygpLFxuICAgIF07XG4gICAgY29uZmlncy5mb3JFYWNoKGNvbmZpZyA9PiB7XG4gICAgICAgIGZsb2F0V2luZG93Q29uZmlncy5zZXQoY29uZmlnLmtleSwgY29uZmlnKTtcbiAgICB9KTtcbiAgICByZXR1cm4gY29uZmlncztcbn1cblxuZnVuY3Rpb24gZ2V0RmxvYXRXaW5kb3dNYXAoKSB7XG4gICAgcmV0dXJuIGZsb2F0V2luZG93TWFwO1xufVxuXG5leHBvcnQge1xuICAgIEZsb2F0V2luZG93LFxuICAgIGdldEZsb2F0V2luZG93TWFwLFxufTtcbiJdfQ==
