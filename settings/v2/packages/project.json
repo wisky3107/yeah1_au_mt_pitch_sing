@@ -34,18 +34,5 @@
     "preserveSymlinks": true,
     "loose": true
   },
-  "layer": [
-    {
-      "name": "Bullet",
-      "value": 1
-    },
-    {
-      "name": "GunMine",
-      "value": 2
-    },
-    {
-      "name": "GunOpponent",
-      "value": 4
-    }
-  ]
+  "layer": []
 }
