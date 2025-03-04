@@ -1,6 +1,4 @@
 import { _decorator, Component, math, Node, randomRangeInt, SpriteFrame } from 'cc';
-import { SlotUIData } from '../../Constant/Defines';
-import { CapyState } from './Capy/ActorCapy';
 const { ccclass, property } = _decorator;
 
 @ccclass('ImageLoader')
@@ -38,15 +36,6 @@ export class ImageLoader extends Component {
         }
         console.error("Unknown sprite" + name);
         return null;
-    }
-
-    public getSlotImageBy(id: string, isBlur: boolean = false): SpriteFrame {
-        const imageData = SlotUIData[id];
-        if (!imageData) return null;
-        if (isBlur) {
-            return this.getSpriteFrame(imageData.icon + "_blur");
-        }
-        return this.getSpriteFrame(imageData.icon);
     }
 
     public getAvatar(id: string): SpriteFrame {

@@ -1,6 +1,6 @@
-import { _decorator, assetManager, Component, ImageAsset, Node, Sprite, SpriteFrame, Texture2D } from 'cc';
+import { _decorator, Component, Sprite, SpriteFrame } from 'cc';
 import { assetRemoteUtil } from './assetRemoteUtil';
-import { ImageLoader } from '../Modules/Game/ImageLoader';
+import { ImageLoader } from './ImageLoader';
 const { ccclass, property, requireComponent } = _decorator;
 
 @ccclass('UIAvatar')
@@ -25,14 +25,14 @@ export class UIAvatar extends Component {
     public setData(photo_url: string, id: string) {
         if (!this.sprite) return;
         this.sprite.spriteFrame = ImageLoader.instance.getAvatar(this.id);
-        this.id = id; 
+        this.id = id;
         this.url = photo_url;
 
         this.loadAvatarFunction = this.onLoadedAvatar.bind(this);
         assetRemoteUtil.loadAndListenAvatar(photo_url, this.loadAvatarFunction);
     }
 
-    onLoadedAvatar(sf: SpriteFrame){
+    onLoadedAvatar(sf: SpriteFrame) {
         this.sprite.spriteFrame = sf ?? ImageLoader.instance.getAvatar(this.id);
         this.loadAvatarFunction = null; // only load one per set data 
     }
