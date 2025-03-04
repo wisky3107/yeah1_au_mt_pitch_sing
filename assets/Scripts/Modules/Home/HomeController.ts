@@ -1,10 +1,13 @@
 import { _decorator, Component, Node } from 'cc';
+import { loadMidi } from '../../Common/MidiReader';
 const { ccclass, property } = _decorator;
 
 @ccclass('HomeController')
 export class HomeController extends Component {
-    start() {
 
+
+    start() {
+        console.log(window);
     }
 
     update(deltaTime: number) {
@@ -14,10 +17,7 @@ export class HomeController extends Component {
     //#region callbacks
 
     public onTouch_Test() {
-
     }
 
     //#endregion
 }
-
-

@@ -1,0 +1,44 @@
+{
+  "__type__": "cc.Material",
+  "_name": "FaceMaterial",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "facial-blend-shapes-effect-uuid"
+  },
+  "_techIdx": 0,
+  "_defines": [
+    {}
+  ],
+  "_states": [
+    {
+      "rasterizerState": {},
+      "depthStencilState": {},
+      "blendState": {
+        "targets": [
+          {}
+        ]
+      }
+    }
+  ],
+  "_props": [
+    {
+      "mainTexture": {
+        "__uuid__": "face-texture-uuid"
+      },
+      "mainColor": {
+        "__type__": "cc.Color",
+        "r": 255,
+        "g": 255,
+        "b": 255,
+        "a": 255
+      },
+      "blendShape_eyeBrowUp": 0,
+      "blendShape_eyeBrowDown": 0,
+      "blendShape_eyeClose": 0,
+      "blendShape_mouthOpen": 0,
+      "blendShape_mouthSmile": 0,
+      "blendShape_mouthFrown": 0
+    }
+  ]
+} 

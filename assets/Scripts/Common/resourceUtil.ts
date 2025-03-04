@@ -55,20 +55,6 @@ export class resourceUtil {
         })
     }
 
-    public static loadIslandRes(modulePath: string) {
-        return new Promise((resolve, reject) => {
-            this.loadRes(`prefab/island/${modulePath}`, Prefab, (err: any, prefab: Prefab) => {
-                if (err) {
-                    console.error('loadIslandRes failed', modulePath);
-                    reject && reject();
-                    return;
-                }
-
-                resolve && resolve(prefab);
-            })
-        })
-    }
-
     /**
      * @param path 
      * @param arrName 

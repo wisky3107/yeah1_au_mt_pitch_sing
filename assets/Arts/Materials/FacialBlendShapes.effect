@@ -1,0 +1,136 @@
+// Effect Syntax Guide: https://docs.cocos.com/creator/manual/en/shader/
+
+CCEffect %{
+  techniques:
+  - name: opaque
+    passes:
+    - vert: standard-vs
+      frag: standard-fs
+      properties: &props
+        mainTexture:    { value: white }
+        mainColor:      { value: [1, 1, 1, 1], editor: { type: color } }
+        
+        # Blend shape weights for facial expressions
+        blendShape_eyeBrowUp:    { value: 0.0, target: params.x }
+        blendShape_eyeBrowDown:  { value: 0.0, target: params.y }
+        blendShape_eyeClose:     { value: 0.0, target: params.z }
+        blendShape_mouthOpen:    { value: 0.0, target: params.w }
+        blendShape_mouthSmile:   { value: 0.0, target: params2.x }
+        blendShape_mouthFrown:   { value: 0.0, target: params2.y }
+      
+      migrations: &migs
+        properties:
+          mainColor:    { formerlySerializedAs: color }
+  - name: transparent
+    passes:
+    - vert: standard-vs
+      frag: standard-fs
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendSrcAlpha: src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      properties: *props
+      migrations: *migs
+}%
+
+CCProgram standard-vs %{
+  precision highp float;
+  #include <cc-global>
+  #include <cc-local>
+  
+  in vec3 a_position;
+  in vec3 a_normal;
+  in vec2 a_texCoord;
+  
+  // Blend shape targets (morph targets)
+  in vec3 a_blendShapeEyeBrowUp;
+  in vec3 a_blendShapeEyeBrowDown;
+  in vec3 a_blendShapeEyeClose;
+  in vec3 a_blendShapeMouthOpen;
+  in vec3 a_blendShapeMouthSmile;
+  in vec3 a_blendShapeMouthFrown;
+  
+  // Blend shape normals
+  in vec3 a_blendShapeEyeBrowUpNormal;
+  in vec3 a_blendShapeEyeBrowDownNormal;
+  in vec3 a_blendShapeEyeCloseNormal;
+  in vec3 a_blendShapeMouthOpenNormal;
+  in vec3 a_blendShapeMouthSmileNormal;
+  in vec3 a_blendShapeMouthFrownNormal;
+  
+  out vec2 v_uv;
+  out vec3 v_normal;
+  
+  uniform StandardVS {
+    vec4 params;
+    vec4 params2;
+  };
+  
+  void main() {
+    // Get blend shape weights
+    float eyeBrowUpWeight = params.x;
+    float eyeBrowDownWeight = params.y;
+    float eyeCloseWeight = params.z;
+    float mouthOpenWeight = params.w;
+    float mouthSmileWeight = params2.x;
+    float mouthFrownWeight = params2.y;
+    
+    // Apply blend shapes to position
+    vec3 position = a_position;
+    position += a_blendShapeEyeBrowUp * eyeBrowUpWeight;
+    position += a_blendShapeEyeBrowDown * eyeBrowDownWeight;
+    position += a_blendShapeEyeClose * eyeCloseWeight;
+    position += a_blendShapeMouthOpen * mouthOpenWeight;
+    position += a_blendShapeMouthSmile * mouthSmileWeight;
+    position += a_blendShapeMouthFrown * mouthFrownWeight;
+    
+    // Apply blend shapes to normal
+    vec3 normal = a_normal;
+    normal += a_blendShapeEyeBrowUpNormal * eyeBrowUpWeight;
+    normal += a_blendShapeEyeBrowDownNormal * eyeBrowDownWeight;
+    normal += a_blendShapeEyeCloseNormal * eyeCloseWeight;
+    normal += a_blendShapeMouthOpenNormal * mouthOpenWeight;
+    normal += a_blendShapeMouthSmileNormal * mouthSmileWeight;
+    normal += a_blendShapeMouthFrownNormal * mouthFrownWeight;
+    normal = normalize(normal);
+    
+    // Pass to fragment shader
+    v_uv = a_texCoord;
+    v_normal = normal;
+    
+    // Transform position
+    vec4 worldPos = cc_matWorld * vec4(position, 1.0);
+    gl_Position = cc_matViewProj * worldPos;
+  }
+}%
+
+CCProgram standard-fs %{
+  precision highp float;
+  #include <cc-global>
+  
+  in vec2 v_uv;
+  in vec3 v_normal;
+  
+  uniform sampler2D mainTexture;
+  
+  uniform StandardFS {
+    vec4 mainColor;
+  };
+  
+  void main() {
+    vec4 color = texture(mainTexture, v_uv) * mainColor;
+    
+    // Simple lighting calculation
+    vec3 normal = normalize(v_normal);
+    vec3 lightDir = normalize(vec3(0.5, 0.5, 1.0));
+    float diffuse = max(dot(normal, lightDir), 0.0);
+    
+    // Apply lighting
+    vec3 finalColor = color.rgb * (0.3 + 0.7 * diffuse);
+    
+    gl_FragColor = vec4(finalColor, color.a);
+  }
+}% 
