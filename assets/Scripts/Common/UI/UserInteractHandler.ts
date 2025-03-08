@@ -101,7 +101,7 @@ export class UserInteractHandler extends Component {
             let weight = -0.01;
             dispatchEvent.data = (scale) * weight;
             this.dispatchEvent(dispatchEvent);
-            this.isTouchMoveTrigger = true;
+            this.isTouchMoveTrigger= true;
         }
         else if (event.getTouches().length === 1) {
             const currentTouchPos = event.getTouches()[0].getLocation();

@@ -47,6 +47,7 @@ export class PoolManager {
 
         node.parent = parent;
         node.active = true;
+        node.name = name;
         return node;
     }
 

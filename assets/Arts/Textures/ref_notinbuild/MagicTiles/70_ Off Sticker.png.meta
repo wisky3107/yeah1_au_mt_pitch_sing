@@ -1,0 +1,134 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": true,
+  "uuid": "f274eb07-d0ea-401d-b9a6-97014c80073e",
+  "files": [
+    ".json",
+    ".png"
+  ],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "f274eb07-d0ea-401d-b9a6-97014c80073e@6c48a",
+      "displayName": "70_ Off Sticker",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "clamp-to-edge",
+        "wrapModeT": "clamp-to-edge",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "f274eb07-d0ea-401d-b9a6-97014c80073e",
+        "visible": false
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9941": {
+      "importer": "sprite-frame",
+      "uuid": "f274eb07-d0ea-401d-b9a6-97014c80073e@f9941",
+      "displayName": "70_ Off Sticker",
+      "id": "f9941",
+      "name": "spriteFrame",
+      "userData": {
+        "trimType": "auto",
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 4,
+        "trimY": 4,
+        "width": 168,
+        "height": 168,
+        "rawWidth": 176,
+        "rawHeight": 176,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [
+            -84,
+            -84,
+            0,
+            84,
+            -84,
+            0,
+            -84,
+            84,
+            0,
+            84,
+            84,
+            0
+          ],
+          "indexes": [
+            0,
+            1,
+            2,
+            2,
+            1,
+            3
+          ],
+          "uv": [
+            4,
+            172,
+            172,
+            172,
+            4,
+            4,
+            172,
+            4
+          ],
+          "nuv": [
+            0.022727272727272728,
+            0.022727272727272728,
+            0.9772727272727273,
+            0.022727272727272728,
+            0.022727272727272728,
+            0.9772727272727273,
+            0.9772727272727273,
+            0.9772727272727273
+          ],
+          "minPos": [
+            -84,
+            -84,
+            0
+          ],
+          "maxPos": [
+            84,
+            84,
+            0
+          ]
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "f274eb07-d0ea-401d-b9a6-97014c80073e@6c48a",
+        "atlasUuid": ""
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "hasAlpha": true,
+    "type": "sprite-frame",
+    "fixAlphaTransparencyArtifacts": false,
+    "redirect": "f274eb07-d0ea-401d-b9a6-97014c80073e@6c48a"
+  }
+}

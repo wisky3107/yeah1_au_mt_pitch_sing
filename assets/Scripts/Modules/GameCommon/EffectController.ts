@@ -11,7 +11,7 @@ export class EffectController extends Component {
     //#region singletons
     public static instance: EffectController = null;
     //#endregion
-    preloadPrefabNames: string[] = [GameConstant.EFFECT.EXPLODE, GameConstant.EFFECT.HIT_WATER];
+    preloadPrefabNames: string[] = [];
 
     protected onLoad(): void {
         EffectController.instance = this;

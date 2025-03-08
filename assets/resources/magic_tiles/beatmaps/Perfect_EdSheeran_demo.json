@@ -1,0 +1,19 @@
+{
+    "metadata": {
+        "id": "perfect_edsheeran_demo",
+        "title": "Perfect",
+        "artist": "Ed Sheeran",
+        "bpm": 95,
+        "difficulty": 3,
+        "difficultyName": "Medium",
+        "level": 5,
+        "preview": {
+            "start": 60,
+            "end": 90
+        },
+        "audioPath": "magic_tiles/audios/Perfect_EdSheeran_demo",
+        "midiPath": "magic_tiles/midis/Perfect_EdSheeran_demo",
+        "backgroundImage": "magic_tiles/images/Perfect_EdSheeran_background",
+        "coverImage": "magic_tiles/images/Perfect_EdSheeran_cover"
+    }
+} 

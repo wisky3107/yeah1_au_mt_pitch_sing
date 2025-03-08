@@ -137,7 +137,7 @@ export class AudioManager {
                     return 0;
                 }
             })
-            .call(callback)
+            .call(() => callback?.())
             .start();
     }
 
