@@ -2,7 +2,6 @@ import { DEBUG } from "cc/env";
 import { APIFakeData, initFakeData } from "./APIFakeData";
 import { CurrentEnviroment, GameConstant } from "../Constant/Constants";
 import { UserModel } from "../Models/UserModel";
-import { ClientEvent } from "../Common/ClientEvent";
 
 class APIManager {
     private baseURL: string;

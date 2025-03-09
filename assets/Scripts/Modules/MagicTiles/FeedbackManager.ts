@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, Label, Vec3, Color, tween, instantiate, UIOpacity, Camera, Animation, animation, easing, Tween } from 'cc';
+import { _decorator, Component, Node, Prefab, Label, Vec3, Color, tween, instantiate, UIOpacity, Camera, Animation, animation, easing, Tween, ParticleSystem2D } from 'cc';
 import { HitRating } from './Tile';
 import { MagicTilesAudioManager } from './AudioManager';
 import { PoolManager } from '../../Common/poolManager';
@@ -42,6 +42,8 @@ export class FeedbackManager extends Component {
     })
     feedbackNodes: Node[] = [];
 
+    @property(ParticleSystem2D)
+    particleSystemPerfectFragments: ParticleSystem2D = null!;
     // Combo label
     @property(Label)
     comboLabel: Label = null!;
@@ -339,6 +341,7 @@ export class FeedbackManager extends Component {
                 prefab = this.perfectPrefab;
                 soundEffect = this.perfectSoundEffect;
                 this.showFeedback(FeedbackType.PERFECT);
+                this.particleSystemPerfectFragments.resetSystem();
                 break;
             case HitRating.GREAT:
                 prefab = this.greatPrefab;
@@ -419,7 +422,7 @@ export class FeedbackManager extends Component {
             }
             this.comboLabel.node.scale = new Vec3(0.0, 0.0, 0.0);
             this.comboTween = tween(this.comboLabel.node)
-                .to(0.2, { scale: new Vec3(1.2, 1.2, 1) })
+                .to(0.1, { scale: new Vec3(1.2, 1.2, 1) })
                 .delay(0.5)
                 .to(0.35, { scale: Vec3.ZERO }, { easing: easing.backIn })
                 .start();
