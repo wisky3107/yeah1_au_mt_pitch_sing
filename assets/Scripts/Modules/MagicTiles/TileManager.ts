@@ -612,6 +612,8 @@ export class TileManager extends Component {
                     // Store it for later release only if it was successfully tapped
                     if (hitRating !== HitRating.MISS) {
                         this.touchedTiles.set(laneIndex, tile);
+
+
                     }
                 }
             } else {

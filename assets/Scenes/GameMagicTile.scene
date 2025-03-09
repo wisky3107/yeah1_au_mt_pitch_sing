@@ -208,7 +208,7 @@
     "defaultScrollSpeed": 600,
     "laneWidth": 160,
     "maxPoolSize": 50,
-    "isAutoplay": true,
+    "isAutoplay": false,
     "missThreshold": -900,
     "_id": "45/xVxhHdOP68NnPrqbd+Q"
   },
