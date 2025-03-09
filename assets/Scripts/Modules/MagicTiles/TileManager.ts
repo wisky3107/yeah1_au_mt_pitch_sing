@@ -26,7 +26,7 @@ export class TileManager extends Component {
 
     // Tile spawn position (Y coordinate)
     @property
-    spawnPositionY: number = 800;
+    spawnPositionY: number = 1200;
 
     // Tile target position (Y coordinate - the hit zone)
     @property
@@ -38,7 +38,7 @@ export class TileManager extends Component {
 
     // How many seconds ahead to spawn tiles
     @property
-    lookAheadTime: number = 2.0;
+    lookAheadTime: number = 4.0;
 
     // Default scroll speed (pixels per second)s    
     @property
@@ -87,7 +87,7 @@ export class TileManager extends Component {
 
     // Track touched tiles
     private touchedTiles: Map<number, Tile> = new Map();
-    private minTileHeight: number = 350.0;
+    private minTileHeight: number = 400.0;
 
     // Add time tracking properties
     private lastAudioTimeCheck: number = 0;
@@ -95,12 +95,27 @@ export class TileManager extends Component {
     private audioTimeCheckInterval: number = 0.05; // Check every 50ms
     private timeSinceLastAudioCheck: number = 0;
 
-    // Track tiles by lane for faster lookups
-    private laneTiles: Map<number, Tile[]> = new Map();
+    // Replace Map with direct arrays for lane tiles
+    private laneArrays: Tile[][] = [];
 
     // Reusable Vector3 objects to minimize garbage collection
     private tempVec3: Vec3 = new Vec3();
     private lanePositionVec3: Vec3 = new Vec3();
+
+    // Use typed arrays for better performance and memory layout
+    private tilePositionsY: Float32Array | null = null;
+    private tileIndices: Map<Tile, number> = new Map();
+    private nextTileIndex: number = 0;
+
+    // Add properties for load balancing
+    private updateBudgetPerFrame: number = 20; // Maximum tiles to fully update per frame
+    private updateQueue: Tile[] = [];
+
+    // Add properties for performance monitoring
+    private fpsHistory: number[] = [];
+    private lastFrameTime: number = 0;
+    private frameCounter: number = 0;
+    private performanceLevel: 'high' | 'medium' | 'low' = 'high';
 
     /**
      * Initialize the TileManager with dependencies
@@ -163,6 +178,25 @@ export class TileManager extends Component {
             // Add to pool
             this.tilePool.push(tile);
         }
+
+        // Initialize typed arrays for position data
+        this.tilePositionsY = new Float32Array(this.maxPoolSize);
+        this.tileIndices = new Map();
+        this.nextTileIndex = 0;
+
+        // Initialize lane arrays
+        this.initLaneArrays();
+    }
+
+    /**
+     * Initialize lane arrays for faster lookups
+     */
+    private initLaneArrays() {
+        const laneCount = Math.max(4, this.laneContainers.length);
+        this.laneArrays = new Array(laneCount);
+        for (let i = 0; i < laneCount; i++) {
+            this.laneArrays[i] = [];
+        }
     }
 
     /**
@@ -191,12 +225,8 @@ export class TileManager extends Component {
         //init lands
         this.laneWidth = this.laneContainers[0].getComponent(UITransform)!.width;
 
-        // Initialize lane collections
-        for (let i = 0; i < this.laneContainers.length; i++) {
-            if (!this.laneTiles.has(i)) {
-                this.laneTiles.set(i, []);
-            }
-        }
+        // Initialize lane arrays
+        this.initLaneArrays();
     }
 
     /**
@@ -210,10 +240,10 @@ export class TileManager extends Component {
         this.activeTiles = [];
         this.touchedTiles.clear();
         
-        // Reset lane tiles collections
-        this.laneTiles.forEach((tiles, lane) => {
-            tiles.length = 0;
-        });
+        // Reset lane arrays
+        for (let i = 0; i < this.laneArrays.length; i++) {
+            this.laneArrays[i].length = 0;
+        }
 
         // Calculate optimal scroll speed based on note data
         this.calculateDynamicScrollSpeed();
@@ -226,6 +256,12 @@ export class TileManager extends Component {
             director.getScheduler().schedule(this.update, this, 0);
             this._updateScheduled = true;
         }
+
+        // Reset performance monitoring
+        this.fpsHistory = [];
+        this.lastFrameTime = Date.now();
+        this.frameCounter = 0;
+        this.performanceLevel = 'high';
     }
 
     /**
@@ -269,34 +305,66 @@ export class TileManager extends Component {
      * @param dt Delta time since last frame in seconds
      */
     update(dt: number) {
+        // Monitor performance regardless of game state
+        this.monitorPerformance(dt);
+        
         // Early return based on state
         if (this.gameState !== 'playing') return;
 
-        // Update time tracking
-        this.timeSinceLastAudioCheck += dt;
-        
-        // Only check actual audio time periodically
-        if (this.timeSinceLastAudioCheck >= this.audioTimeCheckInterval) {
-            this.cachedAudioTime = MagicTilesAudioManager.instance.getAudioTime();
-            this.timeSinceLastAudioCheck = 0;
+        // Use the optimized time estimation from AudioManager
+        if (this.audioManager) {
+            this.gameTime = this.audioManager.getEstimatedAudioTime();
         } else {
-            // Estimate time between checks
-            this.cachedAudioTime += dt;
+            // Fallback for backward compatibility
+            this.timeSinceLastAudioCheck += dt;
+            
+            // Only check actual audio time periodically
+            if (this.timeSinceLastAudioCheck >= this.audioTimeCheckInterval) {
+                this.cachedAudioTime = MagicTilesAudioManager.instance.getAudioTime();
+                this.timeSinceLastAudioCheck = 0;
+            } else {
+                // Estimate time between checks
+                this.cachedAudioTime += dt;
+            }
+            
+            // Use cached time for all operations
+            this.gameTime = this.cachedAudioTime;
         }
         
-        // Use cached time for all operations
-        this.gameTime = this.cachedAudioTime;
-        
-        // Throttle UI updates to reduce overhead
-        if (this.timeSinceLastAudioCheck === 0) {
+        // Throttle UI updates to reduce overhead - update every ~3 frames (50ms)
+        if (Math.random() < 0.03) {
             MTUIManager.instance.updateSongTimeDisplay(this.gameTime);
         }
 
         // Spawn tiles that should be visible
         this.spawnTiles();
 
-        // Update active tiles
-        this.updateActiveTiles();
+        // Update tile priorities based on distance from target
+        // this.updateTilePriorities();
+
+        // Use balanced update for better performance
+        this.balancedUpdateActiveTiles();
+    }
+
+    /**
+     * Update tile update priorities based on distance from target position
+     */
+    private updateTilePriorities() {
+        for (const tile of this.activeTiles) {
+            const distanceToTarget = Math.abs(tile.node.position.y - this.targetPositionY);
+            
+            // Tiles far from the target position update less frequently
+            // Closer tiles update every frame for maximum precision
+            let priority = 0; // Default: update every frame
+            
+           if (distanceToTarget > 1500) {
+                priority = 2; // Update every 3rd frame
+            } else if (distanceToTarget > 1000) {
+                priority = 1; // Update every other frame
+            }
+            
+            tile.setUpdatePriority(priority);
+        }
     }
 
     /**
@@ -362,6 +430,12 @@ export class TileManager extends Component {
             this.minTileHeight
         );
 
+        // Assign an index in the position arrays
+        const tileIndex = this.nextTileIndex % this.maxPoolSize;
+        this.tileIndices.set(tile, tileIndex);
+        this.tilePositionsY[tileIndex] = this.spawnPositionY;
+        this.nextTileIndex++;
+        
         // Position the tile using our reusable vector
         this.updateTilePosition(tile, this.spawnPositionY);
 
@@ -399,48 +473,102 @@ export class TileManager extends Component {
         // Add to active tiles
         this.activeTiles.push(tile);
         
-        // Also add to lane-specific collection
-        if (!this.laneTiles.has(lane)) {
-            this.laneTiles.set(lane, []);
+        // Add to lane array for faster lookups
+        if (lane >= 0 && lane < this.laneArrays.length) {
+            this.laneArrays[lane].push(tile);
         }
-        this.laneTiles.get(lane)!.push(tile);
     }
 
     /**
-     * Update all active tiles
+     * Update active tiles with load balancing to maintain consistent FPS
      */
-    private updateActiveTiles() {
+    private balancedUpdateActiveTiles() {
         // Check for tiles that need to be auto-played
         if (this.isAutoplay) {
             this.handleAutoplay();
         }
-
-        // Check for tiles that have reached the bottom and should be missed
-        // Use in-place removal pattern for better performance
+        
+        // Process any queued tiles first
+        if (this.updateQueue.length > 0) {
+            const tilesToProcess = Math.min(this.updateBudgetPerFrame / 2, this.updateQueue.length);
+            for (let i = 0; i < tilesToProcess; i++) {
+                const tile = this.updateQueue.shift();
+                this.processTileUpdate(tile);
+            }
+        }
+        
+        // Queue updates if we have too many active tiles
+        if (this.activeTiles.length > this.updateBudgetPerFrame) {
+            // Sort by priority (closest to target position gets processed first)
+            this.activeTiles.sort((a, b) => {
+                const distA = Math.abs(a.node.position.y - this.targetPositionY);
+                const distB = Math.abs(b.node.position.y - this.targetPositionY);
+                return distA - distB;
+            });
+            
+            // Process high priority tiles immediately
+            for (let i = 0; i < this.updateBudgetPerFrame; i++) {
+                if (i < this.activeTiles.length) {
+                    this.processTileUpdate(this.activeTiles[i]);
+                }
+            }
+            
+            // Queue remaining tiles for next frames if not already in queue
+            for (let i = this.updateBudgetPerFrame; i < this.activeTiles.length; i++) {
+                if (i < this.activeTiles.length && !this.isInUpdateQueue(this.activeTiles[i])) {
+                    this.updateQueue.push(this.activeTiles[i]);
+                }
+            }
+        } else {
+            // Normal update for all tiles
+            for (const tile of this.activeTiles) {
+                this.processTileUpdate(tile);
+            }
+        }
+        
+        // Remove tiles that should be recycled
+        this.checkRecycleTiles();
+    }
+    
+    /**
+     * Process a single tile update
+     */
+    private processTileUpdate(tile: Tile) {
+        // Check for missed tiles
+        if (tile.getStatus() === TileStatus.ACTIVE && tile.node.position.y <= this.missThreshold) {
+            // Mark the tile as missed
+            tile.miss();
+        }
+    }
+    
+    /**
+     * Check for tiles that need to be recycled
+     */
+    private checkRecycleTiles() {
         let i = 0;
         while (i < this.activeTiles.length) {
             const tile = this.activeTiles[i];
             
-            // Check for missed tiles
-            if (tile.getStatus() === TileStatus.ACTIVE && tile.node.position.y <= this.missThreshold) {
-                // Mark the tile as missed
-                tile.miss();
-            }
-            
-            // Check if the tile has passed the recycle position - return to pool regardless of state
+            // Check if the tile has passed the recycle position
             if (tile.node.position.y + tile.getTileHeight() <= this.recyclePositionY) {
                 // For HOLD notes that are currently pressed, release them before recycling
                 if (tile.getStatus() === TileStatus.HOLDING && tile.isLongPressType()) {
                     // Force release of the hold note
                     tile.release(this.gameTime);
                 }
-
-                // Return tiles that have gone past the recycle position to the pool
+                
+                // Return the tile to the pool
                 this.returnTileToPool(tile);
                 
                 // Remove from active tiles without creating a new array
                 this.activeTiles[i] = this.activeTiles[this.activeTiles.length - 1];
                 this.activeTiles.pop();
+                
+                // Also remove from update queue if present
+                const queueIndex = this.updateQueue.indexOf(tile);
+                if (queueIndex !== -1) {
+                    this.updateQueue.splice(queueIndex, 1);
+                }
             } else {
                 // Only increment if we didn't remove an item
                 i++;
@@ -585,16 +713,19 @@ export class TileManager extends Component {
         // Add back to pool
         this.tilePool.push(tile);
 
-        // Remove from lane-specific collection
-        const laneTiles = this.laneTiles.get(laneIndex);
-        if (laneTiles) {
-            const index = laneTiles.indexOf(tile);
+        // Remove from lane array
+        if (laneIndex >= 0 && laneIndex < this.laneArrays.length) {
+            const laneArray = this.laneArrays[laneIndex];
+            const index = laneArray.indexOf(tile);
             if (index !== -1) {
                 // Fast removal without creating a new array
-                laneTiles[index] = laneTiles[laneTiles.length - 1];
-                laneTiles.pop();
+                laneArray[index] = laneArray[laneArray.length - 1];
+                laneArray.pop();
             }
         }
+
+        // Remove from position tracking
+        this.tileIndices.delete(tile);
     }
 
     /**
@@ -615,8 +746,10 @@ export class TileManager extends Component {
             }
         }
         
-        // Get tiles only for the specific lane
-        const laneTiles = this.laneTiles.get(laneIndex) || [];
+        // Get tiles only for the specific lane using our optimized array
+        const laneTiles = (laneIndex >= 0 && laneIndex < this.laneArrays.length) 
+            ? this.laneArrays[laneIndex] 
+            : [];
         
         // Find hitable tiles in this lane
         const hitableTiles = laneTiles.filter(tile => 
@@ -691,6 +824,7 @@ export class TileManager extends Component {
 
     /**
      * Calculate optimal scroll speed based on note density and timing
+     * Optimized version with reduced math operations
      */
     private calculateDynamicScrollSpeed() {
         // Get all notes from the beatmap
@@ -701,68 +835,165 @@ export class TileManager extends Component {
             return;
         }
 
+        // Precalculate constants
+        const minSpeed = this.defaultScrollSpeed * 0.5;  // Don't go below 50% of default
+        const maxSpeed = this.defaultScrollSpeed * 1.5;  // Don't go above 150% of default
+        
         // Sort notes by time (they should already be sorted, but just to be safe)
-        const sortedNotes = [...notes].sort((a, b) => a.time - b.time);
+        // We'll avoid sorting if the notes already appear to be in order
+        let isSorted = true;
+        for (let i = 1; i < notes.length; i++) {
+            if (notes[i].time < notes[i-1].time) {
+                isSorted = false;
+                break;
+            }
+        }
+        
+        // Only sort if necessary
+        const sortedNotes = isSorted ? notes : [...notes].sort((a, b) => a.time - b.time);
 
-        // Find the minimum time gap between consecutive notes
+        // Find the minimum time gap between consecutive notes more efficiently
         let minTimeGap = Number.MAX_VALUE;
-        let averageTimeGap = 0;
+        let totalTimeGap = 0;
         let totalGaps = 0;
         let maxNoteDuration = 0;
 
+        // Single loop to calculate all metrics
         for (let i = 1; i < sortedNotes.length; i++) {
             const timeGap = sortedNotes[i].time - sortedNotes[i - 1].time;
             if (timeGap > 0) {
-                minTimeGap = Math.min(minTimeGap, timeGap);
-                averageTimeGap += timeGap;
+                if (timeGap < minTimeGap) {
+                    minTimeGap = timeGap;
+                }
+                totalTimeGap += timeGap;
                 totalGaps++;
             }
 
-            // Track the longest note duration for hol d notes
-            if (sortedNotes[i].duration > 0) {
-                maxNoteDuration = Math.max(maxNoteDuration, sortedNotes[i].duration);
+            // Track the longest note duration for hold notes
+            const duration = sortedNotes[i].duration;
+            if (duration > maxNoteDuration) {
+                maxNoteDuration = duration;
             }
         }
 
         // Calculate average time gap
-        averageTimeGap = totalGaps > 0 ? averageTimeGap / totalGaps : 1.0;
+        const averageTimeGap = totalGaps > 0 ? totalTimeGap / totalGaps : 1.0;
 
         // If we couldn't find a valid minimum gap, use default
         if (minTimeGap === Number.MAX_VALUE) {
             minTimeGap = 1.0;
         }
 
-        // Calculate a base speed factor from the minimum time gap
-        // The shorter the gap, the slower we want the tiles to move
-        // This gives players more time to react to dense patterns
-        const speedFactor = Math.min(1.0, Math.sqrt(minTimeGap * 2));
+        // Calculate speed factors without expensive square roots
+        // Approximate sqrt(x) with a faster but still reasonable calculation
+        // We'll use a simple linear mapping instead of sqrt for better performance
+        const speedFactor = Math.min(1.0, minTimeGap * 0.7 + 0.3);
+        const avgSpeedFactor = Math.min(1.0, averageTimeGap * 0.5 + 0.5);
 
-        // Also factor in the average gap to avoid extreme speeds for outliers
-        const avgSpeedFactor = Math.min(1.0, Math.sqrt(averageTimeGap));
-
-        // If we have hold notes, consider their duration in the calculation
-        // Longer hold notes should generally move slower for better playability
+        // For hold notes, calculate a simple duration factor
         let durationFactor = 1.0;
         if (maxNoteDuration > 0) {
-            // Reduce speed more for extremely long hold notes, but cap the reduction
+            // Use simple linear scaling, capped at sensible values
             durationFactor = Math.max(0.7, 1.0 - (maxNoteDuration * 0.1));
         }
 
-        // Combine all factors, with appropriate weights
+        // Combine all factors with appropriate weights
         const combinedFactor = (speedFactor * 0.6) + (avgSpeedFactor * 0.25) + (durationFactor * 0.15);
 
         // Scale the default speed by our factor, with limits
-        const minSpeed = this.defaultScrollSpeed * 0.5;  // Don't go below 50% of default
-        const maxSpeed = this.defaultScrollSpeed * 1.5;  // Don't go above 150% of default
-
-        const calculatedSpeed = Math.max(minSpeed, Math.min(maxSpeed, this.defaultScrollSpeed * combinedFactor));
+        const calculatedSpeed = minSpeed + (maxSpeed - minSpeed) * combinedFactor;
 
         // Use setScrollSpeed to ensure consistent behavior
-        // this.setScrollSpeed(calculatedSpeed * 3.0);
         this.setScrollSpeed(calculatedSpeed * 4.0);
 
-        console.log(`Dynamic scroll speed calculated: ${this.scrollSpeed.toFixed(1)} px/s (min gap: ${minTimeGap.toFixed(3)}s, avg gap: ${averageTimeGap.toFixed(3)}s, max duration: ${maxNoteDuration.toFixed(3)}s)`);
+        // Log with reduced string operations
+        if (this.performanceLevel === 'high') {
+            console.log(`Dynamic scroll speed: ${Math.round(this.scrollSpeed)} px/s`);
+        }
     }
 
+    /**
+     * Update tile positions in batch using the typed arrays
+     */
+    private updateTilePositionsFromArray() {
+        for (const tile of this.activeTiles) {
+            const index = this.tileIndices.get(tile);
+            if (index !== undefined) {
+                // Update node position from the typed array
+                this.updateTilePosition(tile, this.tilePositionsY[index]);
+            }
+        }
+    }
 
+    /**
+     * Check if a tile is already in the update queue
+     */
+    private isInUpdateQueue(tile: Tile): boolean {
+        return this.updateQueue.findIndex(t => t === tile) !== -1;
+    }
+
+    /**
+     * Monitor performance and adjust settings accordingly
+     */
+    private monitorPerformance(dt: number) {
+        this.frameCounter++;
+        
+        // Calculate FPS every second
+        const now = Date.now();
+        if (now - this.lastFrameTime > 1000) {
+            const fps = this.frameCounter;
+            this.fpsHistory.push(fps);
+            
+            // Keep only the last 5 samples
+            if (this.fpsHistory.length > 5) {
+                this.fpsHistory.shift();
+            }
+            
+            // Adjust performance level based on average FPS
+            const avgFps = this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length;
+            this.adjustPerformanceSettings(avgFps);
+            
+            // Reset counters
+            this.frameCounter = 0;
+            this.lastFrameTime = now;
+        }
+    }
+    
+    /**
+     * Adjust game settings based on performance level
+     */
+    private adjustPerformanceSettings(fps: number) {
+        const oldLevel = this.performanceLevel;
+        
+        // Determine performance level
+        if (fps < 30) {
+            this.performanceLevel = 'low';
+        } else if (fps < 50) {
+            this.performanceLevel = 'medium';
+        } else {
+            this.performanceLevel = 'high';
+        }
+        
+        // Only apply changes if performance level changed
+        if (oldLevel !== this.performanceLevel) {
+            console.log(`Performance level changed: ${oldLevel} -> ${this.performanceLevel} (Average FPS: ${fps.toFixed(1)})`);
+            
+            switch (this.performanceLevel) {
+                case 'low':
+                    this.updateBudgetPerFrame = 10;
+                    this.audioTimeCheckInterval = 60; // Check audio time less often
+                    break;
+                    
+                case 'medium':
+                    this.updateBudgetPerFrame = 15;
+                    this.audioTimeCheckInterval = 45;
+                    break;
+                    
+                case 'high':
+                    this.updateBudgetPerFrame = 20;
+                    this.audioTimeCheckInterval = 30;
+                    break;
+            }
+        }
+    }
 }

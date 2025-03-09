@@ -95,6 +95,10 @@ export class Tile extends Component {
     // Reusable Vec3 object to reduce allocations
     private tempVec3: Vec3 = new Vec3();
 
+    // Add properties for frame skipping
+    private updatePriority: number = 0; // 0=every frame, 1=every other frame, etc.
+    private frameCounter: number = 0;
+
     onLoad() {
         // Initialize Sprite and Transform references if not set in the inspector
         if (!this.background) {
@@ -211,9 +215,23 @@ export class Tile extends Component {
     }
     
     /**
+     * Set the update priority based on distance from target
+     * @param priority 0=update every frame, 1=every other frame, etc.
+     */
+    setUpdatePriority(priority: number) {
+        this.updatePriority = priority;
+    }
+    
+    /**
      * Built-in update method that will be called every frame
      */
     update(dt: number) {
+        // Skip updates based on priority
+        if (this.updatePriority > 0) {
+            this.frameCounter = (this.frameCounter + 1) % (this.updatePriority + 1);
+            if (this.frameCounter !== 0) return;
+        }
+        
         // Handle direct movement if active
         if (this.isMovementActive) {
             this.updateTileMovement();
@@ -222,8 +240,9 @@ export class Tile extends Component {
     
     /**
      * Update the tile position directly
+     * @returns The calculated new Y position
      */
-    private updateTileMovement() {
+    private updateTileMovement(): number {
         // Get current game time from audio manager
         const currentTime = this.calculateCurrentTime();
         const elapsedTime = currentTime - this.movementStartTime;
@@ -240,6 +259,8 @@ export class Tile extends Component {
         if (progress >= 1.0) {
             this.isMovementActive = false;
         }
+        
+        return newY;
     }
     
     /**

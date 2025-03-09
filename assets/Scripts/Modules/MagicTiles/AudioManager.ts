@@ -41,6 +41,12 @@ export class MagicTilesAudioManager {
     // Timer for tracking audio playback position
     private _playbackTimer: number = 0;
     
+    // Add properties for time estimation
+    private audioTimeEstimation: number = 0;
+    private lastSystemTime: number = 0;
+    private _timeCheckCounter: number = 0;
+    private _timeCheckInterval: number = 30; // Check actual time every 30 frames
+    
     constructor() {
         this.init();
     }
@@ -49,7 +55,6 @@ export class MagicTilesAudioManager {
         // Create a dedicated node for beatmap audio
         const beatmapNode = new Node('beatmap-audio');
         director.getScene()!.addChild(beatmapNode);
-        game.addPersistRootNode(beatmapNode);
         
         // Create a dedicated audio source for beatmaps
         this._beatmapAudioSource = beatmapNode.addComponent(AudioSource);
@@ -132,6 +137,41 @@ export class MagicTilesAudioManager {
         // this.startBeatTracking();
     }
 
+    /**
+     * Get estimated audio time with minimal overhead
+     * Uses time estimation between actual audio time checks
+     */
+    public getEstimatedAudioTime(): number {
+        const currentTime = Date.now() / 1000;
+        
+        // Initialize if first call
+        if (!this.lastSystemTime) {
+            this.lastSystemTime = currentTime;
+            this.audioTimeEstimation = this._beatmapAudioSource.currentTime;
+            return this.audioTimeEstimation;
+        }
+        
+        // Calculate time elapsed since last check
+        const deltaTime = currentTime - this.lastSystemTime;
+        
+        // Update estimation
+        this.audioTimeEstimation += deltaTime;
+        
+        // Periodically correct estimation (less frequently)
+        if (this._timeCheckCounter++ % this._timeCheckInterval === 0) {
+            const actualTime = this._beatmapAudioSource.currentTime;
+            // Smoothly adjust to actual time
+            this.audioTimeEstimation = 0.95 * this.audioTimeEstimation + 0.05 * actualTime;
+        }
+        
+        this.lastSystemTime = currentTime;
+        return this.audioTimeEstimation;
+    }
+    
+    /**
+     * Get the current audio time
+     * This is the original method, but we now recommend using getEstimatedAudioTime()
+     */
     public getAudioTime(): number {
         return this._beatmapAudioSource.currentTime;
     }
