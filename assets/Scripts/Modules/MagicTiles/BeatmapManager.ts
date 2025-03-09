@@ -142,21 +142,72 @@ export class BeatmapManager {
         return beatmap;
     }
 
+    /**
+     * Update the notes data for a beatmap while minimizing object creation
+     * @param id The beatmap ID
+     * @param notes The raw note data
+     * @returns The updated beatmap or null if not found
+     */
     public updateNotes(id: string, notes: TrackNoteInfo[]): Beatmap {
         if (this.beatmaps.has(id)) {
             const beatmap = this.beatmaps.get(id)!;
-            beatmap.notes = notes.map(node => {
-                return {
-                    midi: node.midi,
-                    time: node.time,
-                    lane: this.getLandById(node.midi),
-                    duration: node.duration,
-                    durationTicks: node.durationTicks,
-                    velocity: node.velocity,
-                    type: this.getNoteType(node)
+            
+            // Prepare to reuse existing notes array when possible
+            const existingNotes = beatmap.notes;
+            const newLength = notes.length;
+            
+            // If we already have an array with sufficient capacity, reuse it
+            if (existingNotes.length >= newLength) {
+                // Reuse existing array and just update values
+                for (let i = 0; i < newLength; i++) {
+                    const node = notes[i];
+                    existingNotes[i].midi = node.midi;
+                    existingNotes[i].time = node.time;
+                    existingNotes[i].lane = this.getLandById(node.midi);
+                    existingNotes[i].duration = node.duration;
+                    existingNotes[i].durationTicks = node.durationTicks;
+                    existingNotes[i].velocity = node.velocity;
+                    existingNotes[i].type = this.getNoteType(node);
                 }
-            });
+                // If the new array is smaller, truncate the existing one
+                if (existingNotes.length > newLength) {
+                    existingNotes.length = newLength;
+                }
+            } else {
+                // Need to create a new array
+                beatmap.notes = new Array(newLength);
+                
+                // Use existing objects where possible
+                for (let i = 0; i < newLength; i++) {
+                    const node = notes[i];
+                    if (i < existingNotes.length) {
+                        // Reuse existing note object
+                        beatmap.notes[i] = existingNotes[i];
+                        beatmap.notes[i].midi = node.midi;
+                        beatmap.notes[i].time = node.time;
+                        beatmap.notes[i].lane = this.getLandById(node.midi);
+                        beatmap.notes[i].duration = node.duration;
+                        beatmap.notes[i].durationTicks = node.durationTicks;
+                        beatmap.notes[i].velocity = node.velocity;
+                        beatmap.notes[i].type = this.getNoteType(node);
+                    } else {
+                        // Create new note object
+                        beatmap.notes[i] = {
+                            midi: node.midi,
+                            time: node.time,
+                            lane: this.getLandById(node.midi),
+                            duration: node.duration,
+                            durationTicks: node.durationTicks,
+                            velocity: node.velocity,
+                            type: this.getNoteType(node)
+                        };
+                    }
+                }
+            }
+            
+            // Sort in place with a more efficient implementation if needed
             beatmap.notes.sort((a, b) => a.time - b.time);
+            
             this.beatmaps.set(id, beatmap);
             return beatmap;
         }

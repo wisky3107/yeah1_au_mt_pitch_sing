@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Sprite, Color, tween, Vec3, UIOpacity, UITransform, Size } from 'cc';
+import { _decorator, Component, Node, Sprite, Color, tween, Vec3, UIOpacity, UITransform, Size, director } from 'cc';
 import { NoteType, TrackNoteInfo } from './MTDefines';
 
 const { ccclass, property } = _decorator;
@@ -85,6 +85,15 @@ export class Tile extends Component {
 
     private holdRating: HitRating = HitRating.MISS;
 
+    // New properties for direct movement
+    private movementStartTime: number = 0;
+    private movementDuration: number = 0;
+    private movementStartY: number = 0;
+    private movementTargetY: number = 0;
+    private isMovementActive: boolean = false;
+    
+    // Reusable Vec3 object to reduce allocations
+    private tempVec3: Vec3 = new Vec3();
 
     onLoad() {
         // Initialize Sprite and Transform references if not set in the inspector
@@ -176,53 +185,71 @@ export class Tile extends Component {
     }
 
     /**
-     * Start the tile's movement
+     * Start the tile's movement using direct position updates
      * @param duration How long the movement should take in seconds
+     * @param gameTime Current game time
      */
-    startMovement(duration: number, gametime: number) {
+    startMovement(duration: number, gameTime: number) {
         this.status = TileStatus.ACTIVE;
         this.spawnTime = Date.now() / 1000;
-        console.log("Start movement", this.noteData.time, gametime, gametime - this.noteData.time);
-
-        // Calculate a position that's beyond the target position based on the increased duration
-        // This will make the tile continue moving past the target position
+        
+        // Calculate a position that's beyond the target position
         const targetPosY = this.targetY - ((duration * this.scrollSpeed) - (this.startY - this.targetY));
-
-        // Create and start the movement tween
-        this.moveTween = tween(this.node)
-            .to(duration, { position: new Vec3(0, targetPosY, 0) }, {
-                easing: 'linear',
-                // No onComplete callback - TileManager will handle miss detection
-            })
-            .start();
-    }
-
-    /**
-     * Update the tile's movement when scroll speed changes
-     * @param newDuration New duration for completing the movement
-     * @param progressPct Current progress percentage (0-1)
-     */
-    updateMovement(newDuration: number, progressPct: number) {
-        // If we have an active movement tween, stop it
+        
+        // Store movement parameters for direct updates
+        this.movementStartTime = gameTime;
+        this.movementDuration = duration;
+        this.movementStartY = this.node.position.y;
+        this.movementTargetY = targetPosY;
+        this.isMovementActive = true;
+        
+        // Stop any existing tween
         if (this.moveTween) {
             this.moveTween.stop();
+            this.moveTween = null;
         }
-
-        // If the tile is already hit or missed, no need to update
-        if (this.status !== TileStatus.ACTIVE && this.status !== TileStatus.HOLDING) {
-            return;
+    }
+    
+    /**
+     * Built-in update method that will be called every frame
+     */
+    update(dt: number) {
+        // Handle direct movement if active
+        if (this.isMovementActive) {
+            this.updateTileMovement();
         }
-
-        // Calculate a position that's beyond the target position based on the increased duration
-        const targetPosY = this.targetY - ((newDuration * this.scrollSpeed) - (this.startY - this.targetY));
-
-        // Create and start a new tween from the current position to the target
-        this.moveTween = tween(this.node)
-            .to(newDuration, { position: new Vec3(0, targetPosY, 0) }, {
-                easing: 'linear',
-                // No onComplete callback - TileManager will handle miss detection
-            })
-            .start();
+    }
+    
+    /**
+     * Update the tile position directly
+     */
+    private updateTileMovement() {
+        // Get current game time from audio manager
+        const currentTime = this.calculateCurrentTime();
+        const elapsedTime = currentTime - this.movementStartTime;
+        const progress = Math.min(1.0, elapsedTime / this.movementDuration);
+        
+        // Linear interpolation for position
+        const newY = this.movementStartY + (this.movementTargetY - this.movementStartY) * progress;
+        
+        // Reuse Vec3 object to reduce garbage collection
+        this.tempVec3.set(0, newY, 0);
+        this.node.position = this.tempVec3;
+        
+        // If movement complete, stop updates
+        if (progress >= 1.0) {
+            this.isMovementActive = false;
+        }
+    }
+    
+    /**
+     * Get the current time for movement calculations
+     * In a real implementation, this would use a reference to the audio manager
+     */
+    private calculateCurrentTime(): number {
+        // In a real implementation, get this from the audio manager
+        // For now, we'll use a simple approximation
+        return Date.now() / 1000 - this.spawnTime + this.movementStartTime;
     }
 
     /**
@@ -461,6 +488,9 @@ export class Tile extends Component {
         this.isTouching = false;
         this.isLongPress = false;
         this.isSliding = false;
+
+        // Clean up direct movement
+        this.isMovementActive = false;
 
         // Hide the node
         this.node.active = false;

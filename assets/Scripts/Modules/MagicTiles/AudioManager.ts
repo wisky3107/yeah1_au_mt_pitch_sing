@@ -66,11 +66,11 @@ export class MagicTilesAudioManager {
         this._isBuffering = true;
         
         try {
-            // Load the audio clip
-            const audioClip = await this.loadAudioClip(audioPath);
-            
-            // Load the MIDI data
-            const midiTrack: MidiTrackInfo = await loadMidi(midiPath, trackIndex);
+            // Load both resources in parallel for better performance
+            const [audioClip, midiTrack] = await Promise.all([
+                this.loadAudioClip(audioPath),
+                loadMidi(midiPath, trackIndex)
+            ]);
             
             // Create beatmap audio data
             this._currentBeatmap = {

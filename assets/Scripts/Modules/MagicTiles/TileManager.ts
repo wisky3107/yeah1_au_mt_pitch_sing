@@ -56,8 +56,8 @@ export class TileManager extends Component {
     maxPoolSize: number = 50;
 
     // Reference to managers
-    private beatmapManager: BeatmapManager = null!;
-    private audioManager: MagicTilesAudioManager = null!;
+    private beatmapManager: BeatmapManager | null = null;
+    private audioManager: MagicTilesAudioManager | null = null;
 
     // Tile object pool
     private tilePool: Tile[] = [];
@@ -71,8 +71,11 @@ export class TileManager extends Component {
     // Track the current game time
     private gameTime: number = 0;
 
-    // Track if the game is currently playing
-    private isPlaying: boolean = false;
+    // Change isPlaying to a game state enum
+    private gameState: 'stopped' | 'playing' | 'paused' = 'stopped';
+    
+    // Track if update is scheduled
+    private _updateScheduled: boolean = false;
 
     // Add autoplay flag
     @property
@@ -86,10 +89,41 @@ export class TileManager extends Component {
     private touchedTiles: Map<number, Tile> = new Map();
     private minTileHeight: number = 350.0;
 
+    // Add time tracking properties
+    private lastAudioTimeCheck: number = 0;
+    private cachedAudioTime: number = 0;
+    private audioTimeCheckInterval: number = 0.05; // Check every 50ms
+    private timeSinceLastAudioCheck: number = 0;
+
+    // Track tiles by lane for faster lookups
+    private laneTiles: Map<number, Tile[]> = new Map();
+
+    // Reusable Vector3 objects to minimize garbage collection
+    private tempVec3: Vec3 = new Vec3();
+    private lanePositionVec3: Vec3 = new Vec3();
+
+    /**
+     * Initialize the TileManager with dependencies
+     * This allows for dependency injection rather than direct singleton usage
+     * @param beatmapManager The beatmap manager instance
+     * @param audioManager The audio manager instance
+     */
+    initialize(beatmapManager: BeatmapManager, audioManager: MagicTilesAudioManager) {
+        this.beatmapManager = beatmapManager;
+        this.audioManager = audioManager;
+        this.initTilePool();
+    }
+
     protected onLoad(): void {
-        // Get references to managers
-        this.beatmapManager = BeatmapManager.instance;
-        this.audioManager = MagicTilesAudioManager.instance;
+        // Get references to managers - still use singletons for backward compatibility
+        // but prefer using the initialize method for new code
+        if (!this.beatmapManager) {
+            this.beatmapManager = BeatmapManager.instance;
+        }
+        if (!this.audioManager) {
+            this.audioManager = MagicTilesAudioManager.instance;
+        }
+        
         // Initialize the object pool
         this.initTilePool();
     }
@@ -105,6 +139,18 @@ export class TileManager extends Component {
     private initTilePool() {
         // Clear any existing tiles
         this.tilePool = [];
+        
+        // Estimate optimal pool size based on note density and screen size
+        const notes = this.beatmapManager?.getNotes();
+        if (notes && notes.length > 0) {
+            const visibleDistance = this.spawnPositionY - this.recyclePositionY;
+            const noteTimeSpan = notes[notes.length - 1].time - notes[0].time;
+            // Prevent division by zero
+            const scrollSpeedToUse = this.scrollSpeed || this.defaultScrollSpeed;
+            const estimatedVisibleNotes = Math.ceil(notes.length * (visibleDistance / (scrollSpeedToUse * Math.max(0.1, noteTimeSpan))));
+            this.maxPoolSize = Math.max(this.maxPoolSize, estimatedVisibleNotes + 10); // Add buffer
+            console.log(`Dynamic pool size calculated: ${this.maxPoolSize} (estimated visible: ${estimatedVisibleNotes})`);
+        }
 
         // Create the initial pool of tiles
         for (let i = 0; i < this.maxPoolSize; i++) {
@@ -133,8 +179,9 @@ export class TileManager extends Component {
                 const laneNode = new Node(`Lane_${i}`);
                 laneNode.parent = this.node;
 
-                // Position the lane
-                laneNode.position = new Vec3((i - requiredLanes / 2 + 0.5) * this.laneWidth, 0, 0);
+                // Position the lane using reusable Vec3
+                this.lanePositionVec3.set((i - requiredLanes / 2 + 0.5) * this.laneWidth, 0, 0);
+                laneNode.position = this.lanePositionVec3;
 
                 // Add to lane containers
                 this.laneContainers.push(laneNode);
@@ -143,6 +190,13 @@ export class TileManager extends Component {
 
         //init lands
         this.laneWidth = this.laneContainers[0].getComponent(UITransform)!.width;
+
+        // Initialize lane collections
+        for (let i = 0; i < this.laneContainers.length; i++) {
+            if (!this.laneTiles.has(i)) {
+                this.laneTiles.set(i, []);
+            }
+        }
     }
 
     /**
@@ -152,9 +206,14 @@ export class TileManager extends Component {
         // Reset state
         this.nextNoteIndex = 0;
         this.gameTime = 0.0;
-        this.isPlaying = true;
+        this.gameState = 'playing';
         this.activeTiles = [];
         this.touchedTiles.clear();
+        
+        // Reset lane tiles collections
+        this.laneTiles.forEach((tiles, lane) => {
+            tiles.length = 0;
+        });
 
         // Calculate optimal scroll speed based on note data
         this.calculateDynamicScrollSpeed();
@@ -162,16 +221,25 @@ export class TileManager extends Component {
         // Clear any active tiles
         this.clearActiveTiles();
 
-        // Start the update loop
-        director.getScheduler().schedule(this.update, this, 0);
+        // Only schedule if not already scheduled
+        if (!this._updateScheduled) {
+            director.getScheduler().schedule(this.update, this, 0);
+            this._updateScheduled = true;
+        }
     }
 
     /**
      * Stop the game
      */
     stopGame() {
-        this.isPlaying = false;
-        director.getScheduler().unschedule(this.update, this);
+        this.gameState = 'stopped';
+        
+        // Explicitly unschedule when stopping the game completely
+        if (this._updateScheduled) {
+            director.getScheduler().unschedule(this.update, this);
+            this._updateScheduled = false;
+        }
+        
         this.clearActiveTiles();
     }
 
@@ -179,16 +247,21 @@ export class TileManager extends Component {
      * Pause the game
      */
     pauseGame() {
-        this.isPlaying = false;
-        director.getScheduler().unschedule(this.update, this);
+        this.gameState = 'paused';
+        // Keep the update scheduled but it will early-return based on state
     }
 
     /**
      * Resume the game
      */
     resumeGame() {
-        this.isPlaying = true;
-        director.getScheduler().schedule(this.update, this, 0);
+        this.gameState = 'playing';
+        
+        // Ensure update is scheduled
+        if (!this._updateScheduled) {
+            director.getScheduler().schedule(this.update, this, 0);
+            this._updateScheduled = true;
+        }
     }
 
     /**
@@ -196,12 +269,28 @@ export class TileManager extends Component {
      * @param dt Delta time since last frame in seconds
      */
     update(dt: number) {
-        if (!this.isPlaying) return;
+        // Early return based on state
+        if (this.gameState !== 'playing') return;
 
-        // Update game time
-        // this.gameTime += dt;
-        this.gameTime = MagicTilesAudioManager.instance.getAudioTime();
-        MTUIManager.instance.updateSongTimeDisplay(this.gameTime);
+        // Update time tracking
+        this.timeSinceLastAudioCheck += dt;
+        
+        // Only check actual audio time periodically
+        if (this.timeSinceLastAudioCheck >= this.audioTimeCheckInterval) {
+            this.cachedAudioTime = MagicTilesAudioManager.instance.getAudioTime();
+            this.timeSinceLastAudioCheck = 0;
+        } else {
+            // Estimate time between checks
+            this.cachedAudioTime += dt;
+        }
+        
+        // Use cached time for all operations
+        this.gameTime = this.cachedAudioTime;
+        
+        // Throttle UI updates to reduce overhead
+        if (this.timeSinceLastAudioCheck === 0) {
+            MTUIManager.instance.updateSongTimeDisplay(this.gameTime);
+        }
 
         // Spawn tiles that should be visible
         this.spawnTiles();
@@ -226,6 +315,17 @@ export class TileManager extends Component {
             this.spawnTile(notes[this.nextNoteIndex]);
             this.nextNoteIndex++;
         }
+    }
+
+    /**
+     * Helper method to update tile position without creating new Vec3 objects
+     * @param tile The tile to update
+     * @param posY The Y position to set
+     */
+    private updateTilePosition(tile: Tile, posY: number) {
+        // Reuse the same Vec3 object instead of creating a new one
+        this.tempVec3.set(0, posY, 0);
+        tile.node.position = this.tempVec3;
     }
 
     /**
@@ -262,6 +362,9 @@ export class TileManager extends Component {
             this.minTileHeight
         );
 
+        // Position the tile using our reusable vector
+        this.updateTilePosition(tile, this.spawnPositionY);
+
         // Calculate the total distance from spawn to miss threshold (instead of just to target)
         const totalDistance = this.spawnPositionY - this.recyclePositionY + tile.getTileHeight() + 500.0; //500 is buffer for moving
 
@@ -295,6 +398,12 @@ export class TileManager extends Component {
 
         // Add to active tiles
         this.activeTiles.push(tile);
+        
+        // Also add to lane-specific collection
+        if (!this.laneTiles.has(lane)) {
+            this.laneTiles.set(lane, []);
+        }
+        this.laneTiles.get(lane)!.push(tile);
     }
 
     /**
@@ -307,47 +416,35 @@ export class TileManager extends Component {
         }
 
         // Check for tiles that have reached the bottom and should be missed
-        for (const tile of this.activeTiles) {
-            if (tile.getStatus() === TileStatus.ACTIVE) {
-                // Check if the tile has passed the miss threshold
-                if (tile.node.position.y <= this.missThreshold) {
-                    // Mark the tile as missed
-                    console.log(`Tile missed at position ${tile.node.position.y}, threshold: ${this.missThreshold}`);
-                    tile.miss();
-                }
+        // Use in-place removal pattern for better performance
+        let i = 0;
+        while (i < this.activeTiles.length) {
+            const tile = this.activeTiles[i];
+            
+            // Check for missed tiles
+            if (tile.getStatus() === TileStatus.ACTIVE && tile.node.position.y <= this.missThreshold) {
+                // Mark the tile as missed
+                tile.miss();
             }
-        }
-
-        // Filter out tiles that are no longer active or have passed the recycle position
-        const previousCount = this.activeTiles.length;
-        this.activeTiles = this.activeTiles.filter(tile => {
-            const status = tile.getStatus();
+            
             // Check if the tile has passed the recycle position - return to pool regardless of state
             if (tile.node.position.y + tile.getTileHeight() <= this.recyclePositionY) {
                 // For HOLD notes that are currently pressed, release them before recycling
-                if (status === TileStatus.HOLDING && tile.isLongPressType()) {
+                if (tile.getStatus() === TileStatus.HOLDING && tile.isLongPressType()) {
                     // Force release of the hold note
                     tile.release(this.gameTime);
                 }
 
                 // Return tiles that have gone past the recycle position to the pool
                 this.returnTileToPool(tile);
-                return false;
+                
+                // Remove from active tiles without creating a new array
+                this.activeTiles[i] = this.activeTiles[this.activeTiles.length - 1];
+                this.activeTiles.pop();
+            } else {
+                // Only increment if we didn't remove an item
+                i++;
             }
-
-            // Also recycle tiles that are already completed (hit, missed, or expired)
-            // if (status === TileStatus.HIT || status === TileStatus.MISSED || status === TileStatus.EXPIRED) {
-            //     // Return tiles that are no longer active to the pool
-            //     this.returnTileToPool(tile);
-            //     return false;
-            // }
-
-            return true;
-        });
-
-        // If any tiles were removed, log the count
-        if (previousCount !== this.activeTiles.length) {
-            console.log(`Active tiles: ${this.activeTiles.length} (removed ${previousCount - this.activeTiles.length})`);
         }
     }
 
@@ -487,6 +584,17 @@ export class TileManager extends Component {
 
         // Add back to pool
         this.tilePool.push(tile);
+
+        // Remove from lane-specific collection
+        const laneTiles = this.laneTiles.get(laneIndex);
+        if (laneTiles) {
+            const index = laneTiles.indexOf(tile);
+            if (index !== -1) {
+                // Fast removal without creating a new array
+                laneTiles[index] = laneTiles[laneTiles.length - 1];
+                laneTiles.pop();
+            }
+        }
     }
 
     /**
@@ -506,9 +614,12 @@ export class TileManager extends Component {
                 return touchedTile.release(this.gameTime);
             }
         }
-        // Find the closest tile in this lane that can be hit
-        const hitableTiles = this.activeTiles.filter(tile =>
-            tile.getLane() === laneIndex &&
+        
+        // Get tiles only for the specific lane
+        const laneTiles = this.laneTiles.get(laneIndex) || [];
+        
+        // Find hitable tiles in this lane
+        const hitableTiles = laneTiles.filter(tile => 
             tile.getStatus() === TileStatus.ACTIVE
         );
 
@@ -539,7 +650,6 @@ export class TileManager extends Component {
         }
 
         return HitRating.MISS;
-
     }
 
     /**
