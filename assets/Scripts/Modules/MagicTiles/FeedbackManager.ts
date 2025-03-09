@@ -629,7 +629,7 @@ export class FeedbackManager extends Component {
      * @param message Text to display
      * @param duration How long to show the message
      */
-    showMessage(message: string, duration: number = 2.0) {
+    showMessage(message: string, duration: number = 2.0, fontSize: number = 80) {
         // Check if we have a prefab to use
         if (this.messagePopupPrefab) {
             // Get a node from the pool
@@ -640,6 +640,8 @@ export class FeedbackManager extends Component {
             const label = messageNode.getComponent(Label);
             if (label) {
                 label.string = message;
+                label.fontSize = fontSize;
+                label.lineHeight = fontSize;
             }
             
             // Get opacity component
@@ -668,6 +670,8 @@ export class FeedbackManager extends Component {
             const label = messageNode.getComponent(Label);
             if (label) {
                 label.string = message;
+                label.fontSize = fontSize;
+                label.lineHeight = fontSize;
             }
             
             // Get opacity component
@@ -696,7 +700,8 @@ export class FeedbackManager extends Component {
             // Add label component
             const label = messageNode.getComponent(Label) || messageNode.addComponent(Label);
             label.string = message;
-            label.fontSize = 80;
+            label.fontSize = fontSize;
+            label.lineHeight = fontSize;
             label.color = new Color(255, 255, 255, 255);
     
             // Add opacity component for fade effect

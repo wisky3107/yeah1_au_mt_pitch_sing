@@ -153,19 +153,19 @@ export class GameplayManager extends Component {
         this.setGameState(GameState.COUNTDOWN);
 
         // Show countdown UI
-        this.feedbackManager.showMessage("3");
+        this.feedbackManager.showMessage("3", 1.0, 200);
 
         // Schedule countdown
         this.scheduleOnce(() => {
-            this.feedbackManager.showMessage("2");
+            this.feedbackManager.showMessage("2", 1.0, 200);
         }, 1);
 
         this.scheduleOnce(() => {
-            this.feedbackManager.showMessage("1");
+            this.feedbackManager.showMessage("1", 1.0, 200);
         }, 2);
 
         this.scheduleOnce(() => {
-            this.feedbackManager.showMessage("GO!");
+            this.feedbackManager.showMessage("GO!", 1.0, 200);
             this.startPlaying();
         }, 3);
     }

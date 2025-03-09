@@ -206,7 +206,7 @@
   },
   "macroConfig": {
     "ENABLE_TRANSPARENT_CANVAS": false,
-    "ENABLE_MULTI_TOUCH": false,
+    "ENABLE_MULTI_TOUCH": true,
     "CLEANUP_IMAGE_CACHE": false
   }
 }

@@ -203,11 +203,12 @@
     ],
     "spawnPositionY": 1200,
     "targetPositionY": -400,
+    "recyclePositionY": -1500,
     "lookAheadTime": 5,
     "defaultScrollSpeed": 600,
     "laneWidth": 160,
     "maxPoolSize": 50,
-    "isAutoplay": true,
+    "isAutoplay": false,
     "missThreshold": -900,
     "_id": "45/xVxhHdOP68NnPrqbd+Q"
   },
@@ -2881,7 +2882,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "_opacity": 255,
+    "_opacity": 0,
     "_id": "756HsHclRA5rSuyJL6Lv25"
   },
   {
@@ -3288,7 +3289,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "_opacity": 255,
+    "_opacity": 0,
     "_id": "11tHvT4qtEmqTVa9Ul+/6x"
   },
   {
@@ -3695,7 +3696,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "_opacity": 255,
+    "_opacity": 0,
     "_id": "97l5S3wNxNU7J5wCPqU25J"
   },
   {
@@ -4131,7 +4132,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "_opacity": 255,
+    "_opacity": 0,
     "_id": "718u/Ne9BHVIr+LyBH5vXp"
   },
   {

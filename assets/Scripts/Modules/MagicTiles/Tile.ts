@@ -7,7 +7,7 @@ const { ccclass, property } = _decorator;
 export enum TileStatus {
     WAITING, // Waiting to be shown
     ACTIVE,  // Visible and moving
-    PRESSED, // Currently being pressed
+    HOLDING, // Currently being pressed
     HIT,     // Successfully hit
     MISSED,  // Missed by the player
     EXPIRED  // Past its time and no longer relevant
@@ -29,9 +29,6 @@ export enum HitRating {
 export class Tile extends Component {
     @property(Sprite)
     background: Sprite = null!;
-
-    @property(Sprite)
-    highlight: Sprite = null!;
 
     @property(UITransform)
     transform: UITransform = null!;
@@ -86,6 +83,9 @@ export class Tile extends Component {
     private scaleTween: any = null;
     private opacityTween: any = null;
 
+    private holdRating: HitRating = HitRating.MISS;
+
+
     onLoad() {
         // Initialize Sprite and Transform references if not set in the inspector
         if (!this.background) {
@@ -98,21 +98,6 @@ export class Tile extends Component {
 
         if (!this.opacity) {
             this.opacity = this.getComponent(UIOpacity)!;
-        }
-
-        // Initialize the highlight sprite
-        if (!this.highlight) {
-            const highlightNode = new Node('Highlight');
-            highlightNode.parent = this.node;
-            this.highlight = highlightNode.addComponent(Sprite);
-            highlightNode.addComponent(UIOpacity).opacity = 0;
-
-            // Ensure highlight covers the entire tile
-            const highlightTransform = highlightNode.addComponent(UITransform);
-            highlightTransform.width = this.transform.width;
-            highlightTransform.height = this.transform.height;
-            highlightTransform.anchorX = 0.5;
-            highlightTransform.anchorY = 0.5;
         }
     }
 
@@ -140,7 +125,7 @@ export class Tile extends Component {
         this.node.position = new Vec3(0, startY, 0);
 
         // Set the correct color based on note type
-        this.updateVisualByType();
+        // this.updateVisualByType();
 
         // Reset tweens
         if (this.moveTween) {
@@ -186,6 +171,10 @@ export class Tile extends Component {
         this.node.active = true;
     }
 
+    public getTileHeight(): number {
+        return this.transform.contentSize.height;
+    }
+
     /**
      * Start the tile's movement
      * @param duration How long the movement should take in seconds
@@ -220,7 +209,7 @@ export class Tile extends Component {
         }
 
         // If the tile is already hit or missed, no need to update
-        if (this.status !== TileStatus.ACTIVE && this.status !== TileStatus.PRESSED) {
+        if (this.status !== TileStatus.ACTIVE && this.status !== TileStatus.HOLDING) {
             return;
         }
 
@@ -239,21 +228,22 @@ export class Tile extends Component {
     /**
      * Update the tile's visual appearance based on its type
      */
-    private updateVisualByType() {
-        if (!this.noteData) return;
+    // private updateVisualByType() {
+    //     if (!this.noteData) return;
 
-        switch (this.noteData.type) {
-            case NoteType.TAP:
-                this.background.color = this.normalColor;
-                break;
-            case NoteType.HOLD:
-                this.background.color = this.holdColor;
-                break;
-            case NoteType.SLIDE:
-                this.background.color = this.slideColor;
-                break;
-        }
-    }
+    //     switch (this.noteData.type) {
+    //         case NoteType.TAP:
+    //             this.background.color = this.normalColor;
+    //             break;
+    //         case NoteType.HOLD:
+    //             this.background.color = this.holdColor;
+    //             break;
+    //         case NoteType.SLIDE:
+    //             this.background.color = this.slideColor;
+    //             break;
+    //     }
+    // }
+
 
     /**
      * Handle the tile being tapped
@@ -287,10 +277,12 @@ export class Tile extends Component {
         }
 
         // If this is a regular tap note or we missed, finish the hit process
-        if (this.noteData.type === NoteType.TAP || rating === HitRating.MISS) {
+        if (this.noteData.type === NoteType.TAP) {
             this.completeHit(rating);
         }
-        console.log("Tap rating", rating, timeDiff);
+        else if (this.noteData.type === NoteType.HOLD) {
+            this.triggerLongPress(rating);
+        }
 
         return rating;
     }
@@ -313,7 +305,7 @@ export class Tile extends Component {
             const expectedDuration = this.noteData.duration;
             const actualDuration = this.touchEndTime - this.touchStartTime;
 
-            let rating: HitRating;
+            let rating: HitRating = HitRating.COOL;
 
             // Determine rating based on how closely the hold duration matches expected
             const durationRatio = actualDuration / expectedDuration;
@@ -322,10 +314,6 @@ export class Tile extends Component {
                 rating = HitRating.PERFECT;
             } else if (durationRatio >= 0.8) {
                 rating = HitRating.GREAT;
-            } else if (durationRatio >= 0.6) {
-                rating = HitRating.COOL;
-            } else {
-                rating = HitRating.MISS;
             }
 
             this.completeHit(rating);
@@ -348,13 +336,25 @@ export class Tile extends Component {
         // Update status
         this.status = TileStatus.HIT;
 
-        // Stop the movement tween
-        if (this.moveTween) {
-            this.moveTween.stop();
-        }
+        // // Stop the movement tween
+        // if (this.moveTween) {
+        //     this.moveTween.stop();
+        // }
 
         // Play hit animation
         this.playHitAnimation();
+    }
+
+    private triggerLongPress(rating: HitRating) {
+        if (rating === HitRating.MISS) {
+            this.miss();
+            return;
+        }
+
+        this.status = TileStatus.HOLDING;
+        this.holdRating = rating;
+
+        this.background.color = this.holdColor;
     }
 
     /**
@@ -362,24 +362,22 @@ export class Tile extends Component {
      */
     private playHitAnimation() {
         // Change color to hit color
-        this.background.color = this.hitColor;
-
-        // Flash the highlight
-        const highlightOpacity = this.highlight.getComponent(UIOpacity)!;
-        highlightOpacity.opacity = 180;
+        this.background.color = this.normalColor;
+        this.opacity.opacity = 100;
+        // this.background.color = this.hitColor;
 
         // Scale and fade out
-        this.scaleTween = tween(this.node.scale)
-            .to(0.1, new Vec3(1.2, 1.2, 1.2))
-            .to(0.1, new Vec3(1.0, 1.0, 1.0))
-            .start();
+        // this.scaleTween = tween(this.node.scale)
+        //     .to(0.1, new Vec3(1.2, 1.2, 1.2))
+        //     .to(0.1, new Vec3(1.0, 1.0, 1.0))
+        //     .start();
 
-        this.opacityTween = tween(this.opacity)
-            .to(0.3, { opacity: 0 })
-            .call(() => {
-                this.node.active = false;
-            })
-            .start();
+        // this.opacityTween = tween(this.opacity)
+        //     .to(0.1, { opacity: 100 })
+        //     // .call(() => {
+        //     //     this.node.active = false;
+        //     // })
+        //     .start();
     }
 
     /**
@@ -389,14 +387,13 @@ export class Tile extends Component {
     miss() {
         this.status = TileStatus.MISSED;
         Tile.missCount++;
-        console.log("Missed tile", Tile.missCount);
 
         // Change color to miss color
         this.background.color = this.missColor;
 
         // Fade out
         this.opacityTween = tween(this.opacity)
-            .to(0.3, { opacity: 0 })
+            .to(0.3, { opacity: 100 })
             .call(() => {
                 this.node.active = false;
             })

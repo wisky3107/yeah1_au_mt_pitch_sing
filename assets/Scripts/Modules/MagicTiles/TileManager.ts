@@ -32,6 +32,10 @@ export class TileManager extends Component {
     @property
     targetPositionY: number = -400;
 
+    // Position where tiles should be recycled regardless of their state
+    @property
+    recyclePositionY: number = -1500;
+
     // How many seconds ahead to spawn tiles
     @property
     lookAheadTime: number = 2.0;
@@ -259,7 +263,7 @@ export class TileManager extends Component {
         );
 
         // Calculate the total distance from spawn to miss threshold (instead of just to target)
-        const totalDistance = this.spawnPositionY - this.missThreshold;
+        const totalDistance = this.spawnPositionY - this.recyclePositionY + tile.getTileHeight() + 500.0; //500 is buffer for moving
 
         // Calculate how long it should take for the tile to reach the target position
         const distanceToTarget = this.spawnPositionY - this.targetPositionY;
@@ -314,15 +318,30 @@ export class TileManager extends Component {
             }
         }
 
-        // Filter out tiles that are no longer active
+        // Filter out tiles that are no longer active or have passed the recycle position
         const previousCount = this.activeTiles.length;
         this.activeTiles = this.activeTiles.filter(tile => {
             const status = tile.getStatus();
-            if (status === TileStatus.HIT || status === TileStatus.MISSED || status === TileStatus.EXPIRED) {
-                // Return tiles that are no longer active to the pool
+            // Check if the tile has passed the recycle position - return to pool regardless of state
+            if (tile.node.position.y + tile.getTileHeight() <= this.recyclePositionY) {
+                // For HOLD notes that are currently pressed, release them before recycling
+                if (status === TileStatus.HOLDING && tile.isLongPressType()) {
+                    // Force release of the hold note
+                    tile.release(this.gameTime);
+                }
+
+                // Return tiles that have gone past the recycle position to the pool
                 this.returnTileToPool(tile);
                 return false;
             }
+
+            // Also recycle tiles that are already completed (hit, missed, or expired)
+            // if (status === TileStatus.HIT || status === TileStatus.MISSED || status === TileStatus.EXPIRED) {
+            //     // Return tiles that are no longer active to the pool
+            //     this.returnTileToPool(tile);
+            //     return false;
+            // }
+
             return true;
         });
 
@@ -345,24 +364,30 @@ export class TileManager extends Component {
             const note = tile.getNote();
             if (!note) return false;
 
-            // Check if the tile is within the perfect hit time window
-            const timeDiff = Math.abs(note.time - this.gameTime);
-            // Use a small time window to hit the note perfectly
-            return note.time <= this.gameTime + 0.05;
+            // Check if the tile is within the autoplay hit window
+            // For regular notes, tap when they're at or just before the hit time
+            // For hold notes, tap them slightly earlier to ensure natural timing
+            const timeDiff = note.time - this.gameTime;
+            return timeDiff <= 0.05; // Within 50ms window (detect slightly ahead of time)
         });
 
         // Process each autoplayable tile
         for (const tile of autoplayTiles) {
             const laneIndex = tile.getLane();
+            const note = tile.getNote();
+
+            if (!note) continue;
 
             // Handle different tile types
             if (tile.isLongPressType()) {
                 // For hold notes, store them to release later
                 if (!this.touchedTiles.has(laneIndex)) {
                     // Tap the tile
-                    tile.tap(this.gameTime);
-                    // Store it for later release
-                    this.touchedTiles.set(laneIndex, tile);
+                    const hitRating = tile.tap(this.gameTime);
+                    // Store it for later release only if it was successfully tapped
+                    if (hitRating !== HitRating.MISS) {
+                        this.touchedTiles.set(laneIndex, tile);
+                    }
                 }
             } else {
                 // For regular tap notes, just tap them
@@ -373,14 +398,18 @@ export class TileManager extends Component {
         // Check for held notes that need to be released
         this.touchedTiles.forEach((tile, laneIndex) => {
             const note = tile.getNote();
-            if (!note || tile.getStatus() !== TileStatus.PRESSED) {
+            if (!note || tile.getStatus() !== TileStatus.HOLDING) {
                 // Remove from tracked tiles if not in pressed state
                 this.touchedTiles.delete(laneIndex);
                 return;
             }
 
+            // Calculate when to release the hold note
+            // Release exactly at the end of the hold duration for perfect timing
+            const releaseTime = note.time + note.duration;
+
             // Check if it's time to release the held note
-            if (note.time + note.duration <= this.gameTime + 0.05) {
+            if (releaseTime <= this.gameTime) {
                 tile.release(this.gameTime);
                 this.touchedTiles.delete(laneIndex);
             }
@@ -443,6 +472,16 @@ export class TileManager extends Component {
      * Return a tile to the object pool
      */
     private returnTileToPool(tile: Tile) {
+        // Remove from touchedTiles tracking if it's a HOLD note being tracked
+        const laneIndex = tile.getLane();
+        if (this.touchedTiles.has(laneIndex) && this.touchedTiles.get(laneIndex) === tile) {
+            // Make sure to release the note if it's in HOLDING state
+            if (tile.getStatus() === TileStatus.HOLDING) {
+                tile.release(this.gameTime);
+            }
+            this.touchedTiles.delete(laneIndex);
+        }
+
         // Recycle the tile
         tile.recycle();
 
@@ -457,6 +496,16 @@ export class TileManager extends Component {
      * @returns The hit rating if a tile was hit
      */
     handleLaneTouch(laneIndex: number, isTouchStart: boolean): HitRating {
+        console.log("handleLaneTouch", laneIndex, isTouchStart);
+
+        if (!isTouchStart) {
+            // This is a touch up event - check if we have a stored tile
+            const touchedTile = this.touchedTiles.get(laneIndex);
+            if (touchedTile && touchedTile.isLongPressType()) {
+                this.touchedTiles.delete(laneIndex);
+                return touchedTile.release(this.gameTime);
+            }
+        }
         // Find the closest tile in this lane that can be hit
         const hitableTiles = this.activeTiles.filter(tile =>
             tile.getLane() === laneIndex &&
@@ -487,16 +536,10 @@ export class TileManager extends Component {
             }
 
             return rating;
-        } else {
-            // This is a touch up event - check if we have a stored tile
-            const touchedTile = this.touchedTiles.get(laneIndex);
-            if (touchedTile && touchedTile.isLongPressType()) {
-                this.touchedTiles.delete(laneIndex);
-                return touchedTile.release(this.gameTime);
-            }
-
-            return HitRating.MISS;
         }
+
+        return HitRating.MISS;
+
     }
 
     /**
