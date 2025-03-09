@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, Label, Vec3, Color, tween, instantiate, UIOpacity, Camera, Animation, animation } from 'cc';
+import { _decorator, Component, Node, Prefab, Label, Vec3, Color, tween, instantiate, UIOpacity, Camera, Animation, animation, easing, Tween } from 'cc';
 import { HitRating } from './Tile';
 import { MagicTilesAudioManager } from './AudioManager';
 import { PoolManager } from '../../Common/poolManager';
@@ -130,7 +130,7 @@ export class FeedbackManager extends Component {
             this.feedbackContainer = new Node("FeedbackContainer");
             this.feedbackContainer.parent = this.node;
         }
-        
+
         // Preload object pools for better performance
         if (this.perfectPrefab) {
             PoolManager.instance.preloadPool(this.perfectPrefab, 10);
@@ -147,7 +147,7 @@ export class FeedbackManager extends Component {
         if (this.comboPopupPrefab) {
             PoolManager.instance.preloadPool(this.comboPopupPrefab, 3);
         }
-        
+
         // Create and preload score popup prefab if needed
         if (!this.scorePopupPrefab) {
             // Create a score popup prefab dynamically
@@ -155,7 +155,7 @@ export class FeedbackManager extends Component {
         } else {
             PoolManager.instance.preloadPool(this.scorePopupPrefab, 1);
         }
-        
+
         // Create and preload message popup prefab if needed
         if (!this.messagePopupPrefab) {
             // Create a message popup prefab dynamically
@@ -171,30 +171,30 @@ export class FeedbackManager extends Component {
     private createScorePopupPrefab() {
         // Since we can't create actual prefabs at runtime, we'll use a node as a template
         // and implement our own simple pooling for these specific nodes
-        
+
         // Create a template node that we'll clone
         const scoreNode = new Node("ScorePopup");
-        
+
         // Add label component
         const label = scoreNode.addComponent(Label);
         label.fontSize = 36;
         label.color = new Color(255, 255, 100, 255);
-        
+
         // Add opacity component
         scoreNode.addComponent(UIOpacity);
-        
+
         // Create a parent node for our pool if not exists
         if (!this._poolRoot) {
             this._poolRoot = new Node("PoolContainer");
             this._poolRoot.parent = this.node;
             this._poolRoot.active = false;
         }
-        
+
         // Create a pool for score popups
         if (!this._scorePopupPool) {
             this._scorePopupPool = [];
         }
-        
+
         // Pre-instantiate some nodes
         for (let i = 0; i < 10; i++) {
             const node = instantiate(scoreNode);
@@ -202,7 +202,7 @@ export class FeedbackManager extends Component {
             node.active = false;
             this._scorePopupPool.push(node);
         }
-        
+
         // Store the template
         this._scorePopupTemplate = scoreNode;
         // The template itself should be parented to our pool root but inactive
@@ -216,30 +216,30 @@ export class FeedbackManager extends Component {
     private createMessagePopupPrefab() {
         // Since we can't create actual prefabs at runtime, we'll use a node as a template
         // and implement our own simple pooling for these specific nodes
-        
+
         // Create a template node that we'll clone
         const messageNode = new Node("Message");
-        
+
         // Add label component
         const label = messageNode.addComponent(Label);
         label.fontSize = 48;
         label.color = new Color(255, 255, 255, 255);
-        
+
         // Add opacity component
         messageNode.addComponent(UIOpacity);
-        
+
         // Create a parent node for our pool if not exists
         if (!this._poolRoot) {
             this._poolRoot = new Node("PoolContainer");
             this._poolRoot.parent = this.node;
             this._poolRoot.active = false;
         }
-        
+
         // Create a pool for message popups
         if (!this._messagePopupPool) {
             this._messagePopupPool = [];
         }
-        
+
         // Pre-instantiate some nodes
         for (let i = 0; i < 3; i++) {
             const node = instantiate(messageNode);
@@ -247,7 +247,7 @@ export class FeedbackManager extends Component {
             node.active = false;
             this._messagePopupPool.push(node);
         }
-        
+
         // Store the template
         this._messagePopupTemplate = messageNode;
         // The template itself should be parented to our pool root but inactive
@@ -260,7 +260,7 @@ export class FeedbackManager extends Component {
      */
     private getScorePopupFromPool(): Node {
         let node: Node;
-        
+
         if (this._scorePopupPool.length > 0) {
             // Get from pool
             node = this._scorePopupPool.pop()!;
@@ -268,7 +268,7 @@ export class FeedbackManager extends Component {
             // Create new if pool is empty
             node = instantiate(this._scorePopupTemplate);
         }
-        
+
         node.active = true;
         return node;
     }
@@ -278,7 +278,7 @@ export class FeedbackManager extends Component {
      */
     private putScorePopupToPool(node: Node): void {
         if (!node) return;
-        
+
         node.active = false;
         node.removeFromParent();
         this._scorePopupPool.push(node);
@@ -289,7 +289,7 @@ export class FeedbackManager extends Component {
      */
     private getMessagePopupFromPool(): Node {
         let node: Node;
-        
+
         if (this._messagePopupPool.length > 0) {
             // Get from pool
             node = this._messagePopupPool.pop()!;
@@ -297,7 +297,7 @@ export class FeedbackManager extends Component {
             // Create new if pool is empty
             node = instantiate(this._messagePopupTemplate);
         }
-        
+
         node.active = true;
         return node;
     }
@@ -307,7 +307,7 @@ export class FeedbackManager extends Component {
      */
     private putMessagePopupToPool(node: Node): void {
         if (!node) return;
-        
+
         node.active = false;
         node.removeFromParent();
         this._messagePopupPool.push(node);
@@ -403,18 +403,25 @@ export class FeedbackManager extends Component {
      * Update the combo display
      * @param combo Current combo count
      */
+
+    private comboTween: Tween<Node> = null;
     updateCombo(combo: number) {
         if (!this.comboLabel) return;
 
         // Update the combo label
         if (combo > 1) {
-            this.comboLabel.string = `${combo}`;
+            this.comboLabel.string = `x${combo}`;
             this.comboLabel.node.active = true;
 
             // Animate the combo label
-            tween(this.comboLabel.node)
-                .to(0.1, { scale: new Vec3(1.2, 1.2, 1) })
-                .to(0.1, { scale: new Vec3(1, 1, 1) })
+            if (this.comboTween) {
+                this.comboTween.stop();
+            }
+            this.comboLabel.node.scale = new Vec3(0.0, 0.0, 0.0);
+            this.comboTween = tween(this.comboLabel.node)
+                .to(0.2, { scale: new Vec3(1.2, 1.2, 1) })
+                .delay(0.5)
+                .to(0.35, { scale: Vec3.ZERO }, { easing: easing.backIn })
                 .start();
 
             // Check for combo milestones
@@ -448,7 +455,7 @@ export class FeedbackManager extends Component {
 
             // Position in the center of the screen
             popupNode.position = new Vec3(0, 0, 0);
-            
+
             // Reset scale
             popupNode.scale = new Vec3(1, 1, 1);
 
@@ -535,19 +542,19 @@ export class FeedbackManager extends Component {
             // Get a node from the pool
             const scoreNode = PoolManager.instance.getNode(this.scorePopupPrefab, this.feedbackContainer);
             scoreNode.position = position;
-            
+
             // Get the label component and update text
             const label = scoreNode.getComponent(Label);
             if (label) {
                 label.string = `+${score}`;
             }
-            
+
             // Reset opacity
             const opacity = scoreNode.getComponent(UIOpacity);
             if (opacity) {
                 opacity.opacity = 255;
             }
-            
+
             // Animate the score popup
             tween(scoreNode)
                 .to(0.5, { position: new Vec3(position.x, position.y + 80, position.z) })
@@ -563,19 +570,19 @@ export class FeedbackManager extends Component {
             const scoreNode = this.getScorePopupFromPool();
             scoreNode.parent = this.feedbackContainer;
             scoreNode.position = position;
-            
+
             // Get the label component and update text
             const label = scoreNode.getComponent(Label);
             if (label) {
                 label.string = `+${score}`;
             }
-            
+
             // Reset opacity
             const opacity = scoreNode.getComponent(UIOpacity);
             if (opacity) {
                 opacity.opacity = 255;
             }
-            
+
             // Animate the score popup
             tween(scoreNode)
                 .to(0.5, { position: new Vec3(position.x, position.y + 80, position.z) })
@@ -592,13 +599,13 @@ export class FeedbackManager extends Component {
             const scoreNode = new Node("ScorePopup");
             scoreNode.parent = this.feedbackContainer;
             scoreNode.position = position;
-    
+
             // Add label component
             const label = scoreNode.getComponent(Label) || scoreNode.addComponent(Label);
             label.string = `+${score}`;
             label.fontSize = 36;
             label.color = new Color(255, 255, 100, 255);
-    
+
             // Animate the score popup
             tween(scoreNode)
                 .to(0.5, { position: new Vec3(position.x, position.y + 80, position.z) })
@@ -635,7 +642,7 @@ export class FeedbackManager extends Component {
             // Get a node from the pool
             const messageNode = PoolManager.instance.getNode(this.messagePopupPrefab, this.feedbackContainer);
             messageNode.position = new Vec3(0, 0, 0);
-            
+
             // Get the label component and update text
             const label = messageNode.getComponent(Label);
             if (label) {
@@ -643,12 +650,12 @@ export class FeedbackManager extends Component {
                 label.fontSize = fontSize;
                 label.lineHeight = fontSize;
             }
-            
+
             // Get opacity component
             const opacity = messageNode.getComponent(UIOpacity);
             if (opacity) {
                 opacity.opacity = 0;
-            
+
                 // Fade in and out
                 tween(opacity)
                     .to(0.3, { opacity: 255 })
@@ -665,7 +672,7 @@ export class FeedbackManager extends Component {
             const messageNode = this.getMessagePopupFromPool();
             messageNode.parent = this.feedbackContainer;
             messageNode.position = new Vec3(0, 0, 0);
-            
+
             // Get the label component and update text
             const label = messageNode.getComponent(Label);
             if (label) {
@@ -673,12 +680,12 @@ export class FeedbackManager extends Component {
                 label.fontSize = fontSize;
                 label.lineHeight = fontSize;
             }
-            
+
             // Get opacity component
             const opacity = messageNode.getComponent(UIOpacity);
             if (opacity) {
                 opacity.opacity = 0;
-            
+
                 // Fade in and out
                 tween(opacity)
                     .to(0.3, { opacity: 255 })
@@ -696,17 +703,17 @@ export class FeedbackManager extends Component {
             const messageNode = new Node("Message");
             messageNode.parent = this.feedbackContainer;
             messageNode.position = new Vec3(0, 0, 0);
-    
+
             // Add label component
             const label = messageNode.getComponent(Label) || messageNode.addComponent(Label);
             label.string = message;
             label.fontSize = fontSize;
             label.color = new Color(255, 255, 255, 255);
-    
+
             // Add opacity component for fade effect
             const opacity = messageNode.getComponent(UIOpacity) || messageNode.addComponent(UIOpacity);
             opacity.opacity = 0;
-    
+
             // Fade in and out
             tween(opacity)
                 .to(0.3, { opacity: 255 })
@@ -781,7 +788,7 @@ export class FeedbackManager extends Component {
             });
             this._scorePopupPool = [];
         }
-        
+
         if (this._messagePopupPool) {
             this._messagePopupPool.forEach(node => {
                 if (node && node.isValid) {
@@ -790,18 +797,18 @@ export class FeedbackManager extends Component {
             });
             this._messagePopupPool = [];
         }
-        
+
         // Clean up templates
         if (this._scorePopupTemplate && this._scorePopupTemplate.isValid) {
             this._scorePopupTemplate.destroy();
             this._scorePopupTemplate = null!;
         }
-        
+
         if (this._messagePopupTemplate && this._messagePopupTemplate.isValid) {
             this._messagePopupTemplate.destroy();
             this._messagePopupTemplate = null!;
         }
-        
+
         // Clean up pool root
         if (this._poolRoot && this._poolRoot.isValid) {
             this._poolRoot.destroy();
