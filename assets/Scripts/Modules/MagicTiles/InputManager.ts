@@ -61,14 +61,16 @@ export class InputManager extends Component {
     private activeTouches: Map<number, TouchInfo> = new Map();
 
     onLoad() {
-        // Initialize lane information
-        this.initLaneInfo();
-
         // Initialize tap feedback nodes
         this.initTapFeedback();
 
         // Register event listeners
         this.registerEvents();
+    }
+
+    protected start(): void {
+        // Initialize lane information
+        this.initLaneInfo();
     }
 
     /**

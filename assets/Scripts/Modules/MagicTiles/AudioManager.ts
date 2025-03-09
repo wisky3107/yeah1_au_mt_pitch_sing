@@ -129,7 +129,11 @@ export class MagicTilesAudioManager {
         this._beatmapAudioSource.play();
         
         // Start tracking beats
-        this.startBeatTracking();
+        // this.startBeatTracking();
+    }
+
+    public getAudioTime(): number {
+        return this._beatmapAudioSource.currentTime;
     }
     
     /**

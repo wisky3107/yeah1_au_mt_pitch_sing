@@ -4,6 +4,7 @@ import { Tile, TileStatus, HitRating } from './Tile';
 import { MagicTilesAudioManager } from './AudioManager';
 import { TrackNoteInfo } from './MTDefines';
 import { MTUIManager } from './MTUIManager';
+import { AudioManager } from '../../Common/audioManager';
 
 const { ccclass, property } = _decorator;
 
@@ -69,18 +70,27 @@ export class TileManager extends Component {
     // Track if the game is currently playing
     private isPlaying: boolean = false;
 
+    // Add autoplay flag
+    @property
+    private isAutoplay: boolean = false;
+
+    // Add bottom position threshold where tiles will be considered missed
+    @property
+    private missThreshold: number = -450; // Slightly below the target position
+
     // Track touched tiles
     private touchedTiles: Map<number, Tile> = new Map();
-    private minTileHeight: number = 450.0;
+    private minTileHeight: number = 350.0;
 
-    onLoad() {
+    protected onLoad(): void {
         // Get references to managers
         this.beatmapManager = BeatmapManager.instance;
         this.audioManager = MagicTilesAudioManager.instance;
-
         // Initialize the object pool
         this.initTilePool();
+    }
 
+    start() {
         // Ensure we have the correct number of lane containers
         this.ensureLaneContainers();
     }
@@ -185,7 +195,8 @@ export class TileManager extends Component {
         if (!this.isPlaying) return;
 
         // Update game time
-        this.gameTime += dt;
+        // this.gameTime += dt;
+        this.gameTime = MagicTilesAudioManager.instance.getAudioTime();
         MTUIManager.instance.updateSongTimeDisplay(this.gameTime);
 
         // Spawn tiles that should be visible
@@ -247,26 +258,33 @@ export class TileManager extends Component {
             this.minTileHeight
         );
 
+        // Calculate the total distance from spawn to miss threshold (instead of just to target)
+        const totalDistance = this.spawnPositionY - this.missThreshold;
+
         // Calculate how long it should take for the tile to reach the target position
-        const distance = this.spawnPositionY - this.targetPositionY;
-        const travelTime = distance / this.scrollSpeed;
+        const distanceToTarget = this.spawnPositionY - this.targetPositionY;
+        const travelTimeToTarget = distanceToTarget / this.scrollSpeed;
+
+        // Calculate total travel time to reach the miss threshold
+        const totalTravelTime = totalDistance / this.scrollSpeed;
 
         // Calculate when the tile should arrive at the target (hit time)
         const hitTime = note.time;
 
         // Calculate when to start the tile moving to arrive at the right time
-        const startTime = hitTime - travelTime;
- 
+        const startTime = hitTime - travelTimeToTarget;
+
         // If we need to start moving immediately
         if (startTime <= this.gameTime) {
-            // Start movement immediately
-            tile.startMovement(travelTime, startTime);
+            // Start movement immediately with the total travel time to the miss threshold
+            // This will make the tile continue past the target position
+            tile.startMovement(totalTravelTime, startTime);
         } else {
             // Schedule the tile to start moving at the correct time
             const delay = startTime - this.gameTime;
             this.scheduleOnce(() => {
                 if (tile.node.active) { // Check if still active
-                    tile.startMovement(travelTime, startTime);
+                    tile.startMovement(totalTravelTime, startTime);
                 }
             }, delay);
         }
@@ -279,11 +297,114 @@ export class TileManager extends Component {
      * Update all active tiles
      */
     private updateActiveTiles() {
+        // Check for tiles that need to be auto-played
+        if (this.isAutoplay) {
+            this.handleAutoplay();
+        }
+
+        // Check for tiles that have reached the bottom and should be missed
+        for (const tile of this.activeTiles) {
+            if (tile.getStatus() === TileStatus.ACTIVE) {
+                // Check if the tile has passed the miss threshold
+                if (tile.node.position.y <= this.missThreshold) {
+                    // Mark the tile as missed
+                    console.log(`Tile missed at position ${tile.node.position.y}, threshold: ${this.missThreshold}`);
+                    tile.miss();
+                }
+            }
+        }
+
         // Filter out tiles that are no longer active
+        const previousCount = this.activeTiles.length;
         this.activeTiles = this.activeTiles.filter(tile => {
             const status = tile.getStatus();
-            return status !== TileStatus.HIT && status !== TileStatus.MISSED && status !== TileStatus.EXPIRED;
+            if (status === TileStatus.HIT || status === TileStatus.MISSED || status === TileStatus.EXPIRED) {
+                // Return tiles that are no longer active to the pool
+                this.returnTileToPool(tile);
+                return false;
+            }
+            return true;
         });
+
+        // If any tiles were removed, log the count
+        if (previousCount !== this.activeTiles.length) {
+            console.log(`Active tiles: ${this.activeTiles.length} (removed ${previousCount - this.activeTiles.length})`);
+        }
+    }
+
+    /**
+     * Handle autoplay functionality to automatically hit tiles at the right time
+     */
+    private handleAutoplay(): void {
+        if (!this.isAutoplay) return;
+
+        // Get all active tiles that are close to the target position
+        const autoplayTiles = this.activeTiles.filter(tile => {
+            if (tile.getStatus() !== TileStatus.ACTIVE) return false;
+
+            const note = tile.getNote();
+            if (!note) return false;
+
+            // Check if the tile is within the perfect hit time window
+            const timeDiff = Math.abs(note.time - this.gameTime);
+            // Use a small time window to hit the note perfectly
+            return note.time <= this.gameTime + 0.05;
+        });
+
+        // Process each autoplayable tile
+        for (const tile of autoplayTiles) {
+            const laneIndex = tile.getLane();
+
+            // Handle different tile types
+            if (tile.isLongPressType()) {
+                // For hold notes, store them to release later
+                if (!this.touchedTiles.has(laneIndex)) {
+                    // Tap the tile
+                    tile.tap(this.gameTime);
+                    // Store it for later release
+                    this.touchedTiles.set(laneIndex, tile);
+                }
+            } else {
+                // For regular tap notes, just tap them
+                tile.tap(this.gameTime);
+            }
+        }
+
+        // Check for held notes that need to be released
+        this.touchedTiles.forEach((tile, laneIndex) => {
+            const note = tile.getNote();
+            if (!note || tile.getStatus() !== TileStatus.PRESSED) {
+                // Remove from tracked tiles if not in pressed state
+                this.touchedTiles.delete(laneIndex);
+                return;
+            }
+
+            // Check if it's time to release the held note
+            if (note.time + note.duration <= this.gameTime + 0.05) {
+                tile.release(this.gameTime);
+                this.touchedTiles.delete(laneIndex);
+            }
+        });
+    }
+
+    /**
+     * Toggle autoplay mode
+     * @param enable Whether to enable or disable autoplay
+     */
+    toggleAutoplay(enable?: boolean): void {
+        if (enable !== undefined) {
+            this.isAutoplay = enable;
+        } else {
+            this.isAutoplay = !this.isAutoplay;
+        }
+        console.log(`Autoplay ${this.isAutoplay ? 'enabled' : 'disabled'}`);
+    }
+
+    /**
+     * Check if autoplay is enabled
+     */
+    isAutoplayEnabled(): boolean {
+        return this.isAutoplay;
     }
 
     /**
@@ -485,7 +606,7 @@ export class TileManager extends Component {
 
         // Use setScrollSpeed to ensure consistent behavior
         // this.setScrollSpeed(calculatedSpeed * 3.0);
-        this.setScrollSpeed(calculatedSpeed * 7.0);
+        this.setScrollSpeed(calculatedSpeed * 4.0);
 
         console.log(`Dynamic scroll speed calculated: ${this.scrollSpeed.toFixed(1)} px/s (min gap: ${minTimeGap.toFixed(3)}s, avg gap: ${averageTimeGap.toFixed(3)}s, max duration: ${maxNoteDuration.toFixed(3)}s)`);
     }

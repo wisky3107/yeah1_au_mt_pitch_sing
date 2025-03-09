@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Sprite, Color, tween, Vec3, UIOpacity, UITransform } from 'cc';
+import { _decorator, Component, Node, Sprite, Color, tween, Vec3, UIOpacity, UITransform, Size } from 'cc';
 import { NoteType, TrackNoteInfo } from './MTDefines';
 
 const { ccclass, property } = _decorator;
@@ -68,6 +68,7 @@ export class Tile extends Component {
     private startY: number = 0;
     private targetY: number = 0;
     private lane: number = 0;
+    private scrollSpeed: number = 0;
 
     // Timing data
     private spawnTime: number = 0;
@@ -123,11 +124,11 @@ export class Tile extends Component {
      * @param targetY The ending Y position for the tile
      */
     init(note: TrackNoteInfo, lane: number, startY: number, targetY: number, width: number, scrollSpeed: number, minHeight: number) {
-        this.transform.width = width;
         this.noteData = note;
         this.lane = lane;
         this.startY = startY;
         this.targetY = targetY;
+        this.scrollSpeed = scrollSpeed;
         this.status = TileStatus.WAITING;
 
         // Reset state
@@ -162,7 +163,7 @@ export class Tile extends Component {
 
         const noteHeight = note.duration * scrollSpeed;
         // Set a minimum height to ensure visibility
-        this.transform.height = Math.max(noteHeight, minHeight);
+        this.transform.contentSize = new Size(width, Math.max(noteHeight, minHeight));
         this.transform.node.position = new Vec3(0, -this.bufferHeight, 0);
 
         // Set the height based on note duration for hold notes
@@ -194,15 +195,15 @@ export class Tile extends Component {
         this.spawnTime = Date.now() / 1000;
         console.log("Start movement", this.noteData.time, gametime, gametime - this.noteData.time);
 
+        // Calculate a position that's beyond the target position based on the increased duration
+        // This will make the tile continue moving past the target position
+        const targetPosY = this.targetY - ((duration * this.scrollSpeed) - (this.startY - this.targetY));
+
         // Create and start the movement tween
         this.moveTween = tween(this.node)
-            .to(duration, { position: new Vec3(0, this.targetY, 0) }, {
+            .to(duration, { position: new Vec3(0, targetPosY, 0) }, {
                 easing: 'linear',
-                onComplete: () => {
-                    if (this.status !== TileStatus.HIT) {
-                        this.miss();
-                    }
-                }
+                // No onComplete callback - TileManager will handle miss detection
             })
             .start();
     }
@@ -223,15 +224,14 @@ export class Tile extends Component {
             return;
         }
 
+        // Calculate a position that's beyond the target position based on the increased duration
+        const targetPosY = this.targetY - ((newDuration * this.scrollSpeed) - (this.startY - this.targetY));
+
         // Create and start a new tween from the current position to the target
         this.moveTween = tween(this.node)
-            .to(newDuration, { position: new Vec3(0, this.targetY, 0) }, {
+            .to(newDuration, { position: new Vec3(0, targetPosY, 0) }, {
                 easing: 'linear',
-                onComplete: () => {
-                    if (this.status !== TileStatus.HIT) {
-                        this.miss();
-                    }
-                }
+                // No onComplete callback - TileManager will handle miss detection
             })
             .start();
     }
@@ -278,9 +278,9 @@ export class Tile extends Component {
         // Determine hit rating based on timing accuracy
         if (timeDiff < 0.05) { // Within 50ms
             rating = HitRating.PERFECT;
-        } else if (timeDiff < 0.1) { // Within 100ms
+        } else if (timeDiff < 0.2) { // Within 100ms
             rating = HitRating.GREAT;
-        } else if (timeDiff < 0.15) { // Within 150ms
+        } else if (timeDiff < 0.3) { // Within 150ms
             rating = HitRating.COOL;
         } else {
             rating = HitRating.MISS;
