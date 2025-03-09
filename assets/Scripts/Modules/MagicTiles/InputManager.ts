@@ -60,6 +60,9 @@ export class InputManager extends Component {
     // Touch tracking
     private activeTouches: Map<number, TouchInfo> = new Map();
 
+    // Callback for lane tap events
+    private _laneTapCallback: ((lane: number) => void) | null = null;
+
     onLoad() {
         // Initialize tap feedback nodes
         this.initTapFeedback();
@@ -197,6 +200,11 @@ export class InputManager extends Component {
 
                 // Show tap feedback
                 this.showTapFeedback(lane);
+
+                // Call the lane tap callback if registered
+                if (this._laneTapCallback) {
+                    this._laneTapCallback(lane);
+                }
 
                 // Notify the tile manager and tap validator about the touch
                 const gameTime = this.tileManager.getGameTime();
@@ -498,5 +506,25 @@ export class InputManager extends Component {
      */
     getActiveTouchCount(): number {
         return this.activeTouches.size;
+    }
+
+    /**
+     * Register a callback for lane tap events
+     * @param callback Function to call when a lane is tapped
+     */
+    onLaneTap(callback: (lane: number) => void) {
+        // Store the callback
+        this._laneTapCallback = callback;
+    }
+
+    /**
+     * Remove a callback for lane tap events
+     * @param callback Function to remove
+     */
+    removeOnLaneTap(callback: (lane: number) => void) {
+        // Remove the callback if it matches
+        if (this._laneTapCallback === callback) {
+            this._laneTapCallback = null;
+        }
     }
 } 

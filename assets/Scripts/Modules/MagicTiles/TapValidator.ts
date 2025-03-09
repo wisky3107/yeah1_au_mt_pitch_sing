@@ -55,10 +55,10 @@ export class TapValidator extends Component {
     };
     
     // Callback for combo change events
-    private onComboChangeCallback: ((combo: number) => void) | null = null;
+    private onComboChangeCallbacks: ((combo: number) => void)[] = [];
     
     // Callback for rating events
-    private onRatingCallback: ((lane: number, rating: HitRating) => void) | null = null;
+    private onRatingCallbacks: ((lane: number, rating: HitRating) => void)[] = [];
     
     onLoad() {
         this.resetCombo();
@@ -75,11 +75,10 @@ export class TapValidator extends Component {
     validateTap(lane: number, tapTime: number, rating: HitRating): HitRating {
         // Update combo based on rating
         this.updateCombo(rating);
+        console.log("combo", this.combo);
         
         // Notify listeners of the rating
-        if (this.onRatingCallback) {
-            this.onRatingCallback(lane, rating);
-        }
+        this.onRatingCallbacks.forEach(callback => callback(lane, rating));
         
         return rating;
     }
@@ -97,11 +96,11 @@ export class TapValidator extends Component {
                 break;
             case HitRating.GREAT:
                 this.combo.goodCount++;
-                this.combo.count++;
+                this.combo.count = 0; // Reset combo on miss
                 break;
             case HitRating.COOL:
                 this.combo.okCount++;
-                this.combo.count++;
+                this.combo.count = 0; // Reset combo on miss
                 break;
             case HitRating.MISS:
                 this.combo.missCount++;
@@ -118,9 +117,7 @@ export class TapValidator extends Component {
         this.combo.lastRating = rating;
         
         // Notify combo change listeners
-        if (this.onComboChangeCallback) {
-            this.onComboChangeCallback(this.combo.count);
-        }
+        this.onComboChangeCallbacks.forEach(callback => callback(this.combo.count));
     }
     
     /**
@@ -138,9 +135,7 @@ export class TapValidator extends Component {
         };
         
         // Notify combo change listeners
-        if (this.onComboChangeCallback) {
-            this.onComboChangeCallback(0);
-        }
+        this.onComboChangeCallbacks.forEach(callback => callback(0));
     }
     
     /**
@@ -194,7 +189,18 @@ export class TapValidator extends Component {
      * @param callback Function to call when the combo changes
      */
     onComboChange(callback: (combo: number) => void) {
-        this.onComboChangeCallback = callback;
+        this.onComboChangeCallbacks.push(callback);
+    }
+    
+    /**
+     * Remove a combo change callback
+     * @param callback The callback to remove
+     */
+    offComboChange(callback: (combo: number) => void) {
+        const index = this.onComboChangeCallbacks.indexOf(callback);
+        if (index !== -1) {
+            this.onComboChangeCallbacks.splice(index, 1);
+        }
     }
     
     /**
@@ -202,7 +208,18 @@ export class TapValidator extends Component {
      * @param callback Function to call when a rating is determined
      */
     onRating(callback: (lane: number, rating: HitRating) => void) {
-        this.onRatingCallback = callback;
+        this.onRatingCallbacks.push(callback);
+    }
+    
+    /**
+     * Remove a rating callback
+     * @param callback The callback to remove
+     */
+    offRating(callback: (lane: number, rating: HitRating) => void) {
+        const index = this.onRatingCallbacks.indexOf(callback);
+        if (index !== -1) {
+            this.onRatingCallbacks.splice(index, 1);
+        }
     }
     
     /**

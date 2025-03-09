@@ -349,6 +349,6 @@ export class MagicTilesAudioManager {
      * Play a sound effect through the common audio manager
      */
     public playSound(name: string, volumePercent: number = 1.0): AudioSource {
-        return this.commonAudioManager.playSound(name, volumePercent);
+        return this.commonAudioManager?.playSound(name, volumePercent);
     }
 } 

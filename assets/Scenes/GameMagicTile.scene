@@ -344,10 +344,10 @@
         "__id__": 51
       },
       {
-        "__id__": 6
+        "__id__": 55
       },
       {
-        "__id__": 55
+        "__id__": 6
       },
       {
         "__id__": 62
@@ -1435,15 +1435,11 @@
     "playOnLoad": true,
     "_clips": [
       {
-        "__uuid__": "441d5608-e485-4dc5-9150-aa5263c1d27c",
+        "__uuid__": "7bc13986-33cf-4fd5-b4d6-b41dd3744387",
         "__expectedType__": "cc.AnimationClip"
       },
       {
         "__uuid__": "b089e757-47aa-419c-824a-e083bf67b8fb",
-        "__expectedType__": "cc.AnimationClip"
-      },
-      {
-        "__uuid__": "7bc13986-33cf-4fd5-b4d6-b41dd3744387",
         "__expectedType__": "cc.AnimationClip"
       },
       {
@@ -1453,13 +1449,17 @@
       {
         "__uuid__": "adb3aaf9-03c5-4842-8094-fed43f0d96a1",
         "__expectedType__": "cc.AnimationClip"
+      },
+      {
+        "__uuid__": "441d5608-e485-4dc5-9150-aa5263c1d27c",
+        "__expectedType__": "cc.AnimationClip"
       }
     ],
     "_defaultClip": {
       "__uuid__": "adb3aaf9-03c5-4842-8094-fed43f0d96a1",
       "__expectedType__": "cc.AnimationClip"
     },
-    "_id": "e5ebudEZJJfr2Z5sR31Zd8"
+    "_id": "810mvL5hREkanoYR8FRyon"
   },
   {
     "__type__": "cc.Node",

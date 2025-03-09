@@ -701,7 +701,6 @@ export class FeedbackManager extends Component {
             const label = messageNode.getComponent(Label) || messageNode.addComponent(Label);
             label.string = message;
             label.fontSize = fontSize;
-            label.lineHeight = fontSize;
             label.color = new Color(255, 255, 255, 255);
     
             // Add opacity component for fade effect

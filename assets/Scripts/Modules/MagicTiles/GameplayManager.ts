@@ -15,7 +15,7 @@ const { ccclass, property } = _decorator;
 export enum GameState {
     NONE,
     LOADING,
-    COUNTDOWN,
+    WAITING_FOR_START,  // State for waiting for the beginning tile tap
     PLAYING,
     PAUSED,
     COMPLETED,
@@ -136,9 +136,9 @@ export class GameplayManager extends Component {
             } else {
                 this.totalNotes = beatmap.notes.length;
             }
-
-            // Start the countdown
-            this.startCountdown();
+            this.tileManager.initGame();
+            // Create beginning tile and wait for user tap
+            this.createBeginningTile();
             return true;
         } catch (err) {
             console.error("Error starting game:", err);
@@ -147,31 +147,7 @@ export class GameplayManager extends Component {
     }
 
     /**
-     * Start the countdown before beginning the game
-     */
-    private startCountdown() {
-        this.setGameState(GameState.COUNTDOWN);
-
-        // Show countdown UI
-        this.feedbackManager.showMessage("3", 1.0, 200);
-
-        // Schedule countdown
-        this.scheduleOnce(() => {
-            this.feedbackManager.showMessage("2", 1.0, 200);
-        }, 1);
-
-        this.scheduleOnce(() => {
-            this.feedbackManager.showMessage("1", 1.0, 200);
-        }, 2);
-
-        this.scheduleOnce(() => {
-            this.feedbackManager.showMessage("GO!", 1.0, 200);
-            this.startPlaying();
-        }, 3);
-    }
-
-    /**
-     * Start actual gameplay after countdown
+     * Start actual gameplay after the beginning tile is tapped
      */
     private startPlaying() {
         // Reset managers
@@ -277,6 +253,8 @@ export class GameplayManager extends Component {
      * Handle a rating event from the tap validator
      */
     private onRatingEvent(lane: number, rating: HitRating) {
+        this.feedbackManager.showRatingFeedback(lane, rating);
+        this.feedbackManager.updateCombo(this.tapValidator.getCombo());
         // Count the note
         this.notesPassed++;
 
@@ -485,5 +463,49 @@ export class GameplayManager extends Component {
 
         // This would typically transition to the menu scene
         console.log("Exit to menu");
+    }
+
+    /**
+     * Create a beginning tile that the player must tap to start the game
+     */
+    private createBeginningTile() {
+        // Change to waiting state
+        this.setGameState(GameState.WAITING_FOR_START);
+
+        // Show message to tap to start
+        this.feedbackManager.showMessage("Tap to Start", 0, 140);
+
+        // Initialize the tileManager with a minimal setup to just show the beginning tile
+        if (this.tileManager) {
+            // Set up tileManager to show the beginning tile but not start the full song
+            this.tileManager.setupBeginningTile();
+        }
+
+        // Enable input for just the beginning tile interaction
+        this.inputManager.setEnabled(true);
+
+        // Register callback for the beginning tile tap
+        this.inputManager.onLaneTap(this.onBeginningTileTap.bind(this));
+    }
+
+    /**
+     * Handler for when the beginning tile is tapped
+     * @param laneIndex The lane that was tapped
+     */
+    private onBeginningTileTap(laneIndex: number) {
+        // Check if we're in the waiting for start state
+        if (this.gameState !== GameState.WAITING_FOR_START) {
+            return;
+        }
+
+        // Check if this lane has the beginning tile
+        const beginningTileTapped = this.tileManager.checkBeginningTileTap(laneIndex);
+        if (beginningTileTapped) {
+            // Unregister the lane tap callback to avoid duplicate calls
+            this.inputManager.removeOnLaneTap(this.onBeginningTileTap.bind(this));
+
+            // Start the actual gameplay
+            this.startPlaying();
+        }
     }
 } 

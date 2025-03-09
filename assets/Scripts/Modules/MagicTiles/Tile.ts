@@ -39,6 +39,18 @@ export class Tile extends Component {
     @property
     bufferHeight: number = 200; //perfect timming will higher than bottom by this amount
 
+    @property(Node)
+    nodeBeginning: Node = null!;
+
+    @property({type: Node, group: {name: 'Long Press'}})
+    nodeLongPress: Node = null!;
+
+    @property({type: Node, group: {name: 'Long Press'}})
+    nodeHoldEffect: Node = null!;
+
+    @property({type: UITransform, group: {name: 'Long Press'}})
+    holdEffectTransform: UITransform = null!;
+
     // Colors for different tile states
     @property
     normalColor: Color = new Color(0, 0, 0, 255);
@@ -91,13 +103,15 @@ export class Tile extends Component {
     private movementStartY: number = 0;
     private movementTargetY: number = 0;
     private isMovementActive: boolean = false;
-    
+
     // Reusable Vec3 object to reduce allocations
     private tempVec3: Vec3 = new Vec3();
 
     // Add properties for frame skipping
     private updatePriority: number = 0; // 0=every frame, 1=every other frame, etc.
     private frameCounter: number = 0;
+
+    private holdRange: number = 0;
 
     onLoad() {
         // Initialize Sprite and Transform references if not set in the inspector
@@ -111,6 +125,10 @@ export class Tile extends Component {
 
         if (!this.opacity) {
             this.opacity = this.getComponent(UIOpacity)!;
+        }
+
+        if (this.nodeHoldEffect && !this.holdEffectTransform) {
+            this.holdEffectTransform = this.nodeHoldEffect.getComponent(UITransform)!;
         }
     }
 
@@ -128,6 +146,7 @@ export class Tile extends Component {
         this.targetY = targetY;
         this.scrollSpeed = scrollSpeed;
         this.status = TileStatus.WAITING;
+        this.holdRange = 0;
 
         // Reset state
         this.isTouching = false;
@@ -163,13 +182,22 @@ export class Tile extends Component {
         // Set a minimum height to ensure visibility
         this.transform.contentSize = new Size(width, Math.max(noteHeight, minHeight));
         this.transform.node.position = new Vec3(0, -this.bufferHeight, 0);
-
+        this.nodeBeginning.active = false;
         // Set the height based on note duration for hold notes
         if (note.type === NoteType.HOLD && note.duration > 0) {
             this.isLongPress = true;
+            this.setLongPressNodeActive(true);
+            if (this.nodeHoldEffect) {
+                this.nodeHoldEffect.active = false;
+            }
+            if (this.holdEffectTransform) {
+                this.holdEffectTransform.height = 0;
+            }
             // Calculate height based on duration and scroll speed
         } else {
             this.isLongPress = false;
+            this.setLongPressNodeActive(false);
+            
             // Reset height to default (square) for regular notes
         }
 
@@ -184,8 +212,21 @@ export class Tile extends Component {
         this.node.active = true;
     }
 
+    public setBeginningNodeActive(active: boolean) {
+        this.nodeBeginning.active = active;
+    }
+
+    public setLongPressNodeActive(active: boolean) {
+        this.nodeLongPress.active = active;
+    }
+
     public getTileHeight(): number {
         return this.transform.contentSize.height;
+    }
+
+    public setBufferHeight(height: number) {
+        this.bufferHeight = height;
+        this.transform.node.position = new Vec3(0, -this.bufferHeight, 0);
     }
 
     /**
@@ -196,24 +237,24 @@ export class Tile extends Component {
     startMovement(duration: number, gameTime: number) {
         this.status = TileStatus.ACTIVE;
         this.spawnTime = Date.now() / 1000;
-        
+
         // Calculate a position that's beyond the target position
         const targetPosY = this.targetY - ((duration * this.scrollSpeed) - (this.startY - this.targetY));
-        
+
         // Store movement parameters for direct updates
         this.movementStartTime = gameTime;
         this.movementDuration = duration;
         this.movementStartY = this.node.position.y;
         this.movementTargetY = targetPosY;
         this.isMovementActive = true;
-        
+
         // Stop any existing tween
         if (this.moveTween) {
             this.moveTween.stop();
             this.moveTween = null;
         }
     }
-    
+
     /**
      * Set the update priority based on distance from target
      * @param priority 0=update every frame, 1=every other frame, etc.
@@ -221,7 +262,7 @@ export class Tile extends Component {
     setUpdatePriority(priority: number) {
         this.updatePriority = priority;
     }
-    
+
     /**
      * Built-in update method that will be called every frame
      */
@@ -231,13 +272,18 @@ export class Tile extends Component {
             this.frameCounter = (this.frameCounter + 1) % (this.updatePriority + 1);
             if (this.frameCounter !== 0) return;
         }
-        
+
         // Handle direct movement if active
         if (this.isMovementActive) {
             this.updateTileMovement();
         }
+
+        // Update hold effect if holding
+        if (this.status === TileStatus.HOLDING && this.isLongPress && this.nodeHoldEffect) {
+            this.updateHoldEffect(dt);
+        }
     }
-    
+
     /**
      * Update the tile position directly
      * @returns The calculated new Y position
@@ -247,22 +293,22 @@ export class Tile extends Component {
         const currentTime = this.calculateCurrentTime();
         const elapsedTime = currentTime - this.movementStartTime;
         const progress = Math.min(1.0, elapsedTime / this.movementDuration);
-        
+
         // Linear interpolation for position
         const newY = this.movementStartY + (this.movementTargetY - this.movementStartY) * progress;
-        
+
         // Reuse Vec3 object to reduce garbage collection
         this.tempVec3.set(0, newY, 0);
         this.node.position = this.tempVec3;
-        
+
         // If movement complete, stop updates
         if (progress >= 1.0) {
             this.isMovementActive = false;
         }
-        
+
         return newY;
     }
-    
+
     /**
      * Get the current time for movement calculations
      * In a real implementation, this would use a reference to the audio manager
@@ -314,16 +360,16 @@ export class Tile extends Component {
         // Get framerate compensation factor from director
         // This helps adjust timing windows for low FPS devices
         const dt = game.deltaTime
-        const targetFrameTime = 1/60; // Target is 60fps
-        
+        const targetFrameTime = 1 / 60; // Target is 60fps
+
         // Calculate a compensation factor based on current frame time vs target frame time
         // Cap the compensation to avoid extreme values
         const fpsCompensationFactor = Math.min(Math.max(dt / targetFrameTime, 1.0), 3.0);
-        
+
         // Apply compensation to timing windows
-        const perfectWindow = 0.05 * fpsCompensationFactor;
-        const greatWindow = 0.2 * fpsCompensationFactor;
-        const coolWindow = 0.3 * fpsCompensationFactor;
+        const perfectWindow = 0.1 * fpsCompensationFactor;
+        const greatWindow = 0.3 * fpsCompensationFactor;
+        const coolWindow = 0.5 * fpsCompensationFactor;
 
         let rating: HitRating;
 
@@ -369,9 +415,9 @@ export class Tile extends Component {
 
             // Get framerate compensation factor from director
             const dt = game.deltaTime;
-            const targetFrameTime = 1/60; // Target is 60fps
+            const targetFrameTime = 1 / 60; // Target is 60fps
             const fpsCompensationFactor = Math.min(Math.max(dt / targetFrameTime, 1.0), 2.0);
-            
+
             let rating: HitRating = HitRating.COOL;
 
             // Determine rating based on how closely the hold duration matches expected
@@ -423,6 +469,17 @@ export class Tile extends Component {
 
         this.status = TileStatus.HOLDING;
         this.holdRating = rating;
+        // Set holdRange based on the distance between current position and target position
+        this.holdRange = Math.abs(this.node.position.y - this.targetY);
+        
+        // Initialize hold effect
+        if (this.nodeHoldEffect) {
+            this.nodeHoldEffect.active = true;
+            if (this.holdEffectTransform) {
+                const currentSize = this.holdEffectTransform.contentSize;
+                this.holdEffectTransform.contentSize = new Size(currentSize.width, 0);
+            }
+        }
 
         this.background.color = this.holdColor;
     }
@@ -531,11 +588,45 @@ export class Tile extends Component {
         this.isTouching = false;
         this.isLongPress = false;
         this.isSliding = false;
+        this.holdRange = 0;
+
+        // Hide nodes
+        if (this.nodeHoldEffect) {
+            this.nodeHoldEffect.active = false;
+        }
 
         // Clean up direct movement
         this.isMovementActive = false;
 
         // Hide the node
         this.node.active = false;
+    }
+
+    /**
+     * Update the hold effect position and size
+     * @param dt Delta time
+     */
+    private updateHoldEffect(dt: number) {
+        if (!this.isTouching) return;
+
+        // Increase holdRange by scrollSpeed
+        this.holdRange = Math.min(this.holdRange + this.scrollSpeed * dt, this.transform.contentSize.height - this.bufferHeight);
+        
+        // Activate hold effect node if not already active
+        if (!this.nodeHoldEffect.active) {
+            this.nodeHoldEffect.active = true;
+        }
+        
+        // Update hold effect position
+        const effectPos = this.nodeHoldEffect.position;
+        const finalHoldPosition = this.holdRange + this.bufferHeight;
+        // Create a new Vec3 instead of modifying the y property directly
+        this.nodeHoldEffect.position = new Vec3(effectPos.x, finalHoldPosition, effectPos.z);
+        
+        // Update hold effect height
+        if (this.holdEffectTransform) {
+            const currentSize = this.holdEffectTransform.contentSize;
+            this.holdEffectTransform.contentSize = new Size(currentSize.width, finalHoldPosition);
+        }
     }
 } 
