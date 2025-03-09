@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Sprite, Color, tween, Vec3, UIOpacity, UITransform, Size, director } from 'cc';
+import { _decorator, Component, Node, Sprite, Color, tween, Vec3, UIOpacity, UITransform, Size, director, game } from 'cc';
 import { NoteType, TrackNoteInfo } from './MTDefines';
 
 const { ccclass, property } = _decorator;
@@ -311,14 +311,28 @@ export class Tile extends Component {
         const expectedTime = this.noteData.time;
         const timeDiff = Math.abs(time - expectedTime);
 
+        // Get framerate compensation factor from director
+        // This helps adjust timing windows for low FPS devices
+        const dt = game.deltaTime
+        const targetFrameTime = 1/60; // Target is 60fps
+        
+        // Calculate a compensation factor based on current frame time vs target frame time
+        // Cap the compensation to avoid extreme values
+        const fpsCompensationFactor = Math.min(Math.max(dt / targetFrameTime, 1.0), 3.0);
+        
+        // Apply compensation to timing windows
+        const perfectWindow = 0.05 * fpsCompensationFactor;
+        const greatWindow = 0.2 * fpsCompensationFactor;
+        const coolWindow = 0.3 * fpsCompensationFactor;
+
         let rating: HitRating;
 
-        // Determine hit rating based on timing accuracy
-        if (timeDiff < 0.05) { // Within 50ms
+        // Determine hit rating based on timing accuracy with adjusted windows
+        if (timeDiff < perfectWindow) { // Perfect window adjusted for fps
             rating = HitRating.PERFECT;
-        } else if (timeDiff < 0.2) { // Within 100ms
+        } else if (timeDiff < greatWindow) { // Great window adjusted for fps
             rating = HitRating.GREAT;
-        } else if (timeDiff < 0.3) { // Within 150ms
+        } else if (timeDiff < coolWindow) { // Cool window adjusted for fps
             rating = HitRating.COOL;
         } else {
             rating = HitRating.MISS;
@@ -353,14 +367,22 @@ export class Tile extends Component {
             const expectedDuration = this.noteData.duration;
             const actualDuration = this.touchEndTime - this.touchStartTime;
 
+            // Get framerate compensation factor from director
+            const dt = game.deltaTime;
+            const targetFrameTime = 1/60; // Target is 60fps
+            const fpsCompensationFactor = Math.min(Math.max(dt / targetFrameTime, 1.0), 2.0);
+            
             let rating: HitRating = HitRating.COOL;
 
             // Determine rating based on how closely the hold duration matches expected
+            // Adjust thresholds based on FPS compensation factor
             const durationRatio = actualDuration / expectedDuration;
+            const perfectThreshold = 0.95 / fpsCompensationFactor;
+            const greatThreshold = 0.8 / fpsCompensationFactor;
 
-            if (durationRatio >= 0.95) {
+            if (durationRatio >= perfectThreshold) {
                 rating = HitRating.PERFECT;
-            } else if (durationRatio >= 0.8) {
+            } else if (durationRatio >= greatThreshold) {
                 rating = HitRating.GREAT;
             }
 

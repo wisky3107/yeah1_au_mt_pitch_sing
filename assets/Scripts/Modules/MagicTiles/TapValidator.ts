@@ -1,6 +1,7 @@
 import { _decorator, Component, Node } from 'cc';
 import { HitRating } from './Tile';
 import { BeatmapManager } from './BeatmapManager';
+import { director } from 'cc';
 
 const { ccclass, property } = _decorator;
 
@@ -96,12 +97,25 @@ export class TapValidator extends Component {
         // Calculate timing difference
         const timeDiff = Math.abs(adjustedTapTime - expectedTime);
         
+        // Get framerate compensation factor from director
+        const dt = director.getDeltaTime();
+        const targetFrameTime = 1/60; // Target is 60fps
+        
+        // Calculate a compensation factor based on current frame time vs target frame time
+        // Cap the compensation to avoid extreme values
+        const fpsCompensationFactor = Math.min(Math.max(dt / targetFrameTime, 1.0), 3.0);
+        
+        // Apply compensation to timing windows
+        const adjustedPerfectWindow = this.perfectWindow * fpsCompensationFactor;
+        const adjustedGoodWindow = this.goodWindow * fpsCompensationFactor;
+        const adjustedOkWindow = this.okWindow * fpsCompensationFactor;
+        
         // Determine rating based on timing windows
-        if (timeDiff <= this.perfectWindow) {
+        if (timeDiff <= adjustedPerfectWindow) {
             return HitRating.PERFECT;
-        } else if (timeDiff <= this.goodWindow) {
+        } else if (timeDiff <= adjustedGoodWindow) {
             return HitRating.GREAT;
-        } else if (timeDiff <= this.okWindow) {
+        } else if (timeDiff <= adjustedOkWindow) {
             return HitRating.COOL;
         } else {
             return HitRating.MISS;
