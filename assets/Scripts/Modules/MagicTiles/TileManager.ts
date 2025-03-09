@@ -230,6 +230,8 @@ export class TileManager extends Component {
     }
 
     initGame() {
+        this.clearActiveTiles();
+
         // Reset state
         this.nextNoteIndex = 0;
         this.gameTime = 0.0;
@@ -243,7 +245,6 @@ export class TileManager extends Component {
         // Calculate optimal scroll speed based on note data
         this.calculateDynamicScrollSpeed();
         // Clear any active tiles
-        this.clearActiveTiles();
     }
 
     /**
@@ -1049,7 +1050,7 @@ export class TileManager extends Component {
         tile.init(beginningNote, lane, yPos, yPos, this.laneWidth, this.scrollSpeed, this.minTileHeight);
         tile.setBufferHeight(this.minTileHeight / 2.0);
         tile.setBeginningNodeActive(true);
-        
+
         // Set a special tag to identify this tile
         tile.node.name = "beginning_tile";
 

@@ -100,6 +100,10 @@ export class MagicTilesAudioManager {
             return null;
         }
     }
+
+    public setCurrentBeatmap(beatmap: BeatmapAudioData) {
+        this._currentBeatmap = beatmap;
+    }
     
     /**
      * Promise-based audio clip loading
@@ -350,5 +354,41 @@ export class MagicTilesAudioManager {
      */
     public playSound(name: string, volumePercent: number = 1.0): AudioSource {
         return this.commonAudioManager?.playSound(name, volumePercent);
+    }
+    
+    /**
+     * Create BeatmapAudioData directly from already loaded assets
+     * Useful for drag-and-drop functionality where assets are loaded outside the resource system
+     * 
+     * @param audioClip The already loaded AudioClip
+     * @param midiTrack The already parsed MIDI track data
+     * @returns Promise that resolves with the BeatmapAudioData
+     */
+    public async createBeatmapAudioDataFromAssets(audioClip: AudioClip, midiTrack: any): Promise<BeatmapAudioData> {
+        this._isBuffering = true;
+        
+        try {
+            // Create beatmap audio data directly from the provided assets
+            this._currentBeatmap = {
+                clip: audioClip,
+                trackInfo: midiTrack,
+                totalDuration: audioClip.getDuration(),
+                currentTime: 0,
+                isPlaying: false,
+                isPaused: false
+            };
+            
+            // Setup the audio source
+            this._beatmapAudioSource.clip = audioClip;
+            this._beatmapAudioSource.volume = 1.0;
+            // this._beatmapAudioSource.volume = this.commonAudioManager.getMusicVolume();
+            
+            this._isBuffering = false;
+            return this._currentBeatmap;
+        } catch (err) {
+            console.error("Failed to create beatmap audio from assets:", err);
+            this._isBuffering = false;
+            return null;
+        }
     }
 } 

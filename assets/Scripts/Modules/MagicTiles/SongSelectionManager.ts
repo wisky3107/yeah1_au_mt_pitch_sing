@@ -580,6 +580,6 @@ export class SongSelectionManager extends Component {
         }
 
         // Start the game with selected beatmap
-        this.gameplayManager.startGame(this.selectedBeatmapId);
+        this.gameplayManager.LoadBeatMap(this.selectedBeatmapId);
     }
 } 

@@ -214,11 +214,11 @@ export class BeatmapManager {
         return null;
     }
 
-    private getLandById(nodeId: number) {
+    public getLandById(nodeId: number) {
         return nodeId - 96;
     }
 
-    private getNoteType(node: TrackNoteInfo) {
+    public getNoteType(node: TrackNoteInfo) {
         if (node.duration > 0.5) {
             return NoteType.HOLD;
         }
@@ -362,5 +362,21 @@ export class BeatmapManager {
             console.error("Invalid custom beatmap format:", err);
             return null;
         }
+    }
+
+    /**
+     * Adds a temporary beatmap for drag and drop functionality
+     * @param id The temporary beatmap ID
+     * @param beatmap The beatmap data
+     * @returns The added beatmap
+     */
+    public addTempBeatmap(id: string, beatmap: Beatmap): Beatmap {
+        // Add to our collection
+        this.beatmaps.set(id, beatmap);
+        
+        // Set as active beatmap
+        this.activeBeatmap = beatmap;
+        
+        return beatmap;
     }
 } 

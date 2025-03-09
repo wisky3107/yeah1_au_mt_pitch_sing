@@ -97,14 +97,14 @@ export class GameplayManager extends Component {
         }
 
         //test play sample song 
-        this.startGame("Perfect_EdSheeran_demo");
+        this.LoadBeatMap("Perfect_EdSheeran_demo");
     }
 
     /**
      * Start loading a beatmap
      * @param beatmapId ID of the beatmap to load
      */
-    async startGame(beatmapId: string): Promise<boolean> {
+    async LoadBeatMap(beatmapId: string): Promise<boolean> {
         // Reset state
         this.resetGameState();
 
@@ -360,7 +360,7 @@ export class GameplayManager extends Component {
     /**
      * Reset the game state to defaults
      */
-    private resetGameState() {
+    public resetGameState() {
         this.gameState = GameState.NONE;
         this.survivalHP = this.maxSurvivalHP;
         this.elapsedTime = 0;
@@ -372,7 +372,7 @@ export class GameplayManager extends Component {
     /**
      * Set the game state and notify listeners
      */
-    private setGameState(newState: GameState) {
+    public setGameState(newState: GameState) {
         this.gameState = newState;
 
         // Notify listeners
@@ -447,7 +447,7 @@ export class GameplayManager extends Component {
      */
     restartGame() {
         if (this.currentBeatmapId) {
-            this.startGame(this.currentBeatmapId);
+            this.LoadBeatMap(this.currentBeatmapId);
         }
     }
 
@@ -468,7 +468,7 @@ export class GameplayManager extends Component {
     /**
      * Create a beginning tile that the player must tap to start the game
      */
-    private createBeginningTile() {
+    public createBeginningTile() {
         // Change to waiting state
         this.setGameState(GameState.WAITING_FOR_START);
 

@@ -70,3 +70,45 @@ export function loadMidi(resourcesPath: string, trackIndex: number = 1): Promise
         });
     });
 }
+
+export function loadMidiFromURL(url: string, trackIndex: number = 1): Promise<any> {
+    return new Promise((resolve, reject) => {
+        // Create a new XMLHttpRequest
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'arraybuffer';
+
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                const arrayBuffer = xhr.response;
+                const byteArray = new Uint8Array(arrayBuffer);
+
+                try {
+                    // Use the global Midi parser if available
+                    if (typeof window !== 'undefined' && window['Midi']) {
+                        const midi = new window['Midi'](byteArray.buffer);
+                        console.log("MIDI file loaded successfully:", midi);
+
+                        // Take the first track
+                        const track = midi.tracks && midi.tracks.length > trackIndex ? midi.tracks[trackIndex] : null;
+                        resolve(track || midi);
+                    } else {
+                        // Fallback if Midi parser is not available
+                        reject(new Error("Midi parser not available"));
+                    }
+                } catch (e) {
+                    console.error("Error parsing MIDI data:", e);
+                    reject(e);
+                }
+            } else {
+                reject(new Error(`Error loading binary data: ${xhr.statusText}`));
+            }
+        };
+
+        xhr.onerror = () => {
+            reject(new Error("Network error during MIDI file loading"));
+        };
+
+        xhr.send();
+    });
+}
