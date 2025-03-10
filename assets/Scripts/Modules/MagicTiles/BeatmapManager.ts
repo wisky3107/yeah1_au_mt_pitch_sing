@@ -1,4 +1,4 @@
-import { _decorator, sys, JsonAsset, NodeEventType } from "cc";
+import { _decorator, sys, JsonAsset, NodeEventType, math } from "cc";
 import { MagicTilesAudioManager } from "./AudioManager";
 import { resourceUtil } from "../../Common/resourceUtil";
 import { Beatmap, BeatmapAudioData, BeatmapMetadata, NoteType, TrackNoteInfo } from "./MTDefines";
@@ -152,74 +152,118 @@ export class BeatmapManager {
         if (this.beatmaps.has(id)) {
             const beatmap = this.beatmaps.get(id)!;
             
-            // Prepare to reuse existing notes array when possible
-            const existingNotes = beatmap.notes;
-            const newLength = notes.length;
-            
-            // If we already have an array with sufficient capacity, reuse it
-            if (existingNotes.length >= newLength) {
-                // Reuse existing array and just update values
-                for (let i = 0; i < newLength; i++) {
-                    const node = notes[i];
-                    existingNotes[i].midi = node.midi;
-                    existingNotes[i].time = node.time;
-                    existingNotes[i].lane = this.getLandById(node.midi);
-                    existingNotes[i].duration = node.duration;
-                    existingNotes[i].durationTicks = node.durationTicks;
-                    existingNotes[i].velocity = node.velocity;
-                    existingNotes[i].type = this.getNoteType(node);
-                }
-                // If the new array is smaller, truncate the existing one
-                if (existingNotes.length > newLength) {
-                    existingNotes.length = newLength;
-                }
-            } else {
-                // Need to create a new array
-                beatmap.notes = new Array(newLength);
-                
-                // Use existing objects where possible
-                for (let i = 0; i < newLength; i++) {
-                    const node = notes[i];
-                    if (i < existingNotes.length) {
-                        // Reuse existing note object
-                        beatmap.notes[i] = existingNotes[i];
-                        beatmap.notes[i].midi = node.midi;
-                        beatmap.notes[i].time = node.time;
-                        beatmap.notes[i].lane = this.getLandById(node.midi);
-                        beatmap.notes[i].duration = node.duration;
-                        beatmap.notes[i].durationTicks = node.durationTicks;
-                        beatmap.notes[i].velocity = node.velocity;
-                        beatmap.notes[i].type = this.getNoteType(node);
-                    } else {
-                        // Create new note object
-                        beatmap.notes[i] = {
-                            midi: node.midi,
-                            time: node.time,
-                            lane: this.getLandById(node.midi),
-                            duration: node.duration,
-                            durationTicks: node.durationTicks,
-                            velocity: node.velocity,
-                            type: this.getNoteType(node)
-                        };
-                    }
-                }
-            }
-            
-            // Sort in place with a more efficient implementation if needed
-            beatmap.notes.sort((a, b) => a.time - b.time);
+            // Convert notes and update the beatmap
+            beatmap.notes = this.convertNotes(notes, beatmap.notes);
             
             this.beatmaps.set(id, beatmap);
             return beatmap;
         }
         return null;
     }
+    
+    /**
+     * Convert raw note data to optimized game notes while minimizing object creation
+     * @param notes The raw note data to convert
+     * @param existingNotes Optional array of existing notes to reuse
+     * @returns Array of processed and optimized notes
+     */
+    public convertNotes(notes: TrackNoteInfo[], existingNotes: TrackNoteInfo[] = []): TrackNoteInfo[] {
+        const newLength = notes.length;
+        let resultNotes: TrackNoteInfo[];
+        
+        // If we already have an array with sufficient capacity, reuse it
+        if (existingNotes.length >= newLength) {
+            // Reuse existing array and just update values
+            for (let i = 0; i < newLength; i++) {
+                const node = notes[i];
+                existingNotes[i].midi = node.midi;
+                existingNotes[i].time = node.time;
+                existingNotes[i].lane = this.getLandById(node.midi);
+                existingNotes[i].duration = node.duration;
+                existingNotes[i].durationTicks = node.durationTicks;
+                existingNotes[i].velocity = node.velocity;
+                existingNotes[i].type = this.getNoteType(node);
+            }
+            // If the new array is smaller, truncate the existing one
+            if (existingNotes.length > newLength) {
+                existingNotes.length = newLength;
+            }
+            resultNotes = existingNotes;
+        } else {
+            // Need to create a new array
+            resultNotes = new Array(newLength);
+            
+            // Use existing objects where possible
+            for (let i = 0; i < newLength; i++) {
+                const node = notes[i];
+                if (i < existingNotes.length) {
+                    // Reuse existing note object
+                    resultNotes[i] = existingNotes[i];
+                    resultNotes[i].midi = node.midi;
+                    resultNotes[i].time = node.time;
+                    resultNotes[i].lane = this.getLandById(node.midi);
+                    resultNotes[i].duration = node.duration;
+                    resultNotes[i].durationTicks = node.durationTicks;
+                    resultNotes[i].velocity = node.velocity;
+                    resultNotes[i].type = this.getNoteType(node);
+                } else {
+                    // Create new note object
+                    resultNotes[i] = {
+                        midi: node.midi,
+                        time: node.time,
+                        lane: this.getLandById(node.midi),
+                        duration: node.duration,
+                        durationTicks: node.durationTicks,
+                        velocity: node.velocity,
+                        type: this.getNoteType(node)
+                    };
+                }
+            }
+        }
+        
+        // Sort in place with a more efficient implementation if needed
+        resultNotes.sort((a, b) => a.time - b.time);
+        
+        // After sorting, calculate durations for non-hold notes based on the next note time
+        for (let i = 0; i < resultNotes.length - 1; i++) {
+            const currentNote = resultNotes[i];
+            let nextNote = resultNotes[i + 1];
+            
+            // Check if the next note has the same time as current note
+            // If so, look for the note after that (i + 2)
+            if (nextNote.time === currentNote.time && i + 2 < resultNotes.length) {
+                nextNote = resultNotes[i + 2];
+            }
+            
+            // Only adjust duration for tap notes (not hold notes)
+            if (currentNote.type !== NoteType.HOLD) {
+                // Set duration to the time difference between this note and the next
+                currentNote.duration = Math.min(nextNote.time - currentNote.time, 0.23);
+            }
+        }
+        
+        // Handle the last note if it's not a hold note
+        if (resultNotes.length > 0) {
+            const lastNote = resultNotes[resultNotes.length - 1];
+            if (lastNote.type !== NoteType.HOLD) {
+                // For the last note, we could set a default duration or leave as is
+                // Here we set a small default duration if it's not already set
+                if (lastNote.duration <= 0) {
+                    lastNote.duration = 0.2; // Default duration for the last note
+                }
+            }
+        }
+        
+        return resultNotes;
+    }
+
 
     public getLandById(nodeId: number) {
         return nodeId - 96;
     }
 
     public getNoteType(node: TrackNoteInfo) {
-        if (node.duration > 0.5) {
+        if (node.duration > 0.3) {
             return NoteType.HOLD;
         }
         return NoteType.TAP;

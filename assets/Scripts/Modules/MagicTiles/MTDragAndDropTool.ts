@@ -1,4 +1,4 @@
-import { _decorator, Component, sys, assetManager, AudioClip, Asset, Node, game, director } from "cc";
+import { _decorator, Component, sys, assetManager, AudioClip, Asset, Node, game, director, Label } from "cc";
 import { MagicTilesAudioManager } from "./AudioManager";
 import { GameplayManager, GameState } from "./GameplayManager";
 import { BeatmapManager } from "./BeatmapManager";
@@ -13,14 +13,19 @@ const { ccclass, property } = _decorator;
  */
 @ccclass("MTDragAndDropTool")
 export class MTDragAndDropTool extends Component {
-    // Make the instance public static to allow initialization
-    public static _instance: MTDragAndDropTool = null;
+    // Singleton instance
+    private static _instance: MTDragAndDropTool = null;
+
+    @property(Node)
+    notificationNode: Node = null;
+
+    @property(Label)
+    notificationLabel: Label = null;
 
     // Temporary storage for drag-dropped files
     private _midiFile: File = null;
     private _audioFile: File = null;
     private _tempBeatmapId: string = null;
-    private _notificationNode: Node = null;
     private _tempAssets: {
         audioClip: AudioClip;
         midiData: any;
@@ -28,16 +33,58 @@ export class MTDragAndDropTool extends Component {
         midiUUID: string;
     } = null;
 
+    // Overlay element for drag visual feedback
+    private _dropOverlay: HTMLDivElement = null;
+
     // Singleton pattern
     public static get instance(): MTDragAndDropTool {
-        if (!this._instance) {
-            this._instance = new MTDragAndDropTool();
-        }
         return this._instance;
     }
 
     protected onLoad(): void {
+        // Set the singleton instance
+        MTDragAndDropTool._instance = this;
+        this.createDragOverlay();
         this.initialize();
+    }
+
+    protected onDestroy(): void {
+        // Clean up the overlay if it exists
+        if (this._dropOverlay && this._dropOverlay.parentNode) {
+            this._dropOverlay.parentNode.removeChild(this._dropOverlay);
+        }
+        
+        // Release the singleton instance if it's this component
+        if (MTDragAndDropTool._instance === this) {
+            MTDragAndDropTool._instance = null;
+        }
+    }
+
+    /**
+     * Create a visual overlay for drag feedback
+     */
+    private createDragOverlay(): void {
+        if (!sys.isBrowser) return;
+
+        // Create the overlay element
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0, 100, 255, 0.3)';
+        overlay.style.display = 'none';
+        overlay.style.zIndex = '9999';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.fontSize = '24px';
+        overlay.style.color = 'white';
+        overlay.style.textShadow = '0 0 5px black';
+        overlay.innerHTML = '<div style="background: rgba(0,0,0,0.7); padding: 20px; border-radius: 10px;">Drop MIDI and Audio files here<br><small>(Need both files to start)</small></div>';
+
+        document.body.appendChild(overlay);
+        this._dropOverlay = overlay;
     }
 
     /**
@@ -56,19 +103,30 @@ export class MTDragAndDropTool extends Component {
         body.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            body.classList.add('drag-over');
+            if (this._dropOverlay) {
+                this._dropOverlay.style.display = 'flex';
+            }
         });
 
         body.addEventListener('dragleave', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            body.classList.remove('drag-over');
+            // Check if we're actually leaving the document body
+            const rect = body.getBoundingClientRect();
+            if (e.clientX <= rect.left || e.clientX >= rect.right ||
+                e.clientY <= rect.top || e.clientY >= rect.bottom) {
+                if (this._dropOverlay) {
+                    this._dropOverlay.style.display = 'none';
+                }
+            }
         });
 
         body.addEventListener('drop', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            body.classList.remove('drag-over');
+            if (this._dropOverlay) {
+                this._dropOverlay.style.display = 'none';
+            }
 
             this.handleFileDrop(e.dataTransfer.files);
         });
@@ -83,26 +141,40 @@ export class MTDragAndDropTool extends Component {
     private handleFileDrop(files: FileList): void {
         if (!files || files.length === 0) return;
 
+        let midiFound = false;
+        let audioFound = false;
+
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
 
             // Check file type
             if (file.name.toLowerCase().endsWith('.mid') || file.name.toLowerCase().endsWith('.midi')) {
                 this._midiFile = file;
+                midiFound = true;
                 console.log("MTDragAndDropTool: MIDI file dropped:", file.name);
             }
             else if (file.name.toLowerCase().endsWith('.mp3') ||
                 file.name.toLowerCase().endsWith('.wav') ||
                 file.name.toLowerCase().endsWith('.ogg')) {
                 this._audioFile = file;
+                audioFound = true;
                 console.log("MTDragAndDropTool: Audio file dropped:", file.name);
             }
         }
 
-        // Check if we have both files
-        if (this._midiFile && this._audioFile) {
-            console.log("MTDragAndDropTool: Both files received, processing...");
-            this.processFiles();
+        // Provide feedback about what files we have
+        if (midiFound && !audioFound) {
+            this.notifyNextStep("MIDI file received! Now drop an audio file (MP3, WAV, or OGG).");
+        } else if (audioFound && !midiFound) {
+            this.notifyNextStep("Audio file received! Now drop a MIDI file (.mid or .midi).");
+        } else if (midiFound && audioFound) {
+            this.notifyNextStep("Both files received, processing...");
+            // Schedule processing on the next frame to not block
+            this.scheduleOnce(() => {
+                this.processFiles();
+            }, 0);
+        } else {
+            this.notifyNextStep("Please drop MIDI (.mid/.midi) and audio files (MP3/WAV/OGG).");
         }
     }
 
@@ -118,20 +190,11 @@ export class MTDragAndDropTool extends Component {
 
             // Load the audio file as an AudioClip
             const audioURL = URL.createObjectURL(this._audioFile);
-            const audioClip = await this.loadAudioFromURL(audioURL);
+            let audioClip: AudioClip =  await this.loadAudioFromURL(audioURL);
 
             // Load the MIDI file
             const midiURL = URL.createObjectURL(this._midiFile);
             const midiData = await loadMidiFromURL(midiURL);
-
-            // Instead of referring to files in the resource system, we'll use cache directly
-            // Create a UUID for our temporary assets
-            const audioUUID = `temp_audio_${Date.now()}`;
-            const midiUUID = `temp_midi_${Date.now()}`;
-
-            // Store directly in the asset manager's cache using proper UUIDs
-            assetManager.assets.add(audioUUID, audioClip);
-            assetManager.assets.add(midiUUID, midiData);
 
             // Create a temporary beatmap metadata with direct references
             const tempMetadata: BeatmapMetadata = {
@@ -161,36 +224,36 @@ export class MTDragAndDropTool extends Component {
 
             // Process MIDI data to generate notes for the beatmap
             if (midiData && midiData.notes) {
-                const trackNotes: TrackNoteInfo[] = [];
-                for (const note of midiData.notes) {
-                    trackNotes.push({
-                        midi: note.midi || 97, // Default to lane 1 if not specified
-                        time: note.time || 0,
-                        duration: note.duration || 0,
-                        durationTicks: note.durationTicks || 0,
-                        velocity: note.velocity || 1,
-                        lane: BeatmapManager.instance.getLandById(note.midi),
-                        type: BeatmapManager.instance.getNoteType(note)
-                    });
-                }
-
-                // Sort notes by time
-                trackNotes.sort((a, b) => a.time - b.time);
-                tempBeatmap.notes = trackNotes;
+                let notes: TrackNoteInfo[] = [];
+                notes = BeatmapManager.instance.convertNotes(midiData.notes, notes);
+                tempBeatmap.notes = notes;
                 console.log(`Processed ${tempBeatmap.notes.length} notes from MIDI data`);
             } else {
                 console.warn("No valid MIDI tracks found in the file");
+                this.notifyNextStep("MIDI file doesn't contain valid note data. Please try another file.");
+                this.resetFiles();
+                return;
             }
 
             // Add the beatmap to the BeatmapManager
             const beatmapManager = BeatmapManager.instance;
+            
             // Set the current beatmap for the audio manager
             const audioManager = MagicTilesAudioManager.instance;
+            
+            // Debug the audio clip to check its properties
+            console.log("AudioClip details:", {
+                name: audioClip.name,
+                duration: audioClip.getDuration(),
+                isValid: audioClip.loaded,
+                type: typeof audioClip._nativeAsset
+            });
+            
             // Create a BeatmapAudioData object with our loaded assets
             const beatmapAudioData: BeatmapAudioData = {
                 clip: audioClip,
                 trackInfo: midiData,
-                totalDuration: audioClip.getDuration(),
+                totalDuration: audioClip.getDuration() || 180, // Default to 3 minutes if duration is not available
                 currentTime: 0,
                 isPlaying: false,
                 isPaused: false
@@ -200,23 +263,11 @@ export class MTDragAndDropTool extends Component {
             audioManager.setCurrentBeatmap(beatmapAudioData);
             beatmapManager.addTempBeatmap(this._tempBeatmapId, tempBeatmap);
 
-            // Store references to these assets in a way we can access them later
-            // These will be used by our modified version of loadBeatmapAudioData
-            this._tempAssets = {
-                audioClip: audioClip,
-                midiData: midiData,
-                audioUUID: audioUUID,
-                midiUUID: midiUUID
-            };
-
-            // Now patch the BeatmapManager's loadBeatmapAudioData method to handle our special case
-            this.patchBeatmapManager();
-
             // Start the game
             this.startGame();
         } catch (error) {
             console.error("MTDragAndDropTool: Error processing files:", error);
-            this.notifyNextStep("Error processing files. Please try again.");
+            this.notifyNextStep("Error processing files: " + error.message);
             this.resetFiles();
         }
     }
@@ -234,7 +285,7 @@ export class MTDragAndDropTool extends Component {
         }
 
         this.notifyNextStep("Starting game...");
-
+        
         // Start the game with the temporary beatmap
         gameplayManager.resetGameState();
         gameplayManager.setGameState(GameState.LOADING);
@@ -257,89 +308,43 @@ export class MTDragAndDropTool extends Component {
      */
     private loadAudioFromURL(url: string): Promise<AudioClip> {
         return new Promise((resolve, reject) => {
-            // Create an Audio element to load the file
-            const audio = new Audio(url);
-
-            audio.oncanplaythrough = () => {
-                // Create an AudioClip
-                const audioClip = new AudioClip();
-                // Set the _nativeAsset directly (internal property)
-                // @ts-ignore - Accessing private property
-                audioClip._nativeAsset = audio;
-
-                resolve(audioClip);
-            };
-
-            audio.onerror = (err) => {
-                reject(new Error("Failed to load audio: " + err));
-            };
-
-            // Start loading
-            audio.load();
-        });
-    }
-
-    /**
-     * Patch the BeatmapManager to handle our temporary assets
-     */
-    private patchBeatmapManager(): void {
-        const originalLoadBeatmapAudioData = BeatmapManager.prototype.loadBeatmapAudioData;
-        const tempAssets = this._tempAssets;
-        const tempBeatmapId = this._tempBeatmapId;
-
-        // Store the original method for later restoration
-        BeatmapManager.prototype['originalLoadBeatmapAudioData'] = originalLoadBeatmapAudioData;
-        // Override the loadBeatmapAudioData method to intercept calls for our temp beatmap
-        BeatmapManager.prototype.loadBeatmapAudioData = async function (): Promise<BeatmapAudioData> {
-            // Check if this is a request for our temp beatmap
-            if (this.activeBeatmap && this.activeBeatmap.metadata.id === tempBeatmapId && tempAssets) {
-                try {
-                    // Create beatmap audio data using our cached assets
-                    const audioManager = MagicTilesAudioManager.instance;
-
-                    // Now directly use the in-memory instances we've already loaded
-                    const beatmapAudioData = await audioManager.createBeatmapAudioDataFromAssets(
-                        tempAssets.audioClip,
-                        tempAssets.midiData
-                    );
-
-                    return beatmapAudioData;
-                } catch (err) {
-                    console.error("Error loading temporary beatmap audio:", err);
-                    return null;
+            // Use assetManager.loadRemote to properly load audio
+            assetManager.loadRemote<AudioClip>(url, {
+                // Force using DOM_AUDIO mode for better compatibility with drag-and-drop
+                audioLoadMode: AudioClip.AudioType.DOM_AUDIO
+            }, (err, audioClip) => {
+                if (err) {
+                    console.error("Failed to load audio:", err);
+                    reject(err);
+                    return;
                 }
-            }
+                
+                // Check if we have a valid AudioClip
+                if (!audioClip || !(audioClip instanceof AudioClip)) {
+                    console.error("Invalid AudioClip received:", audioClip);
+                    // Try loading with DOM_AUDIO mode instead
+                    reject("Invalid AudioClip received");
 
-            // If not our temp beatmap, use the original method
-            return originalLoadBeatmapAudioData.call(this);
-        };
+                } else {
+                    console.log("Successfully loaded AudioClip:", audioClip);
+                    resolve(audioClip);
+                }
+            });
+        });
     }
 
     /**
      * Reset the stored files
      */
     private resetFiles(): void {
+        // Release object URLs if they exist
+        if (this._midiFile) URL.revokeObjectURL(URL.createObjectURL(this._midiFile));
+        if (this._audioFile) URL.revokeObjectURL(URL.createObjectURL(this._audioFile));
+        
         this._midiFile = null;
         this._audioFile = null;
         this._tempBeatmapId = null;
         this._tempAssets = null;
-
-        // Restore original BeatmapManager method if it was patched
-        // This prevents memory leaks and unintended side effects
-        this.unpatchBeatmapManager();
-    }
-
-    /**
-     * Restore the original BeatmapManager method
-     */
-    private unpatchBeatmapManager(): void {
-        // Only restore if we have a reference to the original
-        // This check prevents errors if calling multiple times
-        const origMethod = BeatmapManager.prototype['originalLoadBeatmapAudioData'];
-        if (origMethod) {
-            BeatmapManager.prototype.loadBeatmapAudioData = origMethod;
-            delete BeatmapManager.prototype['originalLoadBeatmapAudioData'];
-        }
     }
 
     /**
@@ -348,11 +353,47 @@ export class MTDragAndDropTool extends Component {
     private notifyNextStep(message: string): void {
         console.log("MTDragAndDropTool: " + message);
 
-        // Simple notification to the user - in a real implementation, 
-        // this would connect to the UI manager to show a proper notification
-        alert(message);
+        // If we have a notification node with label, use it
+        if (this.notificationNode && this.notificationLabel) {
+            this.notificationNode.active = true;
+            this.notificationLabel.string = message;
+            
+            // Hide after a few seconds
+            this.scheduleOnce(() => {
+                this.notificationNode.active = false;
+            }, 3);
+        } else {
+            // Fallback notification - use a custom overlay instead of alert
+            this.showTemporaryNotification(message);
+        }
+    }
+
+    /**
+     * Show a temporary HTML notification when the Cocos UI isn't available
+     */
+    private showTemporaryNotification(message: string): void {
+        if (!sys.isBrowser) return;
+        
+        // Create a simple notification element
+        const notification = document.createElement('div');
+        notification.style.position = 'fixed';
+        notification.style.bottom = '20px';
+        notification.style.left = '50%';
+        notification.style.transform = 'translateX(-50%)';
+        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        notification.style.color = 'white';
+        notification.style.padding = '10px 20px';
+        notification.style.borderRadius = '5px';
+        notification.style.zIndex = '10000';
+        notification.innerText = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
     }
 }
-
-// Initialize the singleton instance
-MTDragAndDropTool._instance = new MTDragAndDropTool();

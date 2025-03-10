@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, director } from 'cc';
+import { _decorator, Component, Node, director, Toggle } from 'cc';
 import { MagicTilesAudioManager } from './AudioManager';
 import { BeatmapManager } from './BeatmapManager';
 import { TileManager } from './TileManager';
@@ -46,6 +46,8 @@ export class GameplayManager extends Component {
     @property(ScoreManager)
     scoreManager: ScoreManager = null!;
 
+    @property(Toggle)
+    toggleAutoPlay: Toggle = null!;
     // Game settings
     @property
     countdownDuration: number = 3;
@@ -97,7 +99,8 @@ export class GameplayManager extends Component {
         }
 
         //test play sample song 
-        this.LoadBeatMap("Perfect_EdSheeran_demo");
+        this.LoadBeatMap("DauCoLoiLam");
+        // this.LoadBeatMap("Perfect_EdSheeran_demo");
     }
 
     /**
@@ -150,6 +153,8 @@ export class GameplayManager extends Component {
      * Start actual gameplay after the beginning tile is tapped
      */
     private startPlaying() {
+        this.setAutoPlay(this.toggleAutoPlay.isChecked);
+
         // Reset managers
         this.tapValidator.resetCombo();
         this.scoreManager.resetScore();
@@ -422,6 +427,7 @@ export class GameplayManager extends Component {
      */
     setAutoPlay(enable: boolean) {
         this.autoPlay = enable;
+        this.tileManager.toggleAutoplay(enable);
     }
 
     /**

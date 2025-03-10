@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, EventTouch, UITransform, Vec3, input, Input, EventMouse, UIOpacity, Sprite, Color, Camera } from 'cc';
+import { _decorator, Component, Node, EventTouch, UITransform, Vec3, input, Input, EventMouse, UIOpacity, Sprite, Color, Camera, EventKeyboard, KeyCode } from 'cc';
 import { TileManager } from './TileManager';
 import { HitRating } from './Tile';
 import { TapValidator } from './TapValidator';
@@ -62,6 +62,9 @@ export class InputManager extends Component {
 
     // Callback for lane tap events
     private _laneTapCallback: ((lane: number) => void) | null = null;
+
+    // Track which key corresponds to which lane for key up handling
+    private activeKeyLanes: Map<KeyCode, number> = new Map();
 
     onLoad() {
         // Initialize tap feedback nodes
@@ -153,6 +156,10 @@ export class InputManager extends Component {
         // input.on(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
         // input.on(Input.EventType.MOUSE_MOVE, this.onMouseMove, this);
         // input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+        
+        // Register keyboard events
+        input.on(Input.EventType.KEY_DOWN, this.onKeyDown, this);
+        input.on(Input.EventType.KEY_UP, this.onKeyUp, this);
     }
 
     /**
@@ -169,6 +176,10 @@ export class InputManager extends Component {
         // input.off(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
         // input.off(Input.EventType.MOUSE_MOVE, this.onMouseMove, this);
         // input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+        
+        // Unregister keyboard events
+        input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
+        input.off(Input.EventType.KEY_UP, this.onKeyUp, this);
     }
 
     /**
@@ -525,6 +536,79 @@ export class InputManager extends Component {
         // Remove the callback if it matches
         if (this._laneTapCallback === callback) {
             this._laneTapCallback = null;
+        }
+    }
+
+    /**
+     * Handle keyboard input
+     * Maps keys to lanes:
+     * - a: lane 0
+     * - s: lane 1
+     * - d: lane 2
+     * - f: lane 3
+     */
+    private onKeyDown(event: EventKeyboard) {
+        if (!this.isEnabled) return;
+
+        let lane = -1;
+        
+        // Map keys to lanes
+        switch (event.keyCode) {
+            case KeyCode.KEY_A:  // 'a' key
+                lane = 0;
+                break;
+            case KeyCode.KEY_S:  // 's' key
+                lane = 1;
+                break;
+            case KeyCode.KEY_D:  // 'd' key
+                lane = 2;
+                break;
+            case KeyCode.KEY_F:  // 'f' key
+                lane = 3;
+                break;
+        }
+
+        // If valid lane was pressed
+        if (lane >= 0 && lane < this.laneCount) {
+            // Store which key is active for which lane
+            this.activeKeyLanes.set(event.keyCode, lane);
+            
+            // Show tap feedback
+            this.showTapFeedback(lane);
+
+            // Call the lane tap callback if registered
+            if (this._laneTapCallback) {
+                this._laneTapCallback(lane);
+            }
+
+            // Notify the tile manager and tap validator about the key press
+            const gameTime = this.tileManager.getGameTime();
+            const rating = this.tileManager.handleLaneTouch(lane, true);
+
+            // Validate the tap
+            this.tapValidator.validateTap(lane, gameTime, rating);
+        }
+    }
+
+    /**
+     * Handle key up events
+     */
+    private onKeyUp(event: EventKeyboard) {
+        if (!this.isEnabled) return;
+
+        // Check if this key was being tracked
+        if (this.activeKeyLanes.has(event.keyCode)) {
+            const lane = this.activeKeyLanes.get(event.keyCode)!;
+            
+            // Notify the tile manager about the key release
+            const gameTime = this.tileManager.getGameTime();
+            const rating = this.tileManager.handleLaneTouch(lane, false);
+            
+            // Hide tap feedback
+            this.hideTapFeedback(lane);
+            
+            // Remove from active keyss 
+            this.activeKeyLanes.delete(event.keyCode);
         }
     }
 } 

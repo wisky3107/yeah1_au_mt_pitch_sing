@@ -87,7 +87,7 @@ export class TileManager extends Component {
 
     // Track touched tiles
     private touchedTiles: Map<number, Tile> = new Map();
-    private minTileHeight: number = 450.0;
+    private minTileHeight: number = 300.0;
 
     // Add time tracking properties
     private lastAudioTimeCheck: number = 0;
@@ -908,7 +908,7 @@ export class TileManager extends Component {
         const calculatedSpeed = minSpeed + (maxSpeed - minSpeed) * combinedFactor;
 
         // Use setScrollSpeed to ensure consistent behavior
-        this.setScrollSpeed(calculatedSpeed * 4.0);
+        this.setScrollSpeed(calculatedSpeed * 2.5);
 
         // Log with reduced string operations
         if (this.performanceLevel === 'high') {
@@ -1036,7 +1036,7 @@ export class TileManager extends Component {
             time: 0,
             lane: lane,
             type: 0, // Regular tap note (NoteType.TAP)
-            duration: 0,
+            duration: 0.3,
             durationTicks: 0,
             velocity: 100
         };

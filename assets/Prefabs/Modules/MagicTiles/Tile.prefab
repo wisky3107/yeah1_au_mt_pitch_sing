@@ -602,7 +602,7 @@
         "__id__": 66
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 74
@@ -1147,7 +1147,7 @@
     "_isAbsVerticalCenter": true,
     "_originalWidth": 128,
     "_originalHeight": 62.604,
-    "_alignMode": 2,
+    "_alignMode": 1,
     "_lockFlags": 0,
     "_id": ""
   },

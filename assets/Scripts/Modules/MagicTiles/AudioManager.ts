@@ -14,7 +14,7 @@ const { ccclass, property } = _decorator;
 @ccclass("MagicTilesAudioManager")
 export class MagicTilesAudioManager {
     private static _instance: MagicTilesAudioManager | null = null;
-    
+
     // Singleton pattern
     public static get instance(): MagicTilesAudioManager {
         if (!this._instance) {
@@ -22,44 +22,44 @@ export class MagicTilesAudioManager {
         }
         return this._instance;
     }
-    
+
     // Reference to the common audio manager
     private commonAudioManager: CommonAudioManager = CommonAudioManager.instance;
-    
+
     // Music source specifically for the beatmap playback
     private _beatmapAudioSource: AudioSource = null!;
-    
+
     // Current beatmap audio data
     private _currentBeatmap: BeatmapAudioData | null = null;
-    
+
     // Callbacks for beat events
     private _beatCallbacks: Function[] = [];
-    
+
     // Audio buffering status
     private _isBuffering: boolean = false;
-    
+
     // Timer for tracking audio playback position
     private _playbackTimer: number = 0;
-    
+
     // Add properties for time estimation
     private audioTimeEstimation: number = 0;
     private lastSystemTime: number = 0;
     private _timeCheckCounter: number = 0;
     private _timeCheckInterval: number = 30; // Check actual time every 30 frames
-    
+
     constructor() {
         this.init();
     }
-    
+
     private init(): void {
         // Create a dedicated node for beatmap audio
         const beatmapNode = new Node('beatmap-audio');
         director.getScene()!.addChild(beatmapNode);
-        
+
         // Create a dedicated audio source for beatmaps
         this._beatmapAudioSource = beatmapNode.addComponent(AudioSource);
     }
-    
+
     /**
      * Load a beatmap audio file and its corresponding MIDI data
      * @param audioPath Path to the audio file
@@ -69,14 +69,14 @@ export class MagicTilesAudioManager {
      */
     public async loadBeatmapAudioData(audioPath: string, midiPath: string, trackIndex: number = 1): Promise<BeatmapAudioData> {
         this._isBuffering = true;
-        
+
         try {
             // Load both resources in parallel for better performance
             const [audioClip, midiTrack] = await Promise.all([
                 this.loadAudioClip(audioPath),
                 loadMidi(midiPath, trackIndex)
             ]);
-            
+
             // Create beatmap audio data
             this._currentBeatmap = {
                 clip: audioClip,
@@ -86,12 +86,12 @@ export class MagicTilesAudioManager {
                 isPlaying: false,
                 isPaused: false
             };
-            
+
             // Setup the audio source
             this._beatmapAudioSource.clip = audioClip;
             this._beatmapAudioSource.volume = 1.0;
             // this._beatmapAudioSource.volume = this.commonAudioManager.getMusicVolume();
-            
+
             this._isBuffering = false;
             return this._currentBeatmap;
         } catch (err) {
@@ -103,8 +103,12 @@ export class MagicTilesAudioManager {
 
     public setCurrentBeatmap(beatmap: BeatmapAudioData) {
         this._currentBeatmap = beatmap;
+        // Setup the audio source
+        this._beatmapAudioSource.clip = beatmap.clip;
+        this._beatmapAudioSource.volume = 1.0;
+        this._isBuffering = false;
     }
-    
+
     /**
      * Promise-based audio clip loading
      */
@@ -119,7 +123,7 @@ export class MagicTilesAudioManager {
             });
         });
     }
-    
+
     /**
      * Start playing the beatmap audio
      * @param startTime Optional start time in seconds
@@ -129,14 +133,14 @@ export class MagicTilesAudioManager {
             console.warn("No beatmap loaded or still buffering");
             return;
         }
-        
+
         this._currentBeatmap.currentTime = startTime;
         this._currentBeatmap.isPlaying = true;
         this._currentBeatmap.isPaused = false;
-        
+
         this._beatmapAudioSource.currentTime = startTime;
         this._beatmapAudioSource.play();
-        
+
         // Start tracking beats
         // this.startBeatTracking();
     }
@@ -147,31 +151,31 @@ export class MagicTilesAudioManager {
      */
     public getEstimatedAudioTime(): number {
         const currentTime = Date.now() / 1000;
-        
+
         // Initialize if first call
         if (!this.lastSystemTime) {
             this.lastSystemTime = currentTime;
             this.audioTimeEstimation = this._beatmapAudioSource.currentTime;
             return this.audioTimeEstimation;
         }
-        
+
         // Calculate time elapsed since last check
         const deltaTime = currentTime - this.lastSystemTime;
-        
+
         // Update estimation
         this.audioTimeEstimation += deltaTime;
-        
+
         // Periodically correct estimation (less frequently)
         if (this._timeCheckCounter++ % this._timeCheckInterval === 0) {
             const actualTime = this._beatmapAudioSource.currentTime;
             // Smoothly adjust to actual time
             this.audioTimeEstimation = 0.95 * this.audioTimeEstimation + 0.05 * actualTime;
         }
-        
+
         this.lastSystemTime = currentTime;
         return this.audioTimeEstimation;
     }
-    
+
     /**
      * Get the current audio time
      * This is the original method, but we now recommend using getEstimatedAudioTime()
@@ -179,7 +183,7 @@ export class MagicTilesAudioManager {
     public getAudioTime(): number {
         return this._beatmapAudioSource.currentTime;
     }
-    
+
     /**
      * Pause the beatmap audio
      */
@@ -187,12 +191,12 @@ export class MagicTilesAudioManager {
         if (!this._currentBeatmap || !this._currentBeatmap.isPlaying) {
             return;
         }
-        
+
         this._beatmapAudioSource.pause();
         this._currentBeatmap.isPaused = true;
         this._currentBeatmap.isPlaying = false;
     }
-    
+
     /**
      * Resume the beatmap audio
      */
@@ -200,12 +204,12 @@ export class MagicTilesAudioManager {
         if (!this._currentBeatmap || !this._currentBeatmap.isPaused) {
             return;
         }
-        
+
         this._beatmapAudioSource.play();
         this._currentBeatmap.isPaused = false;
         this._currentBeatmap.isPlaying = true;
     }
-    
+
     /**
      * Stop the beatmap audio
      */
@@ -213,13 +217,13 @@ export class MagicTilesAudioManager {
         if (!this._currentBeatmap) {
             return;
         }
-        
+
         this._beatmapAudioSource.stop();
         this._currentBeatmap.isPlaying = false;
         this._currentBeatmap.isPaused = false;
         this._currentBeatmap.currentTime = 0;
     }
-    
+
     /**
      * Get the current playback time of the beatmap audio
      */
@@ -227,10 +231,10 @@ export class MagicTilesAudioManager {
         if (!this._currentBeatmap) {
             return 0;
         }
-        
+
         return this._beatmapAudioSource.currentTime;
     }
-    
+
     /**
      * Get the total duration of the current beatmap
      */
@@ -238,10 +242,10 @@ export class MagicTilesAudioManager {
         if (!this._currentBeatmap) {
             return 0;
         }
-        
+
         return this._currentBeatmap.totalDuration;
     }
-    
+
     /**
      * Register a callback to be called on each beat
      * @param callback Function to call on each beat
@@ -249,7 +253,7 @@ export class MagicTilesAudioManager {
     public onBeat(callback: Function): void {
         this._beatCallbacks.push(callback);
     }
-    
+
     /**
      * Remove a beat callback
      * @param callback The callback to remove
@@ -260,7 +264,7 @@ export class MagicTilesAudioManager {
             this._beatCallbacks.splice(index, 1);
         }
     }
-    
+
     /**
      * Start tracking beats from the MIDI file and call registered callbacks
      */
@@ -268,41 +272,41 @@ export class MagicTilesAudioManager {
         if (!this._currentBeatmap || !this._currentBeatmap.trackInfo.notes) {
             return;
         }
-        
+
         // Clean up any existing timer
         this.stopBeatTracking();
-        
+
         // Track note timings and call callbacks
         const notes = this._currentBeatmap.trackInfo.notes;
         let nextNoteIndex = 0;
-        
+
         // Use requestAnimationFrame for more precise timing
         const trackBeats = () => {
             if (!this._currentBeatmap || !this._currentBeatmap.isPlaying) {
                 return;
             }
-            
+
             const currentTime = this._beatmapAudioSource.currentTime;
-            
+
             // Check if we've reached any new notes
-            while (nextNoteIndex < notes.length && 
-                   notes[nextNoteIndex].time <= currentTime) {
+            while (nextNoteIndex < notes.length &&
+                notes[nextNoteIndex].time <= currentTime) {
                 // Call all beat callbacks with the note info
                 this._beatCallbacks.forEach(callback => {
                     callback(notes[nextNoteIndex]);
                 });
-                
+
                 nextNoteIndex++;
             }
-            
+
             // Continue tracking
             requestAnimationFrame(trackBeats);
         };
-        
+
         // Start tracking
         requestAnimationFrame(trackBeats);
     }
-    
+
     /**
      * Stop tracking beats
      */
@@ -312,7 +316,7 @@ export class MagicTilesAudioManager {
             this._currentBeatmap.isPlaying = false;
         }
     }
-    
+
     /**
      * Set the music volume
      * @param volume Volume from 0 to 1
@@ -320,42 +324,42 @@ export class MagicTilesAudioManager {
     public setMusicVolume(volume: number): void {
         this._beatmapAudioSource.volume = volume;
     }
-    
+
     /**
      * Get the music volume
      */
     public getMusicVolume(): number {
         return this._beatmapAudioSource.volume;
     }
-    
+
     /**
      * Check if beatmap audio is still buffering
      */
     public isBuffering(): boolean {
         return this._isBuffering;
     }
-    
+
     /**
      * Check if beatmap audio is currently playing
      */
     public isPlaying(): boolean {
         return this._currentBeatmap ? this._currentBeatmap.isPlaying : false;
     }
-    
+
     /**
      * Check if beatmap audio is currently paused
      */
     public isPaused(): boolean {
         return this._currentBeatmap ? this._currentBeatmap.isPaused : false;
     }
-    
+
     /**
      * Play a sound effect through the common audio manager
      */
     public playSound(name: string, volumePercent: number = 1.0): AudioSource {
         return this.commonAudioManager?.playSound(name, volumePercent);
     }
-    
+
     /**
      * Create BeatmapAudioData directly from already loaded assets
      * Useful for drag-and-drop functionality where assets are loaded outside the resource system
@@ -366,7 +370,7 @@ export class MagicTilesAudioManager {
      */
     public async createBeatmapAudioDataFromAssets(audioClip: AudioClip, midiTrack: any): Promise<BeatmapAudioData> {
         this._isBuffering = true;
-        
+
         try {
             // Create beatmap audio data directly from the provided assets
             this._currentBeatmap = {
@@ -377,12 +381,12 @@ export class MagicTilesAudioManager {
                 isPlaying: false,
                 isPaused: false
             };
-            
+
             // Setup the audio source
             this._beatmapAudioSource.clip = audioClip;
             this._beatmapAudioSource.volume = 1.0;
             // this._beatmapAudioSource.volume = this.commonAudioManager.getMusicVolume();
-            
+
             this._isBuffering = false;
             return this._currentBeatmap;
         } catch (err) {
