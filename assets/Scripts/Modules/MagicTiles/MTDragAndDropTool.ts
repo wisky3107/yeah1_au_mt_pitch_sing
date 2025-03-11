@@ -4,6 +4,7 @@ import { GameplayManager, GameState } from "./GameplayManager";
 import { BeatmapManager } from "./BeatmapManager";
 import { Beatmap, BeatmapMetadata, BeatmapAudioData, TrackNoteInfo, NoteType } from "./MTDefines";
 import { loadMidi, loadMidiFromURL } from "../../Common/MidiReader";
+import { resourceUtil } from "../../Common/resourceUtil";
 
 const { ccclass, property } = _decorator;
 
@@ -142,39 +143,28 @@ export class MTDragAndDropTool extends Component {
         if (!files || files.length === 0) return;
 
         let midiFound = false;
-        let audioFound = false;
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
 
-            // Check file type
+            // Check file type - now only looking for MIDI files
             if (file.name.toLowerCase().endsWith('.mid') || file.name.toLowerCase().endsWith('.midi')) {
                 this._midiFile = file;
                 midiFound = true;
                 console.log("MTDragAndDropTool: MIDI file dropped:", file.name);
-            }
-            else if (file.name.toLowerCase().endsWith('.mp3') ||
-                file.name.toLowerCase().endsWith('.wav') ||
-                file.name.toLowerCase().endsWith('.ogg')) {
-                this._audioFile = file;
-                audioFound = true;
-                console.log("MTDragAndDropTool: Audio file dropped:", file.name);
+                break; // Stop after finding the first MIDI file
             }
         }
 
         // Provide feedback about what files we have
-        if (midiFound && !audioFound) {
-            this.notifyNextStep("MIDI file received! Now drop an audio file (MP3, WAV, or OGG).");
-        } else if (audioFound && !midiFound) {
-            this.notifyNextStep("Audio file received! Now drop a MIDI file (.mid or .midi).");
-        } else if (midiFound && audioFound) {
-            this.notifyNextStep("Both files received, processing...");
+        if (midiFound) {
+            this.notifyNextStep("MIDI file received! Processing...");
             // Schedule processing on the next frame to not block
             this.scheduleOnce(() => {
                 this.processFiles();
             }, 0);
         } else {
-            this.notifyNextStep("Please drop MIDI (.mid/.midi) and audio files (MP3/WAV/OGG).");
+            this.notifyNextStep("Please drop a MIDI file (.mid/.midi).");
         }
     }
 
@@ -188,9 +178,24 @@ export class MTDragAndDropTool extends Component {
             // Generate a temporary ID for this beatmap
             this._tempBeatmapId = `temp_${Date.now()}`;
 
-            // Load the audio file as an AudioClip
-            const audioURL = URL.createObjectURL(this._audioFile);
-            let audioClip: AudioClip =  await this.loadAudioFromURL(audioURL);
+            // Get the base name of the MIDI file (without extension)
+            const midiFileName = this._midiFile.name.replace(/\.(mid|midi)$/i, "");
+            
+            // Construct audio resource path using the MIDI file name
+            const audioResourcePath = `magic_tiles/audios/${midiFileName}`;
+            console.log(`Attempting to load audio from resources: ${audioResourcePath}`);
+            
+            // Load audio from resources
+            let audioClip: AudioClip;
+            try {
+                audioClip = await this.loadAudioFromResources(audioResourcePath);
+                console.log("Successfully loaded audio from resources:", audioClip.name);
+            } catch (error) {
+                console.error(`Failed to load audio resource at ${audioResourcePath}:`, error);
+                this.notifyNextStep(`Could not find matching audio file in resources. Please ensure audio file "${midiFileName}.mp3" exists in magic_tiles/audios folder.`);
+                this.resetFiles();
+                return;
+            }
 
             // Load the MIDI file
             const midiURL = URL.createObjectURL(this._midiFile);
@@ -199,7 +204,7 @@ export class MTDragAndDropTool extends Component {
             // Create a temporary beatmap metadata with direct references
             const tempMetadata: BeatmapMetadata = {
                 id: this._tempBeatmapId,
-                title: this._audioFile.name.replace(/\.[^/.]+$/, ""), // Remove extension
+                title: midiFileName, // Use MIDI filename without extension
                 artist: "Unknown Artist",
                 bpm: midiData.tempo || 120,
                 difficulty: 3,
@@ -304,17 +309,14 @@ export class MTDragAndDropTool extends Component {
     }
 
     /**
-     * Load an audio file from URL into an AudioClip
+     * Load an audio file from resources
      */
-    private loadAudioFromURL(url: string): Promise<AudioClip> {
+    private loadAudioFromResources(path: string): Promise<AudioClip> {
         return new Promise((resolve, reject) => {
-            // Use assetManager.loadRemote to properly load audio
-            assetManager.loadRemote<AudioClip>(url, {
-                // Force using DOM_AUDIO mode for better compatibility with drag-and-drop
-                audioLoadMode: AudioClip.AudioType.DOM_AUDIO
-            }, (err, audioClip) => {
+            // Use the utility function to load from resources
+            resourceUtil.loadRes(path, AudioClip, (err, audioClip: AudioClip) => {
                 if (err) {
-                    console.error("Failed to load audio:", err);
+                    console.error("Failed to load audio from resources:", err);
                     reject(err);
                     return;
                 }
@@ -322,11 +324,9 @@ export class MTDragAndDropTool extends Component {
                 // Check if we have a valid AudioClip
                 if (!audioClip || !(audioClip instanceof AudioClip)) {
                     console.error("Invalid AudioClip received:", audioClip);
-                    // Try loading with DOM_AUDIO mode instead
                     reject("Invalid AudioClip received");
-
                 } else {
-                    console.log("Successfully loaded AudioClip:", audioClip);
+                    console.log("Successfully loaded AudioClip from resources:", audioClip);
                     resolve(audioClip);
                 }
             });
@@ -339,10 +339,8 @@ export class MTDragAndDropTool extends Component {
     private resetFiles(): void {
         // Release object URLs if they exist
         if (this._midiFile) URL.revokeObjectURL(URL.createObjectURL(this._midiFile));
-        if (this._audioFile) URL.revokeObjectURL(URL.createObjectURL(this._audioFile));
         
         this._midiFile = null;
-        this._audioFile = null;
         this._tempBeatmapId = null;
         this._tempAssets = null;
     }

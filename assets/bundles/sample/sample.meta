@@ -1,0 +1,26 @@
+{
+  "ver": "1.2.0",
+  "importer": "directory",
+  "imported": true,
+  "uuid": "0c286510-c093-4339-8023-1bf2b0bce5f1",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "isBundle": true,
+    "bundleFilterConfig": [
+      {
+        "range": "include",
+        "type": "url",
+        "patchOption": {
+          "patchType": "glob",
+          "value": "db://assets/bundles/islands/sample/**/*"
+        },
+        "assets": [
+          ""
+        ]
+      }
+    ],
+    "bundleConfigID": "46jme6pBxDfZETUP6DsNDz",
+    "priority": 2
+  }
+}

@@ -23,3 +23,5 @@ node_modules/
 build/windows/
 Docs/
 ai_guide/
+*.zip
+*.md

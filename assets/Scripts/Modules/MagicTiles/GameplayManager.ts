@@ -99,7 +99,7 @@ export class GameplayManager extends Component {
         }
 
         //test play sample song 
-        this.LoadBeatMap("DauCoLoiLam");
+        // this.LoadBeatMap("DauCoLoiLam_ATVNCG_bestcut");
         // this.LoadBeatMap("Perfect_EdSheeran_demo");
     }
 
@@ -108,7 +108,7 @@ export class GameplayManager extends Component {
      * @param beatmapId ID of the beatmap to load
      */
     async LoadBeatMap(beatmapId: string): Promise<boolean> {
-        // Reset state
+        // Reset states 
         this.resetGameState();
 
         // Set current beatmap ID
