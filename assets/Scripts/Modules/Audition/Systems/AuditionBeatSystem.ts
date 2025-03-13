@@ -4,6 +4,7 @@ import { AuditionInputHandler, AuditionInputType } from './AuditionInputHandler'
 import { AuditionNotePool, AuditionNoteType } from './AuditionNotePool';
 import { AuditionBeatmap, BeatmapData, BeatNote as BeatMapNote } from './AuditionBeatmap';
 import { AuditionNote } from './AuditionNote';
+import { PatternData } from './PatternData';
 const { ccclass, property } = _decorator;
 
 /**
@@ -24,6 +25,8 @@ class ActiveNote {
     public noteType: AuditionNoteType; // Type of note
     public component: AuditionNote; // Reference to note component
     public hit: boolean = false;
+    public patternSequence: PatternData;
+    public patternProgress: number;
     
     constructor(noteId: number, beatTime: number, noteType: AuditionNoteType, component: AuditionNote) {
         this.noteId = noteId;
@@ -92,6 +95,8 @@ export class AuditionBeatSystem extends Component {
     // Whether the beatmap is currently playing
     private isPlaying: boolean = false;
     private lastSpawnedTime: number = 0;
+    
+    private currentPattern: PatternData | null = null;
     
     onLoad() {
         // Setup timing windows
@@ -552,5 +557,28 @@ export class AuditionBeatSystem extends Component {
      */
     public getProcessedNoteCount(): number {
         return this.processedNotes;
+    }
+    
+    private handlePatternInput(inputType: AuditionInputType): void {
+        if (!this.currentPattern) return;
+        
+        // Validate input against current pattern sequence
+        const expectedInput = this.currentPattern.sequence[this.currentPatternProgress];
+        if (inputType === expectedInput) {
+            this.currentPatternProgress++;
+            if (this.currentPatternProgress >= this.currentPattern.sequence.length) {
+                this.activateSyncPoint();
+            }
+        } else {
+            this.breakPattern();
+        }
+    }
+    
+    private activateSyncPoint(): void {
+        // Handle spacebar sync timing evaluation
+    }
+    
+    private breakPattern(): void {
+        // Handle pattern break consequences
     }
 } 

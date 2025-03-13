@@ -1,0 +1,19 @@
+{
+    "metadata": {
+        "id": "Lang",
+        "title": "Lặng",
+        "artist": "Rhymastic",
+        "bpm": 85,
+        "difficulty": 3,
+        "difficultyName": "Medium",
+        "level": 5,
+        "preview": {
+            "start": 60,
+            "end": 90
+        },
+        "audioPath": "magic_tiles/audios/Lang_Rhymastic_ATVNCG",
+        "midiPath": "magic_tiles/midis/Lang_Rhymastic_ATVNCG",
+        "backgroundImage": "magic_tiles/images/Lang_background",
+        "coverImage": "magic_tiles/images/Lang_cover"
+    }
+} 

@@ -34,6 +34,11 @@ interface PlayerProgress {
     unlockedSongs: string[];
     highScores: Record<string, number>;
     experience: number;
+    patternComplexityLevel: number; // Current highest complexity level (0-6 for 3-9 inputs)
+    unlockedPatternLevels: number[]; // Array of unlocked pattern complexity levels
+    finishMovesUnlocked: boolean; // Whether finish moves are unlocked
+    patternsCompleted: Record<string, number>; // Record of completed patterns per song
+    finishMovesCompleted: number; // Count of finish moves completed
 }
 
 /**
@@ -48,6 +53,7 @@ export class AuditionGameManager extends Component {
     // Current scene and game state
     @property
     private currentScene: string = 'AuditionMainMenu';
+
     private gameState: GameState = GameState.MENU;
     
     // Current song and player progress
@@ -55,11 +61,35 @@ export class AuditionGameManager extends Component {
     private playerProgress: PlayerProgress = {
         unlockedSongs: ['song1', 'song2'], // Default unlocked songs
         highScores: {},
-        experience: 0
+        experience: 0,
+        patternComplexityLevel: 0, // Start with level 0 (3 inputs)
+        unlockedPatternLevels: [0], // Only first level unlocked initially
+        finishMovesUnlocked: false, // Finish moves locked initially
+        patternsCompleted: {},
+        finishMovesCompleted: 0
     };
+
+    // Experience thresholds for unlocking new pattern complexity levels
+    private patternLevelExpThresholds: number[] = [
+        0,      // Level 0 (3 inputs) - Default
+        500,    // Level 1 (4 inputs)
+        1500,   // Level 2 (5 inputs)
+        3000,   // Level 3 (6 inputs)
+        5000,   // Level 4 (7 inputs)
+        8000,   // Level 5 (8 inputs)
+        12000   // Level 6 (9 inputs)
+    ];
+
+    // Experience threshold for unlocking finish moves
+    private finishMoveExpThreshold: number = 2000;
 
     // Track the last experience gain from a song
     private lastExperienceGain: number = 0;
+    private lastPatternStats: { completed: number, skipped: number, finishMoves: number } = {
+        completed: 0,
+        skipped: 0,
+        finishMoves: 0
+    };
 
     // Available songs in the game
     private availableSongs: SongData[] = [
@@ -96,7 +126,6 @@ export class AuditionGameManager extends Component {
         // Make this a singleton
         if (AuditionGameManager._instance === null) {
             AuditionGameManager._instance = this;
-            game.addPersistRootNode(this.node);
             this.initGame();
         } else {
             this.node.destroy();
@@ -120,7 +149,7 @@ export class AuditionGameManager extends Component {
      */
     public changeScene(sceneName: string): void {
         console.log(`Changing scene to: ${sceneName}`);
-        director.loadScene(sceneName);
+        // director.loadScene(sceneName);
         this.currentScene = sceneName;
     }
 
@@ -151,15 +180,21 @@ export class AuditionGameManager extends Component {
      * End song and show results
      * @param score The player's score
      * @param maxCombo The player's maximum combo
+     * @param patternStats Statistics about pattern completion
      */
-    public endSong(score: number, maxCombo: number): void {
+    public endSong(
+        score: number, 
+        maxCombo: number, 
+        patternStats: { completed: number, skipped: number, finishMoves: number } = { completed: 0, skipped: 0, finishMoves: 0 }
+    ): void {
         if (!this.currentSong) {
             console.error('No song is currently active');
             return;
         }
         
         this.gameState = GameState.RESULTS;
-        console.log(`Song ended. Score: ${score}, Max Combo: ${maxCombo}`);
+        console.log(`Song ended. Score: ${score}, Max Combo: ${maxCombo}, ` +
+                   `Patterns: ${patternStats.completed}, Finish Moves: ${patternStats.finishMoves}`);
         
         // Update high score if needed
         if (!this.playerProgress.highScores[this.currentSong.id] || 
@@ -168,18 +203,151 @@ export class AuditionGameManager extends Component {
             console.log(`New high score for ${this.currentSong.title}: ${score}`);
         }
         
-        // Calculate experience gained (based on score and difficulty)
+        // Store pattern stats
+        this.lastPatternStats = patternStats;
+        
+        // Update pattern completion counts for this song
+        if (!this.playerProgress.patternsCompleted[this.currentSong.id]) {
+            this.playerProgress.patternsCompleted[this.currentSong.id] = 0;
+        }
+        
+        this.playerProgress.patternsCompleted[this.currentSong.id] += patternStats.completed;
+        this.playerProgress.finishMovesCompleted += patternStats.finishMoves;
+        
+        // Calculate experience gained (based on score, patterns, and difficulty)
         const expMultiplier = this.currentSong.difficulty * 0.5;
-        this.lastExperienceGain = Math.floor(score * 0.01 * expMultiplier);
+        const baseScoreXP = Math.floor(score * 0.01 * expMultiplier);
+        const patternBonus = patternStats.completed * 5 * expMultiplier;
+        const finishMoveBonus = patternStats.finishMoves * 20;
+        
+        this.lastExperienceGain = baseScoreXP + patternBonus + finishMoveBonus;
         
         // Add experience
         this.addExperience(this.lastExperienceGain);
+        
+        // Check for pattern level unlocks
+        this.checkPatternLevelUnlocks();
         
         // Save progress
         this.saveProgress();
         
         // Change to results scene
         this.changeScene('AuditionResults');
+    }
+
+    /**
+     * Check if player has met requirements to unlock new pattern levels
+     */
+    private checkPatternLevelUnlocks(): void {
+        // Check each pattern level
+        for (let level = 0; level < this.patternLevelExpThresholds.length; level++) {
+            const isLevelUnlocked = this.playerProgress.unlockedPatternLevels.indexOf(level) !== -1;
+            
+            if (this.playerProgress.experience >= this.patternLevelExpThresholds[level] && 
+                !isLevelUnlocked) {
+                
+                // Unlock the new level
+                this.playerProgress.unlockedPatternLevels.push(level);
+                console.log(`Unlocked pattern complexity level ${level}!`);
+                
+                // If it's higher than current level, update that too
+                if (level > this.playerProgress.patternComplexityLevel) {
+                    this.playerProgress.patternComplexityLevel = level;
+                }
+            }
+        }
+        
+        // Check for finish move unlock
+        if (this.playerProgress.experience >= this.finishMoveExpThreshold && 
+            !this.playerProgress.finishMovesUnlocked) {
+            
+            this.playerProgress.finishMovesUnlocked = true;
+            console.log('Finish moves unlocked!');
+        }
+    }
+
+    /**
+     * Get player's current pattern complexity level
+     * @returns Current pattern complexity level
+     */
+    public getPatternComplexityLevel(): number {
+        return this.playerProgress.patternComplexityLevel;
+    }
+    
+    /**
+     * Set player's current pattern complexity level (within unlocked levels)
+     * @param level Level to set (0-6 for 3-9 inputs)
+     * @returns Whether the level was successfully set
+     */
+    public setPatternComplexityLevel(level: number): boolean {
+        const isLevelUnlocked = this.playerProgress.unlockedPatternLevels.indexOf(level) !== -1;
+        
+        if (isLevelUnlocked) {
+            this.playerProgress.patternComplexityLevel = level;
+            this.saveProgress();
+            console.log(`Pattern complexity level set to ${level}`);
+            return true;
+        }
+        
+        console.warn(`Pattern complexity level ${level} is not unlocked`);
+        return false;
+    }
+    
+    /**
+     * Get all unlocked pattern complexity levels
+     * @returns Array of unlocked level indices
+     */
+    public getUnlockedPatternLevels(): number[] {
+        return [...this.playerProgress.unlockedPatternLevels];
+    }
+    
+    /**
+     * Check if finish moves are unlocked
+     * @returns Whether finish moves are unlocked
+     */
+    public areFinishMovesUnlocked(): boolean {
+        return this.playerProgress.finishMovesUnlocked;
+    }
+    
+    /**
+     * Get the actual number of inputs for a given complexity level
+     * @param level Pattern complexity level (0-6)
+     * @returns Number of inputs (3-9)
+     */
+    public getPatternComplexityValue(level: number): number {
+        // Level 0 = 3 inputs, Level 1 = 4 inputs, etc.
+        return level + 3;
+    }
+    
+    /**
+     * Get the last pattern stats from completed song
+     * @returns Pattern statistics
+     */
+    public getLastPatternStats(): { completed: number, skipped: number, finishMoves: number } {
+        return {...this.lastPatternStats};
+    }
+    
+    /**
+     * Get total patterns completed across all songs
+     * @returns Total pattern count
+     */
+    public getTotalPatternsCompleted(): number {
+        let total = 0;
+        
+        // Manually sum up the values
+        for (const songId in this.playerProgress.patternsCompleted) {
+            total += this.playerProgress.patternsCompleted[songId];
+        }
+        
+        return total;
+    }
+    
+    /**
+     * Get total finish moves completed
+     * @returns Total finish move count
+     */
+    public getTotalFinishMovesCompleted(): number {
+        return this.playerProgress.finishMovesCompleted;
     }
 
     /**
