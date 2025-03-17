@@ -18,13 +18,6 @@ export enum AuditionInputType {
 export class AuditionInputHandler extends Component {
     // Singleton instance
     private static _instance: AuditionInputHandler = null;
-    
-    // Input mode
-    @property({
-        type: AuditionInputType
-    })
-    private inputMode: number = 0; // 0: Touch, 1: Keyboard
-    
     // Input areas
     @property(Node)
     private leftInputArea: Node = null;
@@ -50,7 +43,6 @@ export class AuditionInputHandler extends Component {
         // Make this a singleton
         if (AuditionInputHandler._instance === null) {
             AuditionInputHandler._instance = this;
-            game.addPersistRootNode(this.node);
             this.initialize();
         } else {
             this.node.destroy();

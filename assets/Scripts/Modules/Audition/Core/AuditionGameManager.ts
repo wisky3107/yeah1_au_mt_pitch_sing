@@ -94,26 +94,15 @@ export class AuditionGameManager extends Component {
     // Available songs in the game
     private availableSongs: SongData[] = [
         {
-            id: 'song1',
-            title: 'Rhythm of Dreams',
-            artist: 'Beat Master',
-            difficulty: 1,
-            bpm: 120,
-            audioPath: 'audition/audio/rhythm_of_dreams',
-            beatmapPath: 'audition/beatmaps/rhythm_of_dreams',
+            id: 'song0211',
+            title: '삐딱하게 (Crooked)',
+            artist: 'G-Dragon',
+            difficulty: 3,
+            bpm: 130,
+            audioPath: 'song0211',
+            beatmapPath: 'song0211',
             previewStart: 30000,
             previewEnd: 45000
-        },
-        {
-            id: 'song2',
-            title: 'Dance Revolution',
-            artist: 'Step Pro',
-            difficulty: 2,
-            bpm: 140,
-            audioPath: 'audition/audio/dance_revolution',
-            beatmapPath: 'audition/beatmaps/dance_revolution',
-            previewStart: 15000,
-            previewEnd: 30000
         }
     ];
 
@@ -141,6 +130,9 @@ export class AuditionGameManager extends Component {
         
         // Log initialization
         console.log('Audition Game Manager initialized');
+
+        //load sample song
+        this.startSong('song0211');
     }
 
     /**
@@ -150,6 +142,7 @@ export class AuditionGameManager extends Component {
     public changeScene(sceneName: string): void {
         console.log(`Changing scene to: ${sceneName}`);
         // director.loadScene(sceneName);
+        
         this.currentScene = sceneName;
     }
 

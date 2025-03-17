@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Animation, AnimationState } from 'cc';
+import { _decorator, Component, Node, Animation, AnimationState, Enum } from 'cc';
 import { AuditionAccuracyRating } from './AuditionBeatSystem';
 import { AuditionInputType } from './AuditionInputHandler';
 import { AuditionCharacterAnimationData, DanceMoveDifficulty, DanceMoveData } from './AuditionCharacterAnimationData';
@@ -54,7 +54,7 @@ export class AuditionCharacterAnimation extends Component {
     private inputHistorySize: number = 20; // Number of recent inputs to track
     
     @property({
-        type: DanceMoveDifficulty
+        type: Enum(DanceMoveDifficulty)
     })
     private maxDanceMoveDifficulty: DanceMoveDifficulty = DanceMoveDifficulty.EXPERT;
     

@@ -1,5 +1,6 @@
 import { _decorator, Component, JsonAsset, resources } from 'cc';
 import { AuditionNoteType } from './AuditionNotePool';
+import { resourceUtil } from '../../../Common/resourceUtil';
 const { ccclass, property } = _decorator;
 
 /**
@@ -46,7 +47,7 @@ export class AuditionBeatmap extends Component {
             const fullPath = this.beatmapFolder + beatmapPath;
             console.log(`Loading beatmap from: ${fullPath}`);
             
-            resources.load(fullPath, JsonAsset, (err, jsonAsset) => {
+            resourceUtil.loadRes(fullPath, JsonAsset, (err, jsonAsset) => {
                 if (err) {
                     console.error(`Failed to load beatmap: ${fullPath}`, err);
                     reject(err);

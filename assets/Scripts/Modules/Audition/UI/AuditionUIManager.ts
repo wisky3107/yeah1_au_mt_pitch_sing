@@ -93,7 +93,6 @@ export class AuditionUIManager extends Component {
         // Make this a singleton
         if (AuditionUIManager._instance === null) {
             AuditionUIManager._instance = this;
-            game.addPersistRootNode(this.node);
         } else {
             this.node.destroy();
         }

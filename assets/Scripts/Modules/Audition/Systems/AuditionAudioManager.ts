@@ -1,4 +1,5 @@
 import { _decorator, Component, AudioSource, AudioClip, resources, game } from 'cc';
+import { resourceUtil } from '../../../Common/resourceUtil';
 const { ccclass, property } = _decorator;
 
 /**
@@ -9,6 +10,9 @@ const { ccclass, property } = _decorator;
 export class AuditionAudioManager extends Component {
     // Singleton instance
     private static _instance: AuditionAudioManager = null;
+    
+    @property
+    private musicFolder: string = 'audition/music/';
     
     // Audio sources for music and sound effects
     @property(AudioSource)
@@ -42,7 +46,6 @@ export class AuditionAudioManager extends Component {
         // Make this a singleton
         if (AuditionAudioManager._instance === null) {
             AuditionAudioManager._instance = this;
-            game.addPersistRootNode(this.node);
             
             // Initialize audio sources if they weren't set in the Inspector
             if (!this.musicSource) {
@@ -67,10 +70,11 @@ export class AuditionAudioManager extends Component {
      * Preload common sound effects
      */
     private loadSoundEffects(): void {
+        // const sfxList = ['perfect', 'good', 'miss', 'click', 'combo'];
         const sfxList = ['perfect', 'good', 'miss', 'click', 'combo'];
         
         sfxList.forEach(sfx => {
-            resources.load(`audition/audio/sfx/${sfx}`, AudioClip, (err, clip) => {
+            resourceUtil.loadRes(`audition/audio/sfx/${sfx}`, AudioClip, (err, clip) => {
                 if (err) {
                     console.error(`Failed to load sound effect: ${sfx}`, err);
                     return;
@@ -90,15 +94,16 @@ export class AuditionAudioManager extends Component {
     public loadSong(songPath: string): Promise<void> {
         return new Promise((resolve, reject) => {
             console.log(`Loading song: ${songPath}`);
-            resources.load(songPath, AudioClip, (err, clip) => {
+            const fullPath = this.musicFolder + songPath;
+            resourceUtil.loadRes(fullPath, AudioClip, (err, clip) => {
                 if (err) {
-                    console.error(`Failed to load song: ${songPath}`, err);
+                    console.error(`Failed to load song: ${fullPath}`, err);
                     reject(err);
                     return;
                 }
                 
                 this.musicSource.clip = clip;
-                console.log(`Song loaded: ${songPath}`);
+                console.log(`Song loaded: ${fullPath}`);
                 resolve();
             });
         });
