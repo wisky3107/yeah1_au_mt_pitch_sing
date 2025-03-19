@@ -95,6 +95,7 @@ export class AuditionBeatSystem extends Component {
     // Whether the beatmap is currently playing
     private isPlaying: boolean = false;
     private lastSpawnedTime: number = 0;
+    private currentPatternProgress: number = 0;
     
     private currentPattern: PatternData | null = null;
     
@@ -123,14 +124,14 @@ export class AuditionBeatSystem extends Component {
     
     /**
      * Load a beatmap from the specified path
-     * @param beatmapPath Path to the beatmap JSON file
+     * @param songData Path to the beatmap JSON file
      * @returns Promise that resolves when the beatmap is loaded
      */
-    public loadBeatmap(beatmapPath: string): Promise<void> {
+    public loadBeatmap(id: string, bpm: number, durationMs: number, quantization: number = 4): Promise<void> {
         return new Promise((resolve, reject) => {
-            console.log(`Loading beatmap: ${beatmapPath}`);
+            console.log(`Loading beatmap: ${id}`);
             
-            this.beatmapSystem.loadBeatmap(beatmapPath)
+            this.beatmapSystem.generateBeatmap(id, bpm, durationMs, quantization)
                 .then((beatmapData) => {
                     this.beatmap = beatmapData;
                     this.totalNotes = beatmapData.notes.length;

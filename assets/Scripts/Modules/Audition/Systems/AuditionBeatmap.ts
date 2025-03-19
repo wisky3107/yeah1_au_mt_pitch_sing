@@ -1,6 +1,5 @@
-import { _decorator, Component, JsonAsset, resources } from 'cc';
+import { _decorator, Component } from 'cc';
 import { AuditionNoteType } from './AuditionNotePool';
-import { resourceUtil } from '../../../Common/resourceUtil';
 const { ccclass, property } = _decorator;
 
 /**
@@ -8,8 +7,7 @@ const { ccclass, property } = _decorator;
  */
 export interface BeatNote {
     time: number;      // Timestamp in milliseconds
-    type: number;      // Note type (0=LEFT, 1=RIGHT, 2=SPACE)
-    duration?: number; // Optional duration for hold notes
+    type: number;      // Note type (2=SPACE only)
 }
 
 /**
@@ -26,94 +24,55 @@ export interface BeatmapData {
 }
 
 /**
- * Class for loading and managing beatmap data
+ * Class for generating and managing beatmap data
  */
 @ccclass('AuditionBeatmap')
 export class AuditionBeatmap extends Component {
-    // Default beatmap path
-    @property
-    private beatmapFolder: string = 'audition/beatmaps/';
-    
     // Currently loaded beatmap
     private currentBeatmap: BeatmapData = null;
     
     /**
-     * Load a beatmap from a JSON file
-     * @param beatmapPath Path to the beatmap JSON file
+     * Generate a beatmap based on BPM and quantization
+     * @param songId The song ID
+     * @param bpm The beats per minute
+     * @param durationMs The song duration in milliseconds
+     * @param quantization The note quantization (e.g., 4 for quarter notes, 8 for eighth notes, 16 for sixteenth notes)
      * @returns Promise that resolves with the beatmap data
      */
-    public loadBeatmap(beatmapPath: string): Promise<BeatmapData> {
-        return new Promise((resolve, reject) => {
-            const fullPath = this.beatmapFolder + beatmapPath;
-            console.log(`Loading beatmap from: ${fullPath}`);
+    public generateBeatmap(songId: string, bpm: number, durationMs: number, quantization: number): Promise<BeatmapData> {
+        return new Promise((resolve) => {
+            const notes: BeatNote[] = [];
+            const beatInterval = 60000 / bpm; // ms per beat
+            const spaceNoteInterval = beatInterval * quantization; // ms per note
             
-            resourceUtil.loadRes(fullPath, JsonAsset, (err, jsonAsset) => {
-                if (err) {
-                    console.error(`Failed to load beatmap: ${fullPath}`, err);
-                    reject(err);
-                    return;
-                }
+            // Start after 1 second and end 2 seconds before song end
+            let currentTime = 1000;
+            const endTime = durationMs - 2000;
+            
+            while (currentTime < endTime) {
+                // Add SPACE note at each quantization point
+                notes.push({ 
+                    time: currentTime, 
+                    type: 2 // SPACE type
+                });
                 
-                try {
-                    const beatmapData: BeatmapData = jsonAsset.json as BeatmapData;
-                    this.validateBeatmap(beatmapData);
-                    
-                    // Sort notes by time for efficient processing
-                    this.sortNotesByTime(beatmapData);
-                    
-                    this.currentBeatmap = beatmapData;
-                    console.log(`Beatmap loaded successfully: ${beatmapData.songId}`);
-                    resolve(beatmapData);
-                } catch (error) {
-                    console.error('Error processing beatmap data:', error);
-                    reject(error);
-                }
-            });
-        });
-    }
-    
-    /**
-     * Validate the beatmap data structure
-     * @param beatmapData The beatmap data to validate
-     */
-    private validateBeatmap(beatmapData: BeatmapData): void {
-        // Check required fields
-        if (!beatmapData.songId) {
-            throw new Error('Beatmap missing required field: songId');
-        }
-        
-        if (!beatmapData.notes || !Array.isArray(beatmapData.notes)) {
-            throw new Error('Beatmap missing required field: notes array');
-        }
-        
-        if (beatmapData.bpm <= 0) {
-            throw new Error('Beatmap has invalid BPM value');
-        }
-        
-        // Validate each note
-        beatmapData.notes.forEach((note, index) => {
-            if (note.time === undefined || note.time < 0) {
-                throw new Error(`Note at index ${index} has invalid time value`);
+                currentTime += spaceNoteInterval;
             }
             
-            if (note.type === undefined || note.type < 0 || note.type > 2) {
-                throw new Error(`Note at index ${index} has invalid type value`);
-            }
+            const beatmapData: BeatmapData = {
+                songId: songId,
+                bpm: bpm,
+                offset: 0,
+                notes: notes,
+                difficulty: 2,
+                creator: 'System',
+                version: '1.0'
+            };
             
-            if (note.duration !== undefined && note.duration <= 0) {
-                throw new Error(`Note at index ${index} has invalid duration value`);
-            }
+            this.currentBeatmap = beatmapData;
+            console.log(`Beatmap generated successfully: ${beatmapData.songId}`);
+            resolve(beatmapData);
         });
-    }
-    
-    /**
-     * Sort notes by timestamp for optimized processing
-     * @param beatmapData The beatmap to sort
-     */
-    private sortNotesByTime(beatmapData: BeatmapData): void {
-        if (beatmapData.notes) {
-            beatmapData.notes.sort((a, b) => a.time - b.time);
-        }
     }
     
     /**
@@ -164,66 +123,6 @@ export class AuditionBeatmap extends Component {
      * @returns The corresponding AuditionNoteType
      */
     public static getNoteTypeFromBeatNote(note: BeatNote): AuditionNoteType {
-        switch (note.type) {
-            case 0: return AuditionNoteType.LEFT;
-            case 1: return AuditionNoteType.RIGHT;
-            case 2: return AuditionNoteType.SPACE;
-            default: return AuditionNoteType.SPACE;
-        }
-    }
-    
-    /**
-     * Create a simple test beatmap (for development/testing)
-     * @param songId The song ID
-     * @param bpm The beats per minute
-     * @param durationMs The song duration in milliseconds
-     * @returns A generated test beatmap
-     */
-    public static createTestBeatmap(songId: string, bpm: number, durationMs: number): BeatmapData {
-        const notes: BeatNote[] = [];
-        const beatInterval = 60000 / bpm; // ms per beat
-        
-        // Create a simple pattern
-        let currentTime = 1000; // Start after 1 second
-        
-        while (currentTime < durationMs - 2000) { // End 2 seconds before song end
-            // Add LEFT note
-            notes.push({ time: currentTime, type: 0 });
-            
-            // Add RIGHT note after 1 beat
-            notes.push({ time: currentTime + beatInterval, type: 1 });
-            
-            // Add SPACE note after 2 beats
-            notes.push({ time: currentTime + (beatInterval * 2), type: 2 });
-            
-            // Move to next pattern start (every 4 beats)
-            currentTime += beatInterval * 4;
-        }
-        
-        return {
-            songId: songId,
-            bpm: bpm,
-            offset: 0,
-            notes: notes,
-            difficulty: 2,
-            creator: 'System',
-            version: '1.0'
-        };
-    }
-    
-    /**
-     * Save a beatmap to JSON (for a beatmap editor feature)
-     * @param beatmapData The beatmap data to save
-     * @param fileName The file name to save as
-     */
-    public static exportBeatmapToJson(beatmapData: BeatmapData): string {
-        try {
-            const json = JSON.stringify(beatmapData, null, 2);
-            console.log(`Beatmap exported to JSON: ${beatmapData.songId}`);
-            return json;
-        } catch (error) {
-            console.error('Error exporting beatmap to JSON:', error);
-            return null;
-        }
+        return AuditionNoteType.SPACE; // All notes are SPACE type
     }
 } 

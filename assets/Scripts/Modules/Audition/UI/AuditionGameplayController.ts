@@ -128,18 +128,21 @@ export class AuditionGameplayController extends Component {
         }
 
         // Load beatmap
-        this.beatSystem.loadBeatmap(currentSong.beatmapPath)
+        // Load song audio first
+        audioManager.loadSong(currentSong.audioPath)
+            .then(() => {
+                // Get song duration from audio manager
+                const songDuration = audioManager.getDuration() * 1000.0;
+                // Load beatmap with song duration
+                return this.beatSystem.loadBeatmap(currentSong.id, currentSong.bpm, songDuration);
+            })
             .then(() => {
                 // Setup scoring callback
                 this.beatSystem.setScoreCallback(this.onNoteProcessed.bind(this));
 
                 // Set total notes count
                 this.totalNotes = this.beatSystem.getTotalNoteCount();
-
-                // Load song audio
-                return audioManager.loadSong(currentSong.audioPath);
-            })
-            .then(() => {
+                
                 // Start gameplay
                 this.startGameplay();
             })

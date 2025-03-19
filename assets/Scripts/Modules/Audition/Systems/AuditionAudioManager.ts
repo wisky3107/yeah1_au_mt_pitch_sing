@@ -85,6 +85,8 @@ export class AuditionAudioManager extends Component {
             });
         });
     }
+
+
     
     /**
      * Load a song audio file
@@ -178,7 +180,12 @@ export class AuditionAudioManager extends Component {
             return 0;
         }
         
-        return Date.now() - this.startTime + this.audioOffset;
+        return this.musicSource.currentTime * 1000;
+        // return Date.now() - this.startTime + this.audioOffset;
+    }
+
+    public getDuration(): number {
+        return this.musicSource.clip.getDuration();
     }
     
     /**

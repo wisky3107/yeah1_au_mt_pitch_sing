@@ -22,7 +22,6 @@ interface SongData {
     difficulty: number;
     bpm: number;
     audioPath: string;
-    beatmapPath: string;
     previewStart: number; // Start time for preview (ms)
     previewEnd: number;   // End time for preview (ms)
 }
@@ -59,7 +58,7 @@ export class AuditionGameManager extends Component {
     // Current song and player progress
     private currentSong: SongData = null;
     private playerProgress: PlayerProgress = {
-        unlockedSongs: ['song1', 'song2'], // Default unlocked songs
+        unlockedSongs: ['song0211'], // Default unlocked songs
         highScores: {},
         experience: 0,
         patternComplexityLevel: 0, // Start with level 0 (3 inputs)
@@ -100,7 +99,6 @@ export class AuditionGameManager extends Component {
             difficulty: 3,
             bpm: 130,
             audioPath: 'song0211',
-            beatmapPath: 'song0211',
             previewStart: 30000,
             previewEnd: 45000
         }
