@@ -1,6 +1,7 @@
 import { _decorator, Component } from 'cc';
 import { AuditionAccuracyRating } from './AuditionBeatSystem';
 import { AuditionInputType } from './AuditionInputHandler';
+import { AuditionAudioManager } from './AuditionAudioManager';
 const { ccclass, property } = _decorator;
 
 /**
@@ -130,16 +131,21 @@ export class AuditionScoringSystem extends Component {
                 this.accuracyStats.perfect++;
                 baseScore = this.perfectScore;
                 this.updateCombo(true);
+                // Play different perfect sound based on combo count (1-5)
+                const perfectSound = this.currentCombo === 1 ? 'perfect' : `perfect${Math.min(this.currentCombo, 5)}`;
+                AuditionAudioManager.instance.playSound(perfectSound);
                 break;
             case AuditionAccuracyRating.GOOD:
                 this.accuracyStats.good++;
                 baseScore = this.goodScore;
-                this.updateCombo(true);
+                this.updateCombo(false);
+                AuditionAudioManager.instance.playSound('good');
                 break;
             case AuditionAccuracyRating.MISS:
                 this.accuracyStats.miss++;
                 baseScore = this.missScore;
                 this.updateCombo(false);
+                AuditionAudioManager.instance.playSound('miss');
                 break;
         }
         

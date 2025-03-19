@@ -71,8 +71,9 @@ export class AuditionAudioManager extends Component {
      */
     private loadSoundEffects(): void {
         // const sfxList = ['perfect', 'good', 'miss', 'click', 'combo'];
-        const sfxList = ['perfect', 'good', 'miss', 'click', 'combo'];
+        const sfxList = ['good', 'miss', 'click'];
         
+        // Load base sound effects
         sfxList.forEach(sfx => {
             resourceUtil.loadRes(`audition/audio/sfx/${sfx}`, AudioClip, (err, clip) => {
                 if (err) {
@@ -84,6 +85,20 @@ export class AuditionAudioManager extends Component {
                 console.log(`Sound effect loaded: ${sfx}`);
             });
         });
+
+        // Load perfect sound variations (1-5)
+        for (let i = 1; i <= 5; i++) {
+            const perfectSound = i === 1 ? 'perfect' : `perfect${i}`;
+            resourceUtil.loadRes(`audition/audio/sfx/${perfectSound}`, AudioClip, (err, clip) => {
+                if (err) {
+                    console.error(`Failed to load perfect sound effect: ${perfectSound}`, err);
+                    return;
+                }
+                
+                this.soundEffects.set(perfectSound, clip);
+                console.log(`Perfect sound effect loaded: ${perfectSound}`);
+            });
+        }
     }
 
 

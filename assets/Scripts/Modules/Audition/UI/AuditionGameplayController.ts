@@ -48,7 +48,6 @@ export class AuditionGameplayController extends Component {
     private songStartTime: number = 0;
     private songDuration: number = 0;
     private notesProcessed: number = 0;
-    private totalNotes: number = 0;
 
     onLoad() {
     }
@@ -132,17 +131,14 @@ export class AuditionGameplayController extends Component {
         audioManager.loadSong(currentSong.audioPath)
             .then(() => {
                 // Get song duration from audio manager
-                const songDuration = audioManager.getDuration() * 1000.0;
+                this.songDuration = audioManager.getDuration() * 1000.0;
                 // Load beatmap with song duration
-                return this.beatSystem.loadBeatmap(currentSong.id, currentSong.bpm, songDuration);
+                return this.songDuration;
             })
             .then(() => {
                 // Setup scoring callback
                 this.beatSystem.setScoreCallback(this.onNoteProcessed.bind(this));
-
                 // Set total notes count
-                this.totalNotes = this.beatSystem.getTotalNoteCount();
-                
                 // Start gameplay
                 this.startGameplay();
             })
@@ -156,6 +152,8 @@ export class AuditionGameplayController extends Component {
      * Start gameplay
      */
     private startGameplay(): void {
+        const currentSong = AuditionGameManager.instance.getCurrentSong();
+
         // Record start time
         this.songStartTime = Date.now();
 
@@ -171,7 +169,7 @@ export class AuditionGameplayController extends Component {
         audioManager.playSong();
 
         // Start beatmap
-        this.beatSystem.startBeatmap();
+        this.beatSystem.startBeatSystem(currentSong.bpm, this.songDuration);
 
         console.log('Gameplay started');
     }
@@ -251,13 +249,13 @@ export class AuditionGameplayController extends Component {
 
         AuditionUIManager.instance.showFeedback(feedbackType);
 
-        // Check if all notes have been processed
-        if (this.notesProcessed >= this.totalNotes) {
-            // Slight delay to allow for animations and final score calculation
-            this.scheduleOnce(() => {
-                this.endGameplay();
-            }, 2.0);
-        }
+        // // Check if all notes have been processed
+        // if (this.notesProcessed >= this.totalNotes) {
+        //     // Slight delay to allow for animations and final score calculation
+        //     this.scheduleOnce(() => {
+        //         this.endGameplay();
+        //     }, 2.0);
+        // }
     }
 
     /**
@@ -286,7 +284,7 @@ export class AuditionGameplayController extends Component {
             audioManager.stopSong();
         }
 
-        this.beatSystem.stopBeatmap();
+        this.beatSystem.stopBeatSystem();
 
         // Get final score and stats
         const score = this.scoringSystem.getScore();
@@ -340,7 +338,7 @@ export class AuditionGameplayController extends Component {
             audioManager.stopSong();
         }
 
-        this.beatSystem.stopBeatmap();
+        this.beatSystem.stopBeatSystem();
 
         // Reload the scene to restart
         director.loadScene(director.getScene().name);
@@ -356,7 +354,7 @@ export class AuditionGameplayController extends Component {
             audioManager.stopSong();
         }
 
-        this.beatSystem.stopBeatmap();
+        this.beatSystem.stopBeatSystem();
 
         // Return to song selection
         AuditionGameManager.instance.changeScene('AuditionSongSelection');
@@ -410,7 +408,7 @@ export class AuditionGameplayController extends Component {
         }
 
         if (this.beatSystem) {
-            this.beatSystem.stopBeatmap();
+            this.beatSystem.stopBeatSystem();
         }
     }
 } 
