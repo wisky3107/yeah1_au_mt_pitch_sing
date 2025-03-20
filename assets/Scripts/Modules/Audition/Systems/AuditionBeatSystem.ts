@@ -54,7 +54,7 @@ export class AuditionBeatSystem extends Component {
     // Game state
     private isPlaying: boolean = false;
     private timingWindows: Map<AuditionAccuracyRating, number> = new Map();
-    private missPenaltyLoops: number = 0;
+    private disableLoops: number = 0;
     private currentLoop: number = 0;
     private lastBeatTime: number = 0;
     private songDuration: number = 0;
@@ -120,7 +120,7 @@ export class AuditionBeatSystem extends Component {
     /**
      * Start the beat system
      */
-    public startBeatSystem(bpm: number, songDuration: number): void {
+    public startBeatSystem(bpm: number, songDuration: number, disableLoops: number = 0): void {
         if (!this.note) return;
         this.bpm = bpm;
         this.updateSpeed();
@@ -137,7 +137,7 @@ export class AuditionBeatSystem extends Component {
         }
 
         this.currentLoop = 0;
-        this.missPenaltyLoops = 0;
+        this.disableLoops = disableLoops;
 
         // Register input callback
         const inputHandler = AuditionInputHandler.instance;
@@ -191,11 +191,12 @@ export class AuditionBeatSystem extends Component {
         if (currentTime - this.lastBeatTime >= beatInterval) {
             this.lastBeatTime = Math.round(currentTime / beatInterval) * beatInterval;
             this.currentLoop++;
-            this.missPenaltyLoops--;
+            this.disableLoops--;
         }
 
         // Move note using speed-based movement based on audio time with delay
-        const timeSinceLastBeat = (currentTime - this.lastBeatTime) / 1000; // Convert to seconds
+        const checkTime = (currentTime - this.lastBeatTime);
+        const timeSinceLastBeat = checkTime / 1000; // Convert to seconds
         const adjustedTime = Math.max(0, timeSinceLastBeat);
         const newX = this.startX + (this.noteSpeed * adjustedTime);
         this.note.position = new Vec3(newX, this.note.position.y, this.note.position.z);
@@ -204,7 +205,8 @@ export class AuditionBeatSystem extends Component {
         if (this.heartBeatSprite) {
             // Calculate how close we are to the next beat
             const normalizedPosition = (currentTime % beatTime);
-            const scale = Math.max(1.0, (1.0 - normalizedPosition / beatTime) * 2.0);
+            const isApplyScale = checkTime > (beatInterval - beatTime) && checkTime < (beatInterval + beatTime);
+            const scale = isApplyScale ? Math.max(1.0, (1.0 - normalizedPosition / beatTime) * 2.0) : 1.0;
             // Apply scale to note
             this.heartBeatSprite.node.setScale(new Vec3(scale, 1.0, 1.0));
 
@@ -223,7 +225,7 @@ export class AuditionBeatSystem extends Component {
      * @param time Time of input
      */
     private evaluateInput(time: number): void {
-        if (!this.isPlaying || this.missPenaltyLoops > 0) return;
+        if (!this.isPlaying || this.disableLoops > 0) return;
 
         const audioManager = AuditionAudioManager.instance;
         if (!audioManager) return;
@@ -245,15 +247,13 @@ export class AuditionBeatSystem extends Component {
             accuracyRating = AuditionAccuracyRating.GOOD;
         } else {
             accuracyRating = AuditionAccuracyRating.MISS;
-            this.missPenaltyLoops = 3; // Apply 3 loop penalty for miss
+            this.disableLoops = 3; // Apply 3 loop penalty for miss
         }
 
         // Call scoring callback
         if (this.scoringCallback) {
             this.scoringCallback(accuracyRating);
         }
-
-        console.log(`Input evaluated: ${AuditionAccuracyRating[accuracyRating]}, Combo: ${this.currentCombo}`);
     }
 
     /**

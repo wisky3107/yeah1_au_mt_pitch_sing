@@ -3408,7 +3408,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 594.7239999999999,
+      "width": 544.724,
       "height": 100
     },
     "_anchorPoint": {
@@ -3469,8 +3469,8 @@
     "__prefab": null,
     "_alignFlags": 45,
     "_target": null,
-    "_left": 0,
-    "_right": 0,
+    "_left": 24.999999999999943,
+    "_right": 24.999999999999943,
     "_top": 20.129999999999995,
     "_bottom": 20.129999999999995,
     "_horizontalCenter": 0,

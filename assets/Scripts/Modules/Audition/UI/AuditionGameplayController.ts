@@ -169,7 +169,7 @@ export class AuditionGameplayController extends Component {
         audioManager.playSong();
 
         // Start beatmap
-        this.beatSystem.startBeatSystem(currentSong.bpm, this.songDuration);
+        this.beatSystem.startBeatSystem(currentSong.bpm, this.songDuration, 4);
 
         console.log('Gameplay started');
     }
