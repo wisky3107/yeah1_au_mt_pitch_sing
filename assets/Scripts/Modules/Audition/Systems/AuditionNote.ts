@@ -14,26 +14,22 @@ export class AuditionNote extends Component {
     public noteVisual: AuditionNoteVisual = null;
     
     // Note properties
-    private noteType: AuditionNoteType = AuditionNoteType.SPACE;
+    private noteType: AuditionNoteType = AuditionNoteType.LEFT;
     private beatTime: number = 0;
-    private speed: number = 1.0;
     private targetY: number = 0;
     private startY: number = 0;
     private isMoving: boolean = false;
     private noteId: number = -1;
-    private moveAction: any = null;
     
     /**
      * Initialize note with properties
      * @param noteType Type of note
      * @param beatTime Time (ms) when the note should be hit
-     * @param speed Movement speed multiplier
      * @param noteId Unique ID for the note
      */
-    public initialize(noteType: AuditionNoteType, beatTime: number, speed: number, noteId: number): void {
+    public initialize(noteType: AuditionNoteType, beatTime: number, noteId: number): void {
         this.noteType = noteType;
         this.beatTime = beatTime;
-        this.speed = speed;
         this.noteId = noteId;
         
         // Initialize visual component
@@ -51,66 +47,15 @@ export class AuditionNote extends Component {
             case AuditionNoteType.RIGHT:
                 this.node.name = 'RightNote';
                 break;
-            case AuditionNoteType.SPACE:
-                this.node.name = 'SpaceNote';
-                break;
         }
     }
-    
-    /**
-     * Begin note movement from start position to target
-     * @param startY Starting Y position
-     * @param targetY Target Y position
-     * @param duration Movement duration in seconds
-     */
-    public startMovement(startY: number, targetY: number, duration: number): void {
-        this.isMoving = true;
-        this.startY = startY;
-        this.targetY = targetY;
-        
-        // Stop any existing movement
-        if (this.moveAction) {
-            this.moveAction.stop();
-        }
-        
-        // Set initial position
-        this.node.setPosition(this.getXPosition(), startY, 0);
-        
-        // Start movement tween
-        this.moveAction = tween(this.node)
-            .to(duration, { position: new Vec3(this.getXPosition(), targetY, 0) }, { easing: 'linear' })
-            .call(() => {
-                // Note reached target, if not hit yet
-                this.isMoving = false;
-            })
-            .start();
-    }
-    
-    /**
-     * Determine the X position based on note type
-     */
-    private getXPosition(): number {
-        // This should be configured based on your track layout
-        switch (this.noteType) {
-            case AuditionNoteType.LEFT:
-                return -150; // Left side position
-            case AuditionNoteType.RIGHT:
-                return 150;  // Right side position
-            case AuditionNoteType.SPACE:
-                return 0;    // Center position
-        }
-        return 0;
-    }
-    
+
     /**
      * Play hit animation when note is successfully hit
      * @param accuracyRating Accuracy rating of the hit
      */
     public playHitEffect(accuracyRating: AuditionAccuracyRating): void {
         // Stop movement
-        if (this.moveAction) {
-            this.moveAction.stop();
-        }
         this.isMoving = false;
         
         // Use visual component to show hit effect
@@ -123,10 +68,7 @@ export class AuditionNote extends Component {
      * Play miss animation when note is missed
      */
     public playMissEffect(): void {
-        // Stop movement
-        if (this.moveAction) {
-            this.moveAction.stop();
-        }
+    
         this.isMoving = false;
         
         // Use visual component to show miss effect
@@ -139,12 +81,6 @@ export class AuditionNote extends Component {
      * Reset the note for reuse
      */
     public reset(): void {
-        // Stop any movement
-        if (this.moveAction) {
-            this.moveAction.stop();
-            this.moveAction = null;
-        }
-        
         this.isMoving = false;
         
         // Reset visual component
@@ -166,41 +102,11 @@ export class AuditionNote extends Component {
     }
     
     /**
-     * Get the beat time when this note should be hit
-     * @returns Beat time in milliseconds
-     */
-    public getBeatTime(): number {
-        return this.beatTime;
-    }
-    
-    /**
      * Get the note's unique ID (for recycling)
      * @returns The note ID
      */
     public getNoteId(): number {
         return this.noteId;
-    }
-    
-    /**
-     * Check if the note is currently moving
-     * @returns True if the note is moving
-     */
-    public isNoteMoving(): boolean {
-        return this.isMoving;
-    }
-    
-    /**
-     * Get the Y-axis progress as a value between 0-1
-     * @returns Progress value (0 = start, 1 = target)
-     */
-    public getProgressValue(): number {
-        if (this.startY === this.targetY) return 1;
-        
-        const currentY = this.node.position.y;
-        const totalDistance = this.targetY - this.startY;
-        const traveledDistance = currentY - this.startY;
-        
-        return Math.max(0, Math.min(1, traveledDistance / totalDistance));
     }
     
     /**

@@ -17,9 +17,7 @@ export class UIManager {
     public static instance: UIManager;
 
     preloadPrefabNames: string[] = [
-        GameConstant.POPUP.LOADING,
-        GameConstant.POPUP.LOADING_ATTACK,
-        GameConstant.POPUP.LOADING_STEAL
+        GameConstant.POPUP.LOADING
     ];
 
     private _dictSharedPanel: any = {}

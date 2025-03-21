@@ -775,23 +775,16 @@
     "pulseIntensity": 0.2,
     "leftNoteColor": {
       "__type__": "cc.Color",
-      "r": 79,
-      "g": 195,
-      "b": 247,
+      "r": 255,
+      "g": 255,
+      "b": 255,
       "a": 255
     },
     "rightNoteColor": {
       "__type__": "cc.Color",
       "r": 255,
-      "g": 112,
-      "b": 67,
-      "a": 255
-    },
-    "spaceNoteColor": {
-      "__type__": "cc.Color",
-      "r": 255,
-      "g": 235,
-      "b": 59,
+      "g": 255,
+      "b": 255,
       "a": 255
     },
     "perfectColor": {
@@ -815,9 +808,9 @@
       "b": 47,
       "a": 255
     },
-    "hitAnimDuration": 0.3,
+    "hitAnimDuration": 0.2,
     "missAnimDuration": 0.4,
-    "appearAnimDuration": 0.2,
+    "appearAnimDuration": 0.05,
     "_id": ""
   },
   {
