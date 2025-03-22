@@ -1,0 +1,451 @@
+DefaultState:first stand
+[first stand]
+	Speed:1
+	Motion:A000215
+	Transition:
+		SrcState:first stand
+		DestState:boy start
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+	Transition:
+		SrcState:first stand
+		DestState:girl start
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[boy start]
+	Speed:.50999999
+	Motion:A000209
+	Transition:
+		SrcState:boy start
+		DestState:Dance start
+		TransitionDuration:.0625
+		TransitionOffset:0
+		ExitTime:.9375
+[girl start]
+	Speed:.639999986
+	Motion:A000212
+	Transition:
+		SrcState:girl start
+		DestState:Dance start
+		TransitionDuration:.0500000007
+		TransitionOffset:0
+		ExitTime:.949999988
+[Dance end]
+	Speed:1
+	Motion:A000215
+	Transition:
+		SrcState:Dance end
+		DestState:end2
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+	Transition:
+		SrcState:Dance end
+		DestState:end3
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+	Transition:
+		SrcState:Dance end
+		DestState:end4
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+	Transition:
+		SrcState:Dance end
+		DestState:end1
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[last stand]
+	Speed:1
+	Motion:A000215
+[end1]
+	Speed:1.20000005
+	Motion:boy_loser
+	Transition:
+		SrcState:end1
+		DestState:last stand
+		TransitionDuration:.0416666679
+		TransitionOffset:0
+		ExitTime:.958333313
+[end2]
+	Speed:1.20000005
+	Motion:boy_win
+	Transition:
+		SrcState:end2
+		DestState:last stand
+		TransitionDuration:.0416666679
+		TransitionOffset:0
+		ExitTime:.958333313
+[end3]
+	Speed:1.20000005
+	Motion:girl_loser
+	Transition:
+		SrcState:end3
+		DestState:last stand
+		TransitionDuration:.0416666679
+		TransitionOffset:0
+		ExitTime:.958333313
+[end4]
+	Speed:1.20000005
+	Motion:girl_win
+	Transition:
+		SrcState:end4
+		DestState:last stand
+		TransitionDuration:.0416666679
+		TransitionOffset:0
+		ExitTime:.958333313
+[C000007]
+	Speed:1
+	Motion:C000007
+	Transition:
+		SrcState:C000007
+		DestState:D000272
+		TransitionDuration:.0360540822
+		TransitionOffset:.186636984
+		ExitTime:.910395324
+[D000272]
+	Speed:1
+	Motion:D000272
+	Transition:
+		SrcState:D000272
+		DestState:D000685 0
+		TransitionDuration:.145922795
+		TransitionOffset:0
+		ExitTime:.938016534
+[C000007 0]
+	Speed:1
+	Motion:C000007
+	Transition:
+		SrcState:C000007 0
+		DestState:D000272 0
+		TransitionDuration:.0141024226
+		TransitionOffset:.191635445
+		ExitTime:.912072599
+[Dance start]
+	Speed:1
+	Motion:D000685
+	Transition:
+		SrcState:Dance start
+		DestState:D000686
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000686]
+	Speed:1
+	Motion:D000686
+	Transition:
+		SrcState:D000686
+		DestState:D000687
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000687]
+	Speed:1
+	Motion:D000687
+	Transition:
+		SrcState:D000687
+		DestState:D000688
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000688]
+	Speed:1
+	Motion:D000688
+	Transition:
+		SrcState:D000688
+		DestState:D000689
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000689]
+	Speed:1
+	Motion:D000689
+	Transition:
+		SrcState:D000689
+		DestState:D000690
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000690]
+	Speed:1
+	Motion:D000690
+	Transition:
+		SrcState:D000690
+		DestState:D000691
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000691]
+	Speed:1
+	Motion:D000691
+	Transition:
+		SrcState:D000691
+		DestState:D000748
+		TransitionDuration:.103100017
+		TransitionOffset:.481928527
+		ExitTime:.374808818
+[D000748]
+	Speed:1
+	Motion:D000748
+	Transition:
+		SrcState:D000748
+		DestState:D000749
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000749]
+	Speed:1
+	Motion:D000749
+	Transition:
+		SrcState:D000749
+		DestState:D000750
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000750]
+	Speed:1
+	Motion:D000750
+	Transition:
+		SrcState:D000750
+		DestState:D000751
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000751]
+	Speed:1
+	Motion:D000751
+	Transition:
+		SrcState:D000751
+		DestState:D000752
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000752]
+	Speed:1
+	Motion:D000752
+	Transition:
+		SrcState:D000752
+		DestState:D000753
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000753]
+	Speed:1
+	Motion:D000753
+	Transition:
+		SrcState:D000753
+		DestState:D000754
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000754]
+	Speed:1
+	Motion:D000754
+	Transition:
+		SrcState:D000754
+		DestState:C000007
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.667904377
+[D000685 0]
+	Speed:1
+	Motion:D000685
+	Transition:
+		SrcState:D000685 0
+		DestState:D000686 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000686 0]
+	Speed:1
+	Motion:D000686
+	Transition:
+		SrcState:D000686 0
+		DestState:D000687 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000687 0]
+	Speed:1
+	Motion:D000687
+	Transition:
+		SrcState:D000687 0
+		DestState:D000688 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000688 0]
+	Speed:1
+	Motion:D000688
+	Transition:
+		SrcState:D000688 0
+		DestState:D000689 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000689 0]
+	Speed:1
+	Motion:D000689
+	Transition:
+		SrcState:D000689 0
+		DestState:D000690 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000690 0]
+	Speed:1
+	Motion:D000690
+	Transition:
+		SrcState:D000690 0
+		DestState:D000691 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000691 0]
+	Speed:1
+	Motion:D000691
+	Transition:
+		SrcState:D000691 0
+		DestState:D000748 0
+		TransitionDuration:.103100449
+		TransitionOffset:.481928468
+		ExitTime:.374808818
+[D000748 0]
+	Speed:1
+	Motion:D000748
+	Transition:
+		SrcState:D000748 0
+		DestState:D000749 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000749 0]
+	Speed:1
+	Motion:D000749
+	Transition:
+		SrcState:D000749 0
+		DestState:D000750 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000750 0]
+	Speed:1
+	Motion:D000750
+	Transition:
+		SrcState:D000750 0
+		DestState:D000751 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000751 0]
+	Speed:1
+	Motion:D000751
+	Transition:
+		SrcState:D000751 0
+		DestState:D000752 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000752 0]
+	Speed:1
+	Motion:D000752
+	Transition:
+		SrcState:D000752 0
+		DestState:D000753 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000753 0]
+	Speed:1
+	Motion:D000753
+	Transition:
+		SrcState:D000753 0
+		DestState:D000756
+		TransitionDuration:.046875
+		TransitionOffset:.13230966
+		ExitTime:.938423514
+[D000272 0]
+	Speed:1
+	Motion:D000272
+	Transition:
+		SrcState:D000272 0
+		DestState:D000685 1
+		TransitionDuration:.136596009
+		TransitionOffset:0
+		ExitTime:.954674602
+[D000685 1]
+	Speed:1
+	Motion:D000685
+	Transition:
+		SrcState:D000685 1
+		DestState:D000686 1
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000686 1]
+	Speed:1
+	Motion:D000686
+	Transition:
+		SrcState:D000686 1
+		DestState:D000687 1
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000687 1]
+	Speed:1
+	Motion:D000687
+	Transition:
+		SrcState:D000687 1
+		DestState:D000688 1
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000688 1]
+	Speed:1
+	Motion:D000688
+	Transition:
+		SrcState:D000688 1
+		DestState:D000689 1
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000689 1]
+	Speed:1
+	Motion:D000689
+	Transition:
+		SrcState:D000689 1
+		DestState:D000690 1
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000690 1]
+	Speed:1
+	Motion:D000690
+	Transition:
+		SrcState:D000690 1
+		DestState:D000691 1
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125
+[D000691 1]
+	Speed:1
+	Motion:D000691
+	Transition:
+		SrcState:D000691 1
+		DestState:Dance end
+		TransitionDuration:.107893929
+		TransitionOffset:0
+		ExitTime:.459424257
+[D000756]
+	Speed:1
+	Motion:D000756
+	Transition:
+		SrcState:D000756
+		DestState:C000007 0
+		TransitionDuration:.046875
+		TransitionOffset:0
+		ExitTime:.953125

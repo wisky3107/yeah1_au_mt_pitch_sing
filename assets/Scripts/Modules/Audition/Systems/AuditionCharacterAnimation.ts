@@ -1,30 +1,14 @@
-import { _decorator, Component, Node, Animation, AnimationState, Enum } from 'cc';
+import { _decorator, Component, Node, Animation, AnimationState, Enum, Skeleton, Prefab, SkeletalAnimation, instantiate, AnimationClip } from 'cc';
 import { AuditionAccuracyRating } from './AuditionBeatSystem';
-import { AuditionInputType } from './AuditionInputHandler';
-import { AuditionCharacterAnimationData, DanceMoveDifficulty, DanceMoveData } from './AuditionCharacterAnimationData';
+import { AuditionCharacterAnimationData, SpecialStateType, AnimationState as DanceState } from './AuditionCharacterAnimationData';
+import { AuditionGameManager } from '../Core/AuditionGameManager';
+import { resourceUtil } from '../../../Common/resourceUtil';
 const { ccclass, property } = _decorator;
-
-/**
- * Animation types for the character
- */
-enum AnimationType {
-    IDLE,
-    PERFECT_LEFT,
-    PERFECT_RIGHT,
-    PERFECT_SPACE,
-    GOOD_LEFT,
-    GOOD_RIGHT,
-    GOOD_SPACE,
-    MISS,
-    COMBO,
-    DANCE_MOVE
-}
 
 /**
  * Input history record used for tracking sequences
  */
 interface InputRecord {
-    inputType: AuditionInputType;
     accuracyRating: AuditionAccuracyRating;
     timestamp: number;
 }
@@ -38,378 +22,335 @@ export class AuditionCharacterAnimation extends Component {
     // Character model/sprite
     @property(Node)
     private character: Node = null;
-    
+
     // Animation component
     @property(Animation)
     private animationController: Animation = null;
-    
+
     // Animation configuration
     @property
     private transitionDuration: number = 0.2; // Duration for animation transitions
-    
+
     @property
     private comboThreshold: number = 10; // Combo count to trigger combo animation
-    
+
     @property
     private inputHistorySize: number = 20; // Number of recent inputs to track
-    
-    @property({
-        type: Enum(DanceMoveDifficulty)
-    })
-    private maxDanceMoveDifficulty: DanceMoveDifficulty = DanceMoveDifficulty.EXPERT;
-    
+
     // Current state
-    private currentAnimation: string = 'idle';
+    private currentAnimation: string = '';
     private currentCombo: number = 0;
     private isPlayingSpecial: boolean = false;
     private inputHistory: InputRecord[] = [];
-    private availableDanceMoves: DanceMoveData[] = [];
-    
-    onLoad() {
-        // Initialize animation controller if not set
+    private isMale: boolean = true; // Default to male, should be set based on character selection
+
+    public loadDanceData(songId: string) {
         if (!this.animationController && this.character) {
             this.animationController = this.character.getComponent(Animation);
         }
-        
-        // Initialize dance move data
-        AuditionCharacterAnimationData.initialize();
-        
-        // Get available dance moves
-        this.updateAvailableDanceMoves();
+        return new Promise((resolve, reject) => {
+            // Initialize animation controller if not set
+            // Initialize dance move data
+            AuditionCharacterAnimationData.initialize();
+            const songDance = songId + '_Dance';
+            AuditionCharacterAnimationData.loadDanceData(songDance)
+                .then(() => {
+                    // Get all animation names from the loaded dance data
+                    const animNames = AuditionCharacterAnimationData.getAllAnimationNames();
+                    console.log(`Loading ${animNames.length} dance animations for song: ${songId}`);
+                    // Load all animations for this dance
+                    return this.loadDanceAnims(animNames)
+                })
+                .then((clips) => {
+                    console.log(`Successfully loaded ${clips.length} dance animations`);
+                    this.setClips(clips);
+                    this.playSpecialAnimation(SpecialStateType.FIRST_STAND);
+                    resolve("success");
+                }).catch((error) => {
+                    console.error(`Failed to load dance: ${error}`);
+                    reject(error);
+                });;
+        });
     }
-    
-    start() {
-        // Play idle animation by default
-        if (this.animationController) {
-            this.playAnimation(AnimationType.IDLE);
+
+    private setClips(clips: AnimationClip[]) {
+        for (const clip of clips) {
+            this.animationController.createState(clip, clip.name);
         }
     }
-    
+
+    public testLoadDanceAnim() {
+        this.loadDanceAnim('Breakdance');
+    }
+
+    /**
+     * Loads multiple dance animations by their names
+     * @param animNames Array of animation names to load
+     * @returns Promise that resolves with an array of loaded animation clips
+     */
+    public async loadDanceAnims(animNames: string[]): Promise<AnimationClip[]> {
+        const clipPromises: Promise<AnimationClip>[] = [];
+
+        // Create a promise for each animation name
+        for (const animName of animNames) {
+            clipPromises.push(this.loadDanceAnim(animName));
+        }
+
+        try {
+            // Wait for all animations to load
+            const clips = await Promise.all(clipPromises);
+            return clips;
+        } catch (error) {
+            console.error('Failed to load multiple dance animations:', error);
+            throw error;
+        }
+    }
+
+    // Load prefab with SkeletalAnimation component and play animation
+    public async loadDanceAnim(animName: string): Promise<AnimationClip> {
+        return new Promise((resolve, reject) => {
+            // Load the prefab that contains SkeletalAnimation component
+            resourceUtil.loadRes(`audition/anims/${animName}`, Prefab, (err, prefabAsset) => {
+                if (err) {
+                    console.error('Failed to load character as  nimation prefab:', err);
+                    reject(err);
+                    return;
+                }
+
+                try {
+                    // Instantiate the prefab to access its components
+                    const prefabNode = instantiate(prefabAsset);
+
+                    // Get the SkeletalAnimation component from the prefab
+                    const skeletalAnimation: SkeletalAnimation = prefabNode.getComponent(SkeletalAnimation);
+
+                    if (!skeletalAnimation) {
+                        console.error(`No SkeletalAnimation component found in prefab: ${animName}`);
+                        this.node.destroy();
+                        reject(new Error('Missing SkeletalAnimation component'));
+                        return;
+                    }
+
+                    // Get animation clips from the skeletal animation
+                    const clips = skeletalAnimation.clips;
+
+                    if (!clips || clips.length === 0) {
+                        console.error(`No animation clips found in prefab: ${animName}`);
+                        this.node.destroy();
+                        reject(new Error('No animation clips found'));
+                        return;
+                    }
+
+                    // Set the clips to our animation controller
+                    // if (this.animationController) {
+                    //     // Add each clip to the animation controller
+                    //     for (const clip of clips) {
+                    //         if (clip) {
+                    //             // Check if the clip already exists in the controller
+                    //             if (!this.animationController.getState(clip.name)) {
+                    //                 this.animationController.createState(clip, clip.name);
+                    //             }
+                    //         }
+                    //     }
+
+                    //     // Play the first animation clip
+                    //     if (clips[0]) {
+                    //         this.animationController.play(clips[0].name);
+                    //     }
+                    // } else {
+                    //     console.error('Animation controller not initialized');
+                    //     reject(new Error('Animation controller not initialized'));
+                    // }
+
+                    // Destroy the instantiated prefab node as we no longer need it
+                    prefabNode.destroy();
+                    console.log(`Successfully loaded and setup animation prefab: ${animName}`);
+                    resolve(clips[0]);//return to clips index 0
+                } catch (error) {
+                    console.error('Error processing animation prefab:', error);
+                    reject(error);
+                }
+            });
+        });
+    }
+
+    /**
+     * Set character gender
+     * @param isMale Whether the character is male
+     */
+    public setGender(isMale: boolean): void {
+        this.isMale = isMale;
+    }
+
+    /**
+     * Start the dance sequence
+     */
+    public startDanceSequence(): void {
+        // Play gender-specific start animation
+        const startAnim = this.isMale ? SpecialStateType.BOY_START : SpecialStateType.GIRL_START;
+        this.playSpecialAnimation(startAnim, () => {
+            // After start animation, transition to dance start
+            this.playSpecialAnimation(SpecialStateType.DANCE_START, () => {
+                // Start the regular dance sequence
+                this.playNextDanceState();
+            });
+        });
+    }
+
     /**
      * React to player input with appropriate animation
      * @param accuracyRating Accuracy rating of the hit
-     * @param inputType Type of input
      * @param combo Current combo
      */
-    public reactToInput(accuracyRating: AuditionAccuracyRating, inputType: AuditionInputType, combo: number): void {
+    public reactToInput(accuracyRating: AuditionAccuracyRating, combo: number): void {
         // Update combo count
         this.currentCombo = combo;
-        
-        // If combo has increased, update available dance moves
-        if (combo % 5 === 0) {
-            this.updateAvailableDanceMoves();
-        }
-        
+
         // Record input for sequence detection
-        this.recordInput(accuracyRating, inputType);
-        
-        // Check for dance move sequences first
-        const danceMoveId = this.checkForDanceMoveSequence();
-        if (danceMoveId) {
-            // Play dance move animation if a sequence is matched
-            this.playDanceMove(danceMoveId);
+        this.recordInput(accuracyRating);
+
+        // If we're in a special animation, don't process input
+        if (this.isPlayingSpecial) return;
+
+        // Handle miss animation if accuracy is poor
+        if (accuracyRating === AuditionAccuracyRating.MISS) {
+            this.playMissAnimation();
             return;
         }
-        
-        // Determine animation to play based on accuracy and input type
-        let animationType: AnimationType;
-        
-        switch (accuracyRating) {
-            case AuditionAccuracyRating.PERFECT:
-                switch (inputType) {
-                    case AuditionInputType.LEFT:
-                        animationType = AnimationType.PERFECT_LEFT;
-                        break;
-                    case AuditionInputType.RIGHT:
-                        animationType = AnimationType.PERFECT_RIGHT;
-                        break;
-                    case AuditionInputType.SPACE:
-                        animationType = AnimationType.PERFECT_SPACE;
-                        break;
-                    default:
-                        animationType = AnimationType.PERFECT_SPACE;
-                }
-                break;
-                
-            case AuditionAccuracyRating.GOOD:
-                switch (inputType) {
-                    case AuditionInputType.LEFT:
-                        animationType = AnimationType.GOOD_LEFT;
-                        break;
-                    case AuditionInputType.RIGHT:
-                        animationType = AnimationType.GOOD_RIGHT;
-                        break;
-                    case AuditionInputType.SPACE:
-                        animationType = AnimationType.GOOD_SPACE;
-                        break;
-                    default:
-                        animationType = AnimationType.GOOD_SPACE;
-                }
-                break;
-                
-            case AuditionAccuracyRating.MISS:
-                animationType = AnimationType.MISS;
-                break;
-                
-            default:
-                animationType = AnimationType.IDLE;
-        }
-        
-        // Check for combo animation
-        if (this.currentCombo > 0 && this.currentCombo % this.comboThreshold === 0 && 
-            accuracyRating === AuditionAccuracyRating.PERFECT) {
-            animationType = AnimationType.COMBO;
-        }
-        
-        // Play the animation
-        this.playAnimation(animationType);
+
+        // Continue with regular dance sequence
+        this.playNextDanceState();
     }
-    
+
+    /**
+     * Play the next dance state in sequence
+     */
+    private playNextDanceState(): void {
+        const currentState = AuditionCharacterAnimationData.getDanceState(this.currentAnimation);
+        if (!currentState) {
+            // If no current state, start from default
+            const defaultState = AuditionCharacterAnimationData.getDefaultState();
+            this.playAnimation(defaultState);
+            return;
+        }
+
+        // Find next transition
+        const nextTransition = currentState.transitions[0];
+        if (nextTransition) {
+            this.playAnimation(nextTransition.destState);
+        }
+    }
+
+    /**
+     * Play a special animation
+     * @param type Special animation type
+     * @param callback Optional callback when animation completes
+     */
+    private playSpecialAnimation(type: SpecialStateType, callback?: () => void): void {
+        const state = AuditionCharacterAnimationData.getSpecialState(type);
+        if (!state) {
+            console.error(`Special animation state not found: ${type}`);
+            return;
+        }
+
+        this.isPlayingSpecial = true;
+        this.playAnimation(state.motion, state.speed, callback);
+    }
+
+    /**
+     * Play a miss animation
+     */
+    private playMissAnimation(): void {
+        // TODO: Implement miss animation logic
+        // This should play a brief "miss" animation and then return to the current dance state
+    }
+
+    /**
+     * Play an animation with optional speed and callback
+     */
+    private playAnimation(animationName: string, speed: number = 1.0, callback?: () => void): void {
+        if (!this.animationController) return;
+
+        const state = this.animationController.getState(animationName);
+        if (!state) {
+            console.error(`Animation state not found: ${animationName}`);
+            return;
+        }
+
+        state.speed = speed;
+        // Get the dance state to determine exit time for blending
+        const danceState = AuditionCharacterAnimationData.getDanceState(animationName);
+        if (danceState && danceState.transitions && danceState.transitions.length > 0) {
+            // Use the exit time from the first transition as blend time
+            const exitTime = danceState.transitions[0].exitTime || 0.95;
+            state.play();
+        } else {
+            // Default play without blend time if no transition data
+            state.play();
+        }
+        
+
+        if (callback) {
+            state.on('finished', callback, this);
+        }
+    }
+
     /**
      * Record an input for sequence detection
-     * @param accuracyRating Accuracy rating
-     * @param inputType Input type
      */
-    private recordInput(accuracyRating: AuditionAccuracyRating, inputType: AuditionInputType): void {
+    private recordInput(accuracyRating: AuditionAccuracyRating): void {
         // Add to history
         this.inputHistory.push({
-            inputType: inputType,
             accuracyRating: accuracyRating,
             timestamp: Date.now()
         });
-        
+
         // Limit history size
         if (this.inputHistory.length > this.inputHistorySize) {
             this.inputHistory.shift();
         }
     }
-    
+
     /**
-     * Check for dance move sequences in the input history
-     * @returns ID of the matched dance move, or null if none matched
+     * End the dance sequence with appropriate ending animation
+     * @param isWinner Whether the player won
      */
-    private checkForDanceMoveSequence(): string | null {
-        if (this.inputHistory.length < 2) return null;
-        
-        // Check each dance move
-        for (const danceMove of this.availableDanceMoves) {
-            // Skip if combo requirement not met
-            if (danceMove.requiredCombo > this.currentCombo) {
-                continue;
-            }
-            
-            // Get requirements for this move
-            const requirements = AuditionCharacterAnimationData.getDanceMoveRequirements(danceMove.id);
-            if (!requirements) continue;
-            
-            // Check if we have enough inputs in history
-            if (this.inputHistory.length < requirements.inputSequence.length) {
-                continue;
-            }
-            
-            // Get most recent inputs matching the sequence length
-            const recentInputs = this.inputHistory.slice(-requirements.inputSequence.length);
-            
-            // Check time window
-            const sequenceDuration = recentInputs[recentInputs.length - 1].timestamp - 
-                                    recentInputs[0].timestamp;
-            if (sequenceDuration > requirements.timeWindow) {
-                continue;
-            }
-            
-            // Check sequence match
-            let isMatch = true;
-            for (let i = 0; i < recentInputs.length; i++) {
-                if (recentInputs[i].inputType !== requirements.inputSequence[i] ||
-                    recentInputs[i].accuracyRating !== requirements.accuracySequence[i]) {
-                    isMatch = false;
-                    break;
-                }
-            }
-            
-            if (isMatch) {
-                console.log(`Matched dance move sequence: ${danceMove.name}`);
-                return danceMove.id;
-            }
+    public endDanceSequence(isWinner: boolean): void {
+        // Determine which ending animation to play based on gender and result
+        let endType: SpecialStateType;
+        if (this.isMale) {
+            endType = isWinner ? SpecialStateType.END2 : SpecialStateType.END1;
+        } else {
+            endType = isWinner ? SpecialStateType.END4 : SpecialStateType.END3;
         }
-        
-        return null;
+
+        this.playSpecialAnimation(endType, () => {
+            // After ending animation, transition to last stand
+            this.playSpecialAnimation(SpecialStateType.LAST_STAND);
+        });
     }
-    
-    /**
-     * Update the list of available dance moves based on current combo
-     */
-    private updateAvailableDanceMoves(): void {
-        this.availableDanceMoves = AuditionCharacterAnimationData.getAvailableDanceMoves(this.currentCombo)
-            .filter(move => move.difficulty <= this.maxDanceMoveDifficulty);
-            
-        console.log(`Updated available dance moves. Count: ${this.availableDanceMoves.length}`);
-    }
-    
-    /**
-     * Play a specific dance move animation
-     * @param danceMoveId ID of the dance move to play
-     */
-    private playDanceMove(danceMoveId: string): void {
-        const danceMove = AuditionCharacterAnimationData.getDanceMove(danceMoveId);
-        if (!danceMove) return;
-        
-        console.log(`Playing dance move: ${danceMove.name}`);
-        
-        // Mark as special animation
-        this.isPlayingSpecial = true;
-        
-        // Play the dance move animation
-        if (this.animationController) {
-            this.animationController.play(danceMove.animationName);
-            
-            // Get the animation state
-            let state = this.animationController.getState(danceMove.animationName);
-            
-            if (state) {
-                state.speed = 1.0;
-                state.repeatCount = 1;
-                this.currentAnimation = danceMove.animationName;
-                
-                // Set up completion listener
-                state.on(Animation.EventType.FINISHED, this.onSpecialAnimationComplete, this);
-            }
-        }
-    }
-    
-    /**
-     * Play a specific animation
-     * @param animationType Type of animation to play
-     */
-    private playAnimation(animationType: AnimationType): void {
-        if (!this.animationController) {
-            console.warn('No animation controller found');
-            return;
-        }
-        
-        // Don't interrupt special animations
-        if (this.isPlayingSpecial) {
-            return;
-        }
-        
-        // Map animation type to animation clip name
-        let animationName: string;
-        
-        switch (animationType) {
-            case AnimationType.IDLE:
-                animationName = 'idle';
-                break;
-            case AnimationType.PERFECT_LEFT:
-                animationName = 'perfect_left';
-                break;
-            case AnimationType.PERFECT_RIGHT:
-                animationName = 'perfect_right';
-                break;
-            case AnimationType.PERFECT_SPACE:
-                animationName = 'perfect_space';
-                break;
-            case AnimationType.GOOD_LEFT:
-                animationName = 'good_left';
-                break;
-            case AnimationType.GOOD_RIGHT:
-                animationName = 'good_right';
-                break;
-            case AnimationType.GOOD_SPACE:
-                animationName = 'good_space';
-                break;
-            case AnimationType.MISS:
-                animationName = 'miss';
-                break;
-            case AnimationType.COMBO:
-                animationName = 'combo';
-                this.isPlayingSpecial = true;
-                break;
-            default:
-                animationName = 'idle';
-        }
-        
-        // Play the animation
-        this.animationController.play(animationName);
-        
-        // Get the animation state
-        let state = this.animationController.getState(animationName);
-        
-        // Set transition duration
-        if (state) {
-            state.speed = 1.0;
-            state.repeatCount = 1; // Play once for actions
-            
-            // For idle and miss animations, loop continuously
-            if (animationType === AnimationType.IDLE || animationType === AnimationType.MISS) {
-                state.repeatCount = Infinity;
-            }
-            
-            this.currentAnimation = animationName;
-            
-            // Set up completion listener for combo animations
-            if (animationType === AnimationType.COMBO) {
-                state.on(Animation.EventType.FINISHED, this.onSpecialAnimationComplete, this);
-            }
-        }
-        
-        console.log(`Playing animation: ${animationName}`);
-    }
-    
-    /**
-     * Handle special animation completion
-     * @param type Event type
-     * @param state Animation state
-     */
-    private onSpecialAnimationComplete(type: string, state: AnimationState): void {
-        // Return to idle after special animation
-        this.isPlayingSpecial = false;
-        this.playAnimation(AnimationType.IDLE);
-        
-        // Remove the event listener
-        state.off(Animation.EventType.FINISHED, this.onSpecialAnimationComplete, this);
-    }
-    
-    /**
-     * Set the combo threshold for combo animations
-     * @param threshold Combo count threshold
-     */
-    public setComboThreshold(threshold: number): void {
-        this.comboThreshold = threshold;
-    }
-    
-    /**
-     * Set the maximum difficulty level for dance moves
-     * @param difficulty Maximum difficulty level
-     */
-    public setMaxDanceDifficulty(difficulty: DanceMoveDifficulty): void {
-        this.maxDanceMoveDifficulty = difficulty;
-        this.updateAvailableDanceMoves();
-    }
-    
+
     /**
      * Check if a special animation is currently playing
-     * @returns True if a special animation is playing
      */
     public isPlayingSpecialAnimation(): boolean {
         return this.isPlayingSpecial;
     }
-    
+
     /**
      * Get the current animation name
-     * @returns Current animation name
      */
     public getCurrentAnimation(): string {
         return this.currentAnimation;
     }
-    
+
     /**
      * Reset to idle animation
      */
     public resetToIdle(): void {
-        this.playAnimation(AnimationType.IDLE);
         this.currentCombo = 0;
         this.isPlayingSpecial = false;
         this.inputHistory = [];
-        this.updateAvailableDanceMoves();
+        this.playSpecialAnimation(SpecialStateType.FIRST_STAND);
     }
 } 

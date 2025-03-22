@@ -116,7 +116,7 @@ export class AuditionGameplayController extends Component {
             })
             .then(() => {
                 // Setup scoring callback
-                this.beatSystem.setScoreCallback(this.onNoteProcessed.bind(this));
+                this.beatSystem.setScoreCallback(this.onScoringProcessed.bind(this));
                 // Set total notes count
                 // Start gameplay
                 this.startGameplay();
@@ -229,7 +229,7 @@ export class AuditionGameplayController extends Component {
      * @param rating Accuracy rating
      * @param noteType Note type
      */
-    private onNoteProcessed(rating: AuditionAccuracyRating, noteType: number): void {
+    private onScoringProcessed(rating: AuditionAccuracyRating, noteType: number): void {
         // Update notes processed count
         this.notesProcessed++;
 
@@ -239,7 +239,6 @@ export class AuditionGameplayController extends Component {
         // Update character animation
         this.characterAnimation.reactToInput(
             rating,
-            noteType as AuditionInputType,
             this.scoringSystem.getCombo()
         );
 

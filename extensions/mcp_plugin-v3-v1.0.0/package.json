@@ -1,0 +1,1 @@
+{"name":"mcp","version":"1.0.0","description":"mcp","author":"cc-plugin","main":"./main.js","package_version":2,"contributions":{"builder":"./builder.js","messages":{"onBuilder":{"methods":["onBuilder"]}},"menu":[],"shortcuts":[],"asset-db":{},"assets":{},"scene":{"script":"scene.js"}},"editor":">=3.0.0","panels":{}}
