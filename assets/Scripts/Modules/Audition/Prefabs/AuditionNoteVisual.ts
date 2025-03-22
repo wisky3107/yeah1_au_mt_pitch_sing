@@ -50,7 +50,7 @@ export class AuditionNoteVisual extends Component {
 
     // State
     private noteType: AuditionNoteType = AuditionNoteType.LEFT;
-    private activeTween: Tween<any> = null;
+    private activeTweens: Tween<any>[] = [];
     private originalScale: Vec3 = new Vec3(1, 1, 1);
     private isHit: boolean = false;
 
@@ -109,20 +109,20 @@ export class AuditionNoteVisual extends Component {
         if (!this.node) return;
 
         // Stop any existing animations
-        if (this.activeTween) {
-            this.activeTween.stop();
-        }
+        this.stopAllTweens();
 
         // Reset scale
         this.node.setScale(0, 0, 1);
 
         // Animate scale and opacity
-        this.activeTween = tween(this.node)
+        const appearTween = tween(this.node)
             .to(this.appearAnimDuration, { scale: this.originalScale }, { easing: 'backOut' })
             .call(() => {
                 this.startPulseAnimation();
             })
             .start();
+        
+        this.activeTweens.push(appearTween);
     }
 
     /**
@@ -132,12 +132,10 @@ export class AuditionNoteVisual extends Component {
         if (!this.node || this.isHit) return;
 
         // Stop any existing animations
-        if (this.activeTween) {
-            this.activeTween.stop();
-        }
+        this.stopAllTweens();
 
         // Create pulse animation
-        this.activeTween = tween(this.node)
+        const pulseTween = tween(this.node)
             .to(this.pulseSpeed / 2, {
                 scale: new Vec3(
                     this.originalScale.x * (1 + this.pulseIntensity),
@@ -149,6 +147,13 @@ export class AuditionNoteVisual extends Component {
             .union()
             .repeatForever()
             .start();
+        
+        this.activeTweens.push(pulseTween);
+    }
+
+    private stopAllTweens(): void {
+        this.activeTweens.forEach(tween => tween.stop());
+        this.activeTweens = [];
     }
 
     /**
@@ -161,9 +166,7 @@ export class AuditionNoteVisual extends Component {
         this.isHit = true;
 
         // Stop any existing animations
-        if (this.activeTween) {
-            this.activeTween.stop();
-        }
+        this.stopAllTweens();
 
         // Set color based on accuracy
         let hitColor: Color;
@@ -178,7 +181,7 @@ export class AuditionNoteVisual extends Component {
                 hitColor = this.missColor;
         }
 
-        // Apply hit color to glow
+        // Apply hit color to glow  
         if (this.glowSprite) {
             this.glowSprite.color = hitColor;
             this.glowSprite.node.active = true;
@@ -191,16 +194,20 @@ export class AuditionNoteVisual extends Component {
             this.originalScale.z
         );
 
-        this.activeTween = tween(this.node)
+        const hitTween = tween(this.node)
             .to(this.hitAnimDuration / 3, { scale: targetScale }, { easing: 'quadOut' })
             .to(this.hitAnimDuration * 2 / 3, { scale: this.originalScale }, { easing: 'quadIn' })
             .start();
+        
+        this.activeTweens.push(hitTween);
 
         // Also animate opacity
         if (this.opacity) {
-            tween(this.opacity)
+            const opacityTween = tween(this.opacity)
                 .to(this.hitAnimDuration, { opacity: 50 })
                 .start();
+            
+            this.activeTweens.push(opacityTween);
         }
     }
 
@@ -213,9 +220,7 @@ export class AuditionNoteVisual extends Component {
         this.isHit = true;
 
         // Stop any existing animations
-        if (this.activeTween) {
-            this.activeTween.stop();
-        }
+        this.stopAllTweens();
 
         // Apply miss color to glow
         if (this.glowSprite) {
@@ -230,7 +235,7 @@ export class AuditionNoteVisual extends Component {
             this.node.position.z
         );
 
-        this.activeTween = tween(this.node)
+        const missTween = tween(this.node)
             .to(this.missAnimDuration, {
                 position: endPosition,
                 scale: new Vec3(
@@ -244,12 +249,16 @@ export class AuditionNoteVisual extends Component {
                 this.node.active = false;
             })
             .start();
+        
+        this.activeTweens.push(missTween);
 
         // Also animate opacity
         if (this.opacity) {
-            tween(this.opacity)
+            const opacityTween = tween(this.opacity)
                 .to(this.missAnimDuration, { opacity: 0 })
                 .start();
+            
+            this.activeTweens.push(opacityTween);
         }
     }
 
@@ -258,10 +267,7 @@ export class AuditionNoteVisual extends Component {
      */
     public reset(): void {
         // Stop any active animations
-        if (this.activeTween) {
-            this.activeTween.stop();
-            this.activeTween = null;
-        }
+        this.stopAllTweens();
 
         // Reset transforms
         this.node.setScale(this.originalScale);

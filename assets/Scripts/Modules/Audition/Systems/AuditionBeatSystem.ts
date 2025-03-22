@@ -39,8 +39,8 @@ interface LevelSequence {
  */
 @ccclass('AuditionBeatSystem')
 export class AuditionBeatSystem extends Component {
-    // Note settings
-    // Visual nodes group
+    //#region Properties - Visual Elements
+    // Visual nodes and UI elements for gameplay visualization
     @property({ type: Node, group: { name: "Visual Elements", id: "visual" } })
     private movingBeatNote: Node = null;
 
@@ -58,15 +58,19 @@ export class AuditionBeatSystem extends Component {
 
     @property({ type: UIOpacity, group: { name: "Visual Elements", id: "visual" } })
     private opacityGameplay: UIOpacity = null;
+    //#endregion
 
-    // Beat settings
+    //#region Properties - Beat Settings
+    // Core beat timing and rhythm settings
     @property({ group: { name: "Beat Settings", id: "beat" } })
     private bpm: number = 120;
 
     @property({ group: { name: "Beat Settings", id: "beat" } })
     private beatsPerLoop: number = 4;
+    //#endregion
 
-    // Timing windows for accuracy ratings (in milliseconds)
+    //#region Properties - Timing Windows
+    // Accuracy evaluation windows for note hits
     @property({ group: { name: "Timing Windows", id: "timing" } })
     private perfectWindow: number = 50;  // ±50ms for perfect hit
 
@@ -74,9 +78,11 @@ export class AuditionBeatSystem extends Component {
     private goodWindow: number = 100;    // ±100ms for good hit
 
     @property({ group: { name: "Timing Windows", id: "timing" } })
-    private missWindow: number = 150;    // ±150ms for miss
+    private missWindow: number = 200;    // ±200ms for miss
+    //#endregion
 
-    // Note settings
+    //#region Properties - Note Settings
+    // Note pool and positioning configuration
     @property({ type: AuditionNotePool, group: { name: "Note Settings", id: "notes" } })
     private notePool: AuditionNotePool = null;
 
@@ -85,30 +91,29 @@ export class AuditionBeatSystem extends Component {
 
     @property({ type: CCFloat, group: { name: "Note Settings", id: "notes" } })
     private nodeDistance: number = 65;
+    //#endregion
 
-    // Game state
+    //#region Game State
+    // Core game state variables
     private isPlaying: boolean = false;
     private timingWindows: Map<AuditionAccuracyRating, number> = new Map();
     private currentLoop: number = 0;
     private lastBeatTime: number = 0;
     private songDuration: number = 0;
-
-    // Callback for scoring events
     private scoringCallback: (rating: AuditionAccuracyRating) => void = null;
+    //#endregion
 
-    // Start and end positions for note movement
+    //#region Note Movement
+    // Note movement and positioning variables
     private startX: number = -500;
     private endX: number = 500;
     private targetX: number = 0;
     private noteSpeed: number = 0; // Speed in units per second
     private noteDelay: number = 0; // Delay in seconds to hit target zone at right time
+    //#endregion
 
-    // Heartbeat effect settings
-    private heartbeatScale: number = 1.5;
-    private heartbeatDuration: number = 0.1;
-    private isHeartbeatAnimating: boolean = false;
-
-    // Level system properties
+    //#region Level System
+    // Level progression and sequence management
     private currentLevel: number = 0;
     private currentLevelLoop: number = 0;
     private requiredNotes: number = 0;
@@ -122,12 +127,16 @@ export class AuditionBeatSystem extends Component {
     private get isInPenalty(): boolean {
         return this.penaltyPatternLoops > 0;
     }
+    //#endregion
 
-    // Note tracking
+    //#region Note Tracking
+    // Active note and sequence tracking
     private activeNoteIds: number[] = [];
     private noteSequence: AuditionNoteType[] = [];
     private currentSequenceNotes: AuditionNote[] = [];
+    //#endregion
 
+    //#region Lifecycle Methods
     onLoad() {
         // Setup timing windows
         this.timingWindows.set(AuditionAccuracyRating.PERFECT, this.perfectWindow);
@@ -154,7 +163,9 @@ export class AuditionBeatSystem extends Component {
             this.heartBeatSprite.node.scale = new Vec3(1, 1, 1);
         }
     }
+    //#endregion
 
+    //#region Core Gameplay Methods
     private updateSpeed() {
         // Calculate note speed based on distance and timing
         const distance = this.endX - this.startX;
@@ -171,9 +182,29 @@ export class AuditionBeatSystem extends Component {
         return AuditionAudioManager.instance.getCurrentTime();
     }
 
-    /**
-     * Initialize level sequences from brief
-     */
+    update(dt: number): void {
+        if (!this.isPlaying || !this.movingBeatNote) return;
+
+        const audioManager = AuditionAudioManager.instance;
+        if (!audioManager) return;
+
+        const currentTime = this.getCurrentTime();
+        const beatTime = (60000 / this.bpm);
+        const beatInterval = beatTime * this.beatsPerLoop;
+
+        // Check if it's time for the next beat
+        if (currentTime - this.lastBeatTime >= beatInterval + this.missWindow) {
+            this.lastBeatTime = Math.round(currentTime / beatInterval) * beatInterval;
+            this.currentLoop++;
+            this.updateLevelSystem();
+        }
+
+        this.updateBeatNoteMoving(currentTime);
+        this.updateHeartBeatEffect(currentTime, beatTime, beatInterval);
+    }
+    //#endregion
+
+    //#region Level System Methods
     private initializeLevelSequences(): void {
         this.levelSequences = [
             { type: LevelSequenceType.OFF, loop: 3, notes: 0 },
@@ -191,9 +222,6 @@ export class AuditionBeatSystem extends Component {
         ];
     }
 
-    /**
-     * Start the beat system with level sequences
-     */
     public startBeatSystem(bpm: number, songDuration: number, disableLoops: number = 0): void {
         if (!this.movingBeatNote) return;
         this.bpm = bpm;
@@ -242,82 +270,6 @@ export class AuditionBeatSystem extends Component {
         this.updateGameplayInteractableVisualize();
     }
 
-    /**
-     * Handle note input from player
-     */
-    private handleNoteInput(noteType: AuditionNoteType, time: number): void {
-        if (!this.isPlaying || this.isInPenalty) return;
-        if (this.currentNotes >= this.noteSequence.length) return; //if user finished the sequence
-
-        // Check if the note matches the sequence
-        if (this.currentNotes < this.noteSequence.length && this.noteSequence[this.currentNotes] === noteType) {
-            this.currentSequenceNotes[this.currentNotes].playHitEffect(AuditionAccuracyRating.PERFECT);
-            this.currentNotes++;
-
-        } else {
-            // Wrong note pressed
-
-            this.currentNotes = 0;
-            this.currentSequenceNotes.forEach(note => note.reset());
-        }
-    }
-
-    private clearLastNotes() {
-        // Recycle all active notes
-        this.activeNoteIds.forEach(id => this.notePool.recycleNote(id));
-        this.activeNoteIds = [];
-        this.noteSequence = [];
-        this.currentNotes = 0;
-    }
-
-    /**
-     * Handle miss event
-     */
-    private handleMiss(): void {
-        if (this.isInPenalty) return;
-
-        this.penaltyPatternLoops = 2;//can not play next patterns
-
-        if (this.scoringCallback) {
-            this.scoringCallback(AuditionAccuracyRating.MISS);
-        }
-        this.updateGameplayInteractableVisualize();
-    }
-
-    private handleScored(rating: AuditionAccuracyRating): void {
-        this.clearLastNotes();
-        if (this.scoringCallback) {
-            this.scoringCallback(rating);
-        }
-    }
-
-    /**
-     * Update method called every frame
-     */
-    update(dt: number): void {
-        if (!this.isPlaying || !this.movingBeatNote) return;
-
-        const audioManager = AuditionAudioManager.instance;
-        if (!audioManager) return;
-
-        const currentTime = this.getCurrentTime();
-        const beatTime = (60000 / this.bpm);
-        const beatInterval = beatTime * this.beatsPerLoop;
-
-        // Check if it's time for the next beat
-        if (currentTime - this.lastBeatTime >= beatInterval + this.missWindow) {
-            this.lastBeatTime = Math.round(currentTime / beatInterval) * beatInterval;
-            this.currentLoop++;
-            this.updateLevelSystem();
-        }
-
-        this.updateBeatNoteMoving(currentTime);
-        this.updateHeartBeatEffect(currentTime, beatTime, beatInterval);
-    }
-
-    /**
-     * Update level system state
-     */
     private updateLevelSystem(): void {
         if (this.noteSequence.length > 0) {
             this.handleMiss(); //if reach this but not perfect
@@ -377,9 +329,6 @@ export class AuditionBeatSystem extends Component {
         }
     }
 
-    /**
-     * Start the next pattern
-     */
     private startNextPattern(): void {
         const sequence = this.levelSequences[this.currentSequenceIndex];
         // Set required notes to match the level number (not the sequence value)
@@ -412,43 +361,99 @@ export class AuditionBeatSystem extends Component {
         this.updateGameplayInteractableVisualize();
     }
 
-    /**
-     * Handle finish sequence
-     */
     private handleFinishSequence(): void {
         // Implement finish sequence logic here
         console.log('Finish sequence started');
         // You can add special effects or final pattern here
     }
+    //#endregion
 
-    /**
-     * Stop the beat system
-     */
-    public stopBeatSystem(): void {
-        this.isPlaying = false;
+    //#region Input Handling
+    private handleNoteInput(noteType: AuditionNoteType, time: number): void {
+        if (!this.isPlaying || this.isInPenalty) return;
+        if (this.currentNotes >= this.noteSequence.length) return; //if user finished the sequence
 
-        // Unregister input callback
-        const inputHandler = AuditionInputHandler.instance;
-        if (inputHandler) {
-            inputHandler.unregisterInputCallback(AuditionInputType.SPACE,
-                (time: number) => this.evaluateInput(time));
-            inputHandler.unregisterInputCallback(AuditionInputType.LEFT,
-                (time: number) => this.handleNoteInput(AuditionNoteType.LEFT, time));
-            inputHandler.unregisterInputCallback(AuditionInputType.RIGHT,
-                (time: number) => this.handleNoteInput(AuditionNoteType.RIGHT, time));
+        // Check if the note matches the sequence
+        if (this.currentNotes < this.noteSequence.length && this.noteSequence[this.currentNotes] === noteType) {
+            this.currentSequenceNotes[this.currentNotes].playHitEffect(AuditionAccuracyRating.PERFECT);
+            this.currentNotes++;
+
+        } else {
+            // Wrong note pressed
+
+            this.currentNotes = 0;
+            this.currentSequenceNotes.forEach(note => note.reset());
+        }
+    }
+
+    private evaluateInput(time: number): void {
+        if (!this.isPlaying || this.isInPenalty) return;
+        if (this.noteSequence.length == 0) return; //can not press space if not note sequence
+
+        const audioManager = AuditionAudioManager.instance;
+        if (!audioManager) return;
+
+        const currentTime = this.getCurrentTime();
+        const beatInterval = (60000 / this.bpm) * this.beatsPerLoop;
+        const timeSinceLastBeat = currentTime - this.lastBeatTime;
+
+        // Calculate how close to the target the note is
+        const targetProgress = 1.0; // Note should be at target when beat occurs
+        const currentProgress = (timeSinceLastBeat) / (beatInterval);
+        const distanceFromTarget = Math.abs(targetProgress - currentProgress);
+
+        // Determine accuracy rating
+        let accuracyRating: AuditionAccuracyRating;
+        if (distanceFromTarget <= this.timingWindows.get(AuditionAccuracyRating.PERFECT) / beatInterval) {
+            accuracyRating = AuditionAccuracyRating.PERFECT;
+        } else if (distanceFromTarget <= this.timingWindows.get(AuditionAccuracyRating.GOOD) / beatInterval) {
+            accuracyRating = AuditionAccuracyRating.GOOD;
+        } else {
+            accuracyRating = AuditionAccuracyRating.MISS;
         }
 
-        console.log('Beat system stopped');
+        if (this.isMiss() || accuracyRating == AuditionAccuracyRating.MISS) {
+            this.handleMiss();
+        }
+        else {
+            this.handleScored(accuracyRating);
+        }
+    }
+    //#endregion
+
+    //#region Note Management
+    private clearLastNotes() {
+        // Recycle all active notes
+        this.activeNoteIds.forEach(id => this.notePool.recycleNote(id));
+        this.activeNoteIds = [];
+        this.noteSequence = [];
+        this.currentNotes = 0;
     }
 
-    /**
-     * Set callback for scoring events
-     * @param callback Function to call when notes are hit/missed
-     */
-    public setScoreCallback(callback: (rating: AuditionAccuracyRating) => void): void {
-        this.scoringCallback = callback;
+    private handleMiss(): void {
+        if (this.isInPenalty) return;
+
+        this.penaltyPatternLoops = 2;//can not play next patterns
+
+        if (this.scoringCallback) {
+            this.scoringCallback(AuditionAccuracyRating.MISS);
+        }
+        this.updateGameplayInteractableVisualize();
     }
 
+    private handleScored(rating: AuditionAccuracyRating): void {
+        this.clearLastNotes();
+        if (this.scoringCallback) {
+            this.scoringCallback(rating);
+        }
+    }
+
+    private isMiss(): boolean {
+        return this.currentNotes < this.requiredNotes;
+    }
+    //#endregion
+
+    //#region Visual Effects
     private updateBeatNoteMoving(currentTime: number) {
         // Move note using speed-based movement based on audio time with delay
         const checkTime = (currentTime - this.lastBeatTime);
@@ -483,86 +488,51 @@ export class AuditionBeatSystem extends Component {
         this.heartBeatSprite.color = color;
     }
 
-    /**
-     * 
-     * Evaluate player input against note timing
-     * @param time Time of input
-     */
-    private evaluateInput(time: number): void {
-        if (!this.isPlaying || this.isInPenalty) return;
-        if (this.noteSequence.length == 0) return; //can not press space if not note sequence
-
-        const audioManager = AuditionAudioManager.instance;
-        if (!audioManager) return;
-
-        const currentTime = this.getCurrentTime();
-        const beatInterval = (60000 / this.bpm) * this.beatsPerLoop;
-        const timeSinceLastBeat = currentTime - this.lastBeatTime;
-
-        // Calculate how close to the target the note is
-        const targetProgress = 1.0; // Note should be at target when beat occurs
-        const currentProgress = (timeSinceLastBeat) / (beatInterval);
-        const distanceFromTarget = Math.abs(targetProgress - currentProgress);
-
-        // Determine accuracy rating
-        let accuracyRating: AuditionAccuracyRating;
-        if (distanceFromTarget <= this.timingWindows.get(AuditionAccuracyRating.PERFECT) / beatInterval) {
-            accuracyRating = AuditionAccuracyRating.PERFECT;
-        } else if (distanceFromTarget <= this.timingWindows.get(AuditionAccuracyRating.GOOD) / beatInterval) {
-            accuracyRating = AuditionAccuracyRating.GOOD;
-        } else {
-            accuracyRating = AuditionAccuracyRating.MISS;
-        }
-
-        if (this.isMiss() || accuracyRating == AuditionAccuracyRating.MISS) {
-            this.handleMiss();
-        }
-        else {
-            this.handleScored(accuracyRating);
-        }
-    }
-
-    private isMiss(): boolean {
-        return this.currentNotes < this.requiredNotes;
-    }
-
     private updateGameplayInteractableVisualize() {
         if (!this.opacityGameplay) return;
         const isPlayable = !this.isInPenalty && this.isPlaying;
         this.opacityGameplay.opacity = isPlayable ? 255 : 50;
     }
+    //#endregion
 
-    /**
-     * Get the current BPM
-     * @returns Current BPM
-     */
+    //#region Public Interface
+    public stopBeatSystem(): void {
+        this.isPlaying = false;
+
+        // Unregister input callback
+        const inputHandler = AuditionInputHandler.instance;
+        if (inputHandler) {
+            inputHandler.unregisterInputCallback(AuditionInputType.SPACE,
+                (time: number) => this.evaluateInput(time));
+            inputHandler.unregisterInputCallback(AuditionInputType.LEFT,
+                (time: number) => this.handleNoteInput(AuditionNoteType.LEFT, time));
+            inputHandler.unregisterInputCallback(AuditionInputType.RIGHT,
+                (time: number) => this.handleNoteInput(AuditionNoteType.RIGHT, time));
+        }
+
+        console.log('Beat system stopped');
+    }
+
+    public setScoreCallback(callback: (rating: AuditionAccuracyRating) => void): void {
+        this.scoringCallback = callback;
+    }
+
     public getBPM(): number {
         return this.bpm;
     }
 
-    /**
-     * Set the BPM
-     * @param bpm New BPM value
-     */
     public setBPM(bpm: number): void {
         this.bpm = Math.max(60, Math.min(200, bpm));
         console.log(`BPM set to ${this.bpm}`);
     }
 
-    /**
-     * Get the number of beats per loop
-     * @returns Current beats per loop
-     */
     public getBeatsPerLoop(): number {
         return this.beatsPerLoop;
     }
 
-    /**
-     * Set the number of beats per loop
-     * @param beats New number of beats per loop
-     */
     public setBeatsPerLoop(beats: number): void {
         this.beatsPerLoop = Math.max(1, Math.min(8, beats));
         console.log(`Beats per loop set to ${this.beatsPerLoop}`);
     }
+    //#endregion
 } 

@@ -6,6 +6,15 @@ import { AuditionBeatSystem, AuditionAccuracyRating } from '../Systems/AuditionB
 import { AuditionScoringSystem } from '../Systems/AuditionScoringSystem';
 import { AuditionCharacterAnimation } from '../Systems/AuditionCharacterAnimation';
 import { AuditionInputType } from '../Systems/AuditionInputHandler';
+
+// Game state enum
+enum GameState {
+    INIT,
+    PLAYING,
+    PAUSED,
+    GAME_OVER
+}
+
 const { ccclass, property } = _decorator;
 
 /**
@@ -44,7 +53,7 @@ export class AuditionGameplayController extends Component {
     private songProgressBar: ProgressBar = null;
 
     // State tracking
-    private isPaused: boolean = false;
+    private gameState: GameState = GameState.INIT;
     private songStartTime: number = 0;
     private songDuration: number = 0;
     private notesProcessed: number = 0;
@@ -74,36 +83,6 @@ export class AuditionGameplayController extends Component {
 
         // Initialize gameplay
         this.initGameplay();
-    }
-
-    /**
-     * Setup button event listeners
-     */
-    private setupButtonEvents(): void {
-        // Pause button
-        if (this.pauseButton) {
-            this.pauseButton.node.on(Button.EventType.CLICK, this.onPauseButtonClicked, this);
-        }
-
-        // Resume button
-        if (this.resumeButton) {
-            this.resumeButton.node.on(Button.EventType.CLICK, this.onResumeButtonClicked, this);
-        }
-
-        // Restart button
-        if (this.restartButton) {
-            this.restartButton.node.on(Button.EventType.CLICK, this.onRestartButtonClicked, this);
-        }
-
-        // Quit button
-        if (this.quitButton) {
-            this.quitButton.node.on(Button.EventType.CLICK, this.onQuitButtonClicked, this);
-        }
-
-        // Hide pause menu initially
-        if (this.pauseMenu) {
-            this.pauseMenu.active = false;
-        }
     }
 
     /**
@@ -171,7 +150,40 @@ export class AuditionGameplayController extends Component {
         // Start beatmap
         this.beatSystem.startBeatSystem(currentSong.bpm, this.songDuration);
 
+        // Set game state to playing
+        this.gameState = GameState.PLAYING;
+
         console.log('Gameplay started');
+    }
+
+    /**
+     * Setup button event listeners
+     */
+    private setupButtonEvents(): void {
+        // Pause button
+        if (this.pauseButton) {
+            this.pauseButton.node.on(Button.EventType.CLICK, this.onPauseButtonClicked, this);
+        }
+
+        // Resume button
+        if (this.resumeButton) {
+            this.resumeButton.node.on(Button.EventType.CLICK, this.onResumeButtonClicked, this);
+        }
+
+        // Restart button
+        if (this.restartButton) {
+            this.restartButton.node.on(Button.EventType.CLICK, this.onRestartButtonClicked, this);
+        }
+
+        // Quit button
+        if (this.quitButton) {
+            this.quitButton.node.on(Button.EventType.CLICK, this.onQuitButtonClicked, this);
+        }
+
+        // Hide pause menu initially
+        if (this.pauseMenu) {
+            this.pauseMenu.active = false;
+        }
     }
 
     /**
@@ -179,7 +191,7 @@ export class AuditionGameplayController extends Component {
      * @param dt Delta time
      */
     update(dt: number): void {
-        if (this.isPaused) return;
+        if (this.gameState !== GameState.PLAYING) return;
 
         // Update progress bar
         this.updateProgressBar();
@@ -278,6 +290,9 @@ export class AuditionGameplayController extends Component {
      * End gameplay and show results
      */
     private endGameplay(): void {
+        // Set game state to game over
+        this.gameState = GameState.GAME_OVER;
+
         // Stop audio and beatmap
         const audioManager = AuditionAudioManager.instance;
         if (audioManager) {
@@ -340,6 +355,9 @@ export class AuditionGameplayController extends Component {
 
         this.beatSystem.stopBeatSystem();
 
+        // Reset game state
+        this.gameState = GameState.INIT;
+
         // Reload the scene to restart
         director.loadScene(director.getScene().name);
     }
@@ -356,6 +374,9 @@ export class AuditionGameplayController extends Component {
 
         this.beatSystem.stopBeatSystem();
 
+        // Reset game state
+        this.gameState = GameState.INIT;
+
         // Return to song selection
         AuditionGameManager.instance.changeScene('AuditionSongSelection');
     }
@@ -364,9 +385,9 @@ export class AuditionGameplayController extends Component {
      * Pause the game
      */
     private pauseGame(): void {
-        if (this.isPaused) return;
+        if (this.gameState !== GameState.PLAYING) return;
 
-        this.isPaused = true;
+        this.gameState = GameState.PAUSED;
 
         // Pause audio
         const audioManager = AuditionAudioManager.instance;
@@ -384,9 +405,9 @@ export class AuditionGameplayController extends Component {
      * Resume the game
      */
     private resumeGame(): void {
-        if (!this.isPaused) return;
+        if (this.gameState !== GameState.PAUSED) return;
 
-        this.isPaused = false;
+        this.gameState = GameState.PLAYING;
 
         // Resume audio
         const audioManager = AuditionAudioManager.instance;
