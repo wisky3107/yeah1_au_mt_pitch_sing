@@ -71,7 +71,7 @@ export class AuditionAudioManager extends Component {
      */
     private loadSoundEffects(): void {
         // const sfxList = ['perfect', 'good', 'miss', 'click', 'combo'];
-        const sfxList = ['good', 'miss', 'click'];
+        const sfxList = ['good', 'miss'];
         
         // Load base sound effects
         sfxList.forEach(sfx => {

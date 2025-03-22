@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Vec3, Sprite, tween, math, CCFloat } from 'cc';
+import { _decorator, Component, Node, Vec3, Sprite, tween, math, CCFloat, UIOpacity } from 'cc';
 import { AuditionAudioManager } from './AuditionAudioManager';
 import { AuditionInputHandler, AuditionInputType } from './AuditionInputHandler';
 import { AuditionNotePool, AuditionNoteType } from './AuditionNotePool';
@@ -40,45 +40,50 @@ interface LevelSequence {
 @ccclass('AuditionBeatSystem')
 export class AuditionBeatSystem extends Component {
     // Note settings
-    @property(Node)
+    // Visual nodes group
+    @property({ type: Node, group: { name: "Visual Elements", id: "visual" } })
     private movingBeatNote: Node = null;
 
-    @property(Node)
+    @property({ type: Node, group: { name: "Visual Elements", id: "visual" } })
     private targetZone: Node = null;
 
-    @property(Node)
+    @property({ type: Node, group: { name: "Visual Elements", id: "visual" } })
     private startNode: Node = null;
 
-    @property(Node)
+    @property({ type: Node, group: { name: "Visual Elements", id: "visual" } })
     private endNode: Node = null;
 
-    @property(Sprite)
+    @property({ type: Sprite, group: { name: "Visual Elements", id: "visual" } })
     private heartBeatSprite: Sprite = null;
 
+    @property({ type: UIOpacity, group: { name: "Visual Elements", id: "visual" } })
+    private opacityGameplay: UIOpacity = null;
+
     // Beat settings
-    @property
+    @property({ group: { name: "Beat Settings", id: "beat" } })
     private bpm: number = 120;
 
-    @property
+    @property({ group: { name: "Beat Settings", id: "beat" } })
     private beatsPerLoop: number = 4;
 
     // Timing windows for accuracy ratings (in milliseconds)
-    @property
+    @property({ group: { name: "Timing Windows", id: "timing" } })
     private perfectWindow: number = 50;  // ±50ms for perfect hit
 
-    @property
+    @property({ group: { name: "Timing Windows", id: "timing" } })
     private goodWindow: number = 100;    // ±100ms for good hit
 
-    @property
+    @property({ group: { name: "Timing Windows", id: "timing" } })
     private missWindow: number = 150;    // ±150ms for miss
 
-    @property(AuditionNotePool)
+    // Note settings
+    @property({ type: AuditionNotePool, group: { name: "Note Settings", id: "notes" } })
     private notePool: AuditionNotePool = null;
 
-    @property(Node)
+    @property({ type: Node, group: { name: "Note Settings", id: "notes" } })
     private nodeContainer: Node = null;
 
-    @property(CCFloat)
+    @property({ type: CCFloat, group: { name: "Note Settings", id: "notes" } })
     private nodeDistance: number = 65;
 
     // Game state
@@ -112,8 +117,11 @@ export class AuditionBeatSystem extends Component {
     private delayLoops: number = 0;
     private levelSequences: LevelSequence[] = [];
     private currentSequenceIndex: number = 0;
-    private isInPenalty: boolean = false;
-    private penaltyLoops: number = 0;
+    private penaltyPatternLoops: number = 0;
+    
+    private get isInPenalty(): boolean {
+        return this.penaltyPatternLoops > 0;
+    }
 
     // Note tracking
     private activeNoteIds: number[] = [];
@@ -160,7 +168,7 @@ export class AuditionBeatSystem extends Component {
     }
 
     private getCurrentTime(): number {
-        return AuditionAudioManager.instance.getCurrentTime() - this.noteDelay * 1000;
+        return AuditionAudioManager.instance.getCurrentTime();
     }
 
     /**
@@ -170,15 +178,15 @@ export class AuditionBeatSystem extends Component {
         this.levelSequences = [
             { type: LevelSequenceType.OFF, loop: 3, notes: 0 },
             { type: LevelSequenceType.LEVEL, loop: 1, notes: 1 },
-            { type: LevelSequenceType.LEVEL, loop: 2, notes: 2 },
-            { type: LevelSequenceType.LEVEL, loop: 3, notes: 3 },
-            { type: LevelSequenceType.LEVEL, loop: 4, notes: 4 },
-            { type: LevelSequenceType.LEVEL, loop: 5, notes: 5 },
+            { type: LevelSequenceType.LEVEL, loop: 1, notes: 2 },
+            { type: LevelSequenceType.LEVEL, loop: 1, notes: 3 },
+            { type: LevelSequenceType.LEVEL, loop: 1, notes: 4 },
+            { type: LevelSequenceType.LEVEL, loop: 1, notes: 5 },
             { type: LevelSequenceType.LEVEL, loop: 4, notes: 6, delay: 1 },
             { type: LevelSequenceType.LEVEL, loop: 4, notes: 7, delay: 1 },
             { type: LevelSequenceType.LEVEL, loop: 4, notes: 8, delay: 1 },
             { type: LevelSequenceType.LEVEL, loop: 4, notes: 9, delay: 1 },
-            { type: LevelSequenceType.FINISH, loop: 1, notes: 10 },
+            { type: LevelSequenceType.FINISH, loop: 1, notes: 9 },
             { type: LevelSequenceType.OFF, loop: 4, notes: 0 }
         ];
     }
@@ -200,8 +208,7 @@ export class AuditionBeatSystem extends Component {
         this.currentLevel = 0;
         this.currentNotes = 0;
 
-        this.isInPenalty = false;
-        this.penaltyLoops = 0;
+        this.penaltyPatternLoops = 0;
         this.activeNoteIds = [];
         this.noteSequence = [];
 
@@ -229,19 +236,18 @@ export class AuditionBeatSystem extends Component {
         console.log('Beat system started with level sequences');
 
         //setup frist sequence
-        this.isInDelay = this.levelSequences[this.currentSequenceIndex].type === LevelSequenceType.OFF;
+        this.isInDelay = false;
         this.delayLoops = 0;
-        if (this.isInDelay) {
-            this.delayLoops = this.levelSequences[this.currentSequenceIndex].loop;
-        }
         this.currentLevelLoop = 0;
+        this.updateGameplayInteractableVisualize();
     }
 
     /**
      * Handle note input from player
      */
     private handleNoteInput(noteType: AuditionNoteType, time: number): void {
-        if (!this.isPlaying || this.isInDelay || this.isInPenalty) return;
+        if (!this.isPlaying || this.isInPenalty) return;
+        if (this.currentNotes >= this.noteSequence.length) return; //if user finished the sequence
 
         // Check if the note matches the sequence
         if (this.currentNotes < this.noteSequence.length && this.noteSequence[this.currentNotes] === noteType) {
@@ -268,15 +274,14 @@ export class AuditionBeatSystem extends Component {
      * Handle miss event
      */
     private handleMiss(): void {
-        this.isInPenalty = true;
-        this.penaltyLoops = 3;
+        if (this.isInPenalty) return;
 
-        // Recycle all active notes
-        this.clearLastNotes();
+        this.penaltyPatternLoops = 2;//can not play next patterns
 
         if (this.scoringCallback) {
             this.scoringCallback(AuditionAccuracyRating.MISS);
         }
+        this.updateGameplayInteractableVisualize();
     }
 
     private handleScored(rating: AuditionAccuracyRating): void {
@@ -300,7 +305,7 @@ export class AuditionBeatSystem extends Component {
         const beatInterval = beatTime * this.beatsPerLoop;
 
         // Check if it's time for the next beat
-        if (currentTime - this.lastBeatTime >= beatInterval) {
+        if (currentTime - this.lastBeatTime >= beatInterval + this.missWindow) {
             this.lastBeatTime = Math.round(currentTime / beatInterval) * beatInterval;
             this.currentLoop++;
             this.updateLevelSystem();
@@ -316,44 +321,39 @@ export class AuditionBeatSystem extends Component {
     private updateLevelSystem(): void {
         if (this.noteSequence.length > 0) {
             this.handleMiss(); //if reach this but not perfect
-        } else {
-            this.clearLastNotes();
         }
-
-        this.currentLevelLoop++;
-        if (this.isInPenalty) {
-            this.penaltyLoops--;
-            if (this.penaltyLoops <= 0) {
-                this.isInPenalty = false;
-            }
-
-            if (this.currentLevelLoop >= this.levelSequences[this.currentSequenceIndex].loop) {
-                this.currentSequenceIndex++;
-                this.currentLevelLoop = 0;
-            }
-            return;
-        }
+        this.clearLastNotes();
 
         if (this.isInDelay) {
             this.delayLoops--;
             if (this.delayLoops <= 0) {
                 this.isInDelay = false;
-                this.startNextPattern();
             }
             return;
         }
 
-        if (this.noteSequence.length > 0) {
-            this.handleMiss();
-            return;
-        }
+        const startNewSequence = (sequence: LevelSequence) => {
+            if (this.isInPenalty) {
+                this.penaltyPatternLoops--;
+            }
+
+            this.startNextPattern();
+
+            if (sequence.delay) {
+                this.delayLoops = sequence.delay;
+                this.isInDelay = true;
+            }
+
+        };
+
+        const currentSequence = this.levelSequences[this.currentSequenceIndex];
 
         // Check if current pattern is complete
-        if (this.currentLevelLoop >= this.levelSequences[this.currentSequenceIndex].loop) {
+        if (this.currentLevelLoop >= currentSequence.loop) {
             this.currentSequenceIndex++;
             if (this.currentSequenceIndex >= this.levelSequences.length) {
-                this.stopBeatSystem();
-                return;
+                this.currentSequenceIndex = 0;//reset to wait phase
+                this.penaltyPatternLoops = 0;
             }
 
             const nextSequence = this.levelSequences[this.currentSequenceIndex];
@@ -361,12 +361,18 @@ export class AuditionBeatSystem extends Component {
                 this.delayLoops = nextSequence.loop;
                 this.isInDelay = true;
             } else if (nextSequence.type === LevelSequenceType.LEVEL) {
-                this.currentLevel = nextSequence.loop;
+                this.currentLevel = nextSequence.notes;
                 this.currentLevelLoop = 0;
-                this.startNextPattern();
+                startNewSequence(nextSequence);
             } else if (nextSequence.type === LevelSequenceType.FINISH) {
                 // Handle finish sequence
                 this.handleFinishSequence();
+            }
+        }
+        else {
+            this.currentLevelLoop++;
+            if (currentSequence.type === LevelSequenceType.LEVEL) {
+                startNewSequence(currentSequence);
             }
         }
     }
@@ -403,6 +409,7 @@ export class AuditionBeatSystem extends Component {
         }
 
         this.currentLevelLoop++;
+        this.updateGameplayInteractableVisualize();
     }
 
     /**
@@ -445,11 +452,15 @@ export class AuditionBeatSystem extends Component {
     private updateBeatNoteMoving(currentTime: number) {
         // Move note using speed-based movement based on audio time with delay
         const checkTime = (currentTime - this.lastBeatTime);
-        const timeSinceLastBeat = checkTime / 1000; // Convert to seconds
-        const adjustedTime = Math.max(0, timeSinceLastBeat);
-        const newX = this.startX + (this.noteSpeed * adjustedTime);
+        const timeSinceLastBeat = checkTime / 1000 - this.noteDelay; // Convert to seconds
+        let newX = this.startX;
+        if (timeSinceLastBeat > 0) {
+            newX = this.startX + (this.noteSpeed * timeSinceLastBeat);
+        }
+        else {
+            newX = this.endX + (this.noteSpeed * timeSinceLastBeat);
+        }
         this.movingBeatNote.position = new Vec3(newX, this.movingBeatNote.position.y, this.movingBeatNote.position.z);
-
     }
 
     private updateHeartBeatEffect(currentTime: number, beatTime: number, beatInterval: number) {
@@ -459,7 +470,7 @@ export class AuditionBeatSystem extends Component {
         const checkTime = (currentTime - this.lastBeatTime);
         // Calculate how close we are to the next beat
         const normalizedPosition = (currentTime % beatTime);
-        const isApplyScale = checkTime > (beatInterval - beatTime) && checkTime < (beatInterval + beatTime);
+        const isApplyScale = checkTime > (beatInterval - beatTime * 0.5) && checkTime < (beatInterval + beatTime * 0.5);
         const scale = isApplyScale ? Math.max(1.0, (1.0 - normalizedPosition / beatTime) * 2.0) : 1.0;
         // Apply scale to note
         this.heartBeatSprite.node.setScale(new Vec3(scale, 1.0, 1.0));
@@ -478,8 +489,8 @@ export class AuditionBeatSystem extends Component {
      * @param time Time of input
      */
     private evaluateInput(time: number): void {
-        if (!this.isPlaying) return;
-        if (this.isInDelay || this.isInPenalty) return;
+        if (!this.isPlaying || this.isInPenalty) return;
+        if (this.noteSequence.length == 0) return; //can not press space if not note sequence
 
         const audioManager = AuditionAudioManager.instance;
         if (!audioManager) return;
@@ -490,7 +501,7 @@ export class AuditionBeatSystem extends Component {
 
         // Calculate how close to the target the note is
         const targetProgress = 1.0; // Note should be at target when beat occurs
-        const currentProgress = (timeSinceLastBeat) / (beatInterval - this.noteDelay * 1000);
+        const currentProgress = (timeSinceLastBeat) / (beatInterval);
         const distanceFromTarget = Math.abs(targetProgress - currentProgress);
 
         // Determine accuracy rating
@@ -503,12 +514,22 @@ export class AuditionBeatSystem extends Component {
             accuracyRating = AuditionAccuracyRating.MISS;
         }
 
-        if (this.currentNotes < this.requiredNotes || accuracyRating == AuditionAccuracyRating.MISS) {
+        if (this.isMiss() || accuracyRating == AuditionAccuracyRating.MISS) {
             this.handleMiss();
         }
         else {
             this.handleScored(accuracyRating);
         }
+    }
+
+    private isMiss(): boolean {
+        return this.currentNotes < this.requiredNotes;
+    }
+
+    private updateGameplayInteractableVisualize() {
+        if (!this.opacityGameplay) return;
+        const isPlayable = !this.isInPenalty && this.isPlaying;
+        this.opacityGameplay.opacity = isPlayable ? 255 : 50;
     }
 
     /**
