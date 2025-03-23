@@ -1,11 +1,8 @@
 import { _decorator, Component, director, Label, Node, Sprite, labelAssembler, Socket, primitives } from 'cc';
 import { CurrentEnviroment, GameConstant, setEnvi } from '../../Constant/Constants';
 import { DEBUG } from 'cc/env';
-import { headers, requestUserInfo, setApiKey, setAPIManagerURL, setFakeData, setKeyAuthen, setToken, updateApiKey } from '../../Managers/APIManager';
+import { setAPIManagerURL, setFakeData } from '../../Managers/APIManager';
 import { PopupBase } from '../../Common/UI/PopupBase';
-import { Utils } from '../../Common/Utils';
-import { GameManager } from '../../Managers/GameManager';
-import { SocketManager } from '../../Managers/SocketManager';
 import { AudioManager } from '../../Common/audioManager';
 import { UIManager } from '../../Common/uiManager';
 import { EffectController } from './EffectController';

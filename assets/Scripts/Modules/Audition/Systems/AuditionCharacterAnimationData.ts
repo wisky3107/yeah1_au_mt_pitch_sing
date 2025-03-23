@@ -583,11 +583,14 @@ export class AuditionCharacterAnimationData {
      * Get all animation names from the loaded dance data
      */
     public static getAllAnimationNames(): string[] {
-        const danceStateKeys = Array.from(this.danceStates.keys());
-        const specialStateKeys = Array.from(this.specialStates.keys());
-
-        // Combine both arrays and remove duplicates using Set
-        return [...new Set([...danceStateKeys, ...specialStateKeys])];
+        // Get all animation names from dance states
+        const danceStateNames = Array.from(this.danceStates.keys());
+        
+        // Get all animation names from special states (extract motion property)
+        const specialStateNames = Array.from(this.specialStates.values()).map(state => state.motion);
+        
+        // Combine both arrays and remove duplicates
+        return danceStateNames.concat(specialStateNames);
     }
 
     /**

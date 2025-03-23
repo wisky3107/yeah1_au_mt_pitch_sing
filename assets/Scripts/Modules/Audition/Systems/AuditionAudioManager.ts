@@ -191,16 +191,16 @@ export class AuditionAudioManager extends Component {
             return this.pauseTime;
         }
         
-        if (!this.musicSource.playing) {
-            return 0;
-        }
+        // if (!this.musicSource.playing) {
+        //     return 0;
+        // }
         
         return this.musicSource.currentTime * 1000;
         // return Date.now() - this.startTime + this.audioOffset;
     }
 
     public getDuration(): number {
-        return this.musicSource.clip.getDuration();
+        return this.musicSource.clip.getDuration() * 1000;
     }
     
     /**

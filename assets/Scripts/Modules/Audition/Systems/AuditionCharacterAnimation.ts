@@ -59,6 +59,11 @@ export class AuditionCharacterAnimation extends Component {
                 .then(() => {
                     // Get all animation names from the loaded dance data
                     this.animNames = AuditionCharacterAnimationData.getAllAnimationNames();
+                    // Log all animation names that will be loaded
+                    console.log("Animation names to be loaded:");
+                    this.animNames.forEach((animName, index) => {
+                        console.log(`${index + 1}. ${animName}`);
+                    });
                     console.log(`Loading ${this.animNames.length} dance animations for song: ${songId}`);
                     // Load all animations for this dance
                     return this.loadDanceAnims(this.animNames)
@@ -66,7 +71,6 @@ export class AuditionCharacterAnimation extends Component {
                 .then((clips) => {
                     console.log(`Successfully loaded ${clips.length} dance animations`);
                     this.setClips(clips, this.animNames);
-
                     this.allDanceStates = AuditionCharacterAnimationData.getAllDanceStates();
                     this.currentDanceIndex = -1;
                     this.playSpecialAnimation(SpecialStateType.FIRST_STAND);

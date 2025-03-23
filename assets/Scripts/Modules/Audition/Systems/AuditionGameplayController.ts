@@ -207,8 +207,8 @@ export class AuditionGameplayController extends Component {
             .then(([songLoaded, danceDataLoaded]) => {
                 console.log('Song and dance data loaded successfully');
                 // Get song duration from audio manager
-                
-                this.songDuration = audioManager.getDuration() * 1000.0;
+
+                this.songDuration = audioManager.getDuration();
                 this.characterAnimation.setMusicSpeed(this.currentSong.bpm);
 
                 this.startGameplay();
@@ -226,24 +226,12 @@ export class AuditionGameplayController extends Component {
     private startGameplay(): void {
         // Record start time
         this.songStartTime = Date.now();
-
-        // Get song duration from audio manager
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            // We won't be able to access the clip directly
-            // Set a default duration (3 minutes) that can be adjusted based on song progress
-            this.songDuration = 180000; // 3 minutes in ms
-        }
-
         // Start audio
-        audioManager.playSong();
-
+        AuditionAudioManager.instance.playSong();
         // Start beatmap
         this.beatSystem.startBeatSystem(this.currentSong.bpm, this.songDuration);
-
         // Set game state to playing
         this.gameState = GameState.PLAYING;
-
         console.log('Gameplay started');
     }
 
@@ -290,7 +278,7 @@ export class AuditionGameplayController extends Component {
         // Check for song completion
         const audioManager = AuditionAudioManager.instance;
         // Use the getCurrentTime to check if the song has stopped
-        if (audioManager && audioManager.getCurrentTime() === 0 && this.songStartTime > 0) {
+        if (audioManager && audioManager.getCurrentTime() >= this.songDuration && this.songStartTime > 0) {
             // Song has ended naturally
             this.endGameplay();
         }
@@ -340,7 +328,7 @@ export class AuditionGameplayController extends Component {
                 feedbackType = FeedbackType.PERFECT;
                 break;
             case AuditionAccuracyRating.GOOD:
-                feedbackType = FeedbackType.GOOD;
+                feedbackType = FeedbackType.GREAT;
                 break;
             case AuditionAccuracyRating.MISS:
                 feedbackType = FeedbackType.MISS;
@@ -350,14 +338,6 @@ export class AuditionGameplayController extends Component {
         }
 
         AuditionUIManager.instance.showFeedback(feedbackType);
-
-        // // Check if all notes have been processed
-        // if (this.notesProcessed >= this.totalNotes) {
-        //     // Slight delay to allow for animations and final score calculation
-        //     this.scheduleOnce(() => {
-        //         this.endGameplay();
-        //     }, 2.0);
-        // }
     }
 
     /**
@@ -380,6 +360,7 @@ export class AuditionGameplayController extends Component {
      * End gameplay and show results
      */
     private endGameplay(): void {
+        console
         // Set game state to game over
         this.gameState = GameState.GAME_OVER;
 

@@ -9,6 +9,19 @@
     "isBundle": true,
     "bundleName": "resources",
     "priority": 8,
-    "bundleConfigID": "auto_01a3Z8CNlCza+jxX56e3Io"
+    "bundleConfigID": "auto_01a3Z8CNlCza+jxX56e3Io",
+    "bundleFilterConfig": [
+      {
+        "range": "include",
+        "type": "url",
+        "patchOption": {
+          "patchType": "glob",
+          "value": "db://assets/resources/**/*"
+        },
+        "assets": [
+          ""
+        ]
+      }
+    ]
   }
 }
