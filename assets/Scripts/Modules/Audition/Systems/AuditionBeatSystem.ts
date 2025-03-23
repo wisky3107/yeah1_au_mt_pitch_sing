@@ -165,7 +165,7 @@ export class AuditionBeatSystem extends Component {
             this.heartBeatSprite.node.scale = new Vec3(1, 1, 1);
         }
 
-        //test auto play
+        //test auto plays
         this.setAutoPlay(true);
     }
     //#endregion

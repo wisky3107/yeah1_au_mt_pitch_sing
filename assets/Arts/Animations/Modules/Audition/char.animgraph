@@ -1,0 +1,88 @@
+[
+  {
+    "__type__": "cc.animation.AnimationGraph",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_native": "",
+    "_layers": [
+      {
+        "__id__": 1
+      }
+    ],
+    "_variables": {}
+  },
+  {
+    "__type__": "cc.animation.Layer",
+    "_stateMachine": {
+      "__id__": 2
+    },
+    "name": "",
+    "weight": 1,
+    "mask": null,
+    "additive": false,
+    "_stashes": {}
+  },
+  {
+    "__type__": "cc.animation.StateMachine",
+    "__editorExtras__": {
+      "name": "",
+      "id": "d124017e-c479-40b7-a2b4-8d08f6b51a2e",
+      "clone": null
+    },
+    "_states": [
+      {
+        "__id__": 3
+      },
+      {
+        "__id__": 4
+      },
+      {
+        "__id__": 5
+      }
+    ],
+    "_transitions": [],
+    "_entryState": {
+      "__id__": 3
+    },
+    "_exitState": {
+      "__id__": 4
+    },
+    "_anyState": {
+      "__id__": 5
+    }
+  },
+  {
+    "__type__": "cc.animation.State",
+    "__editorExtras__": {
+      "name": "",
+      "id": "52fb272f-8fa0-4169-be19-f87db75462d2",
+      "clone": null,
+      "centerX": -177.0408163265306,
+      "centerY": -17.346938775510182
+    },
+    "name": "Entry"
+  },
+  {
+    "__type__": "cc.animation.State",
+    "__editorExtras__": {
+      "name": "",
+      "id": "56056c2a-5be4-480f-9347-6fb19df724ae",
+      "clone": null,
+      "centerX": 125,
+      "centerY": 0
+    },
+    "name": "Exit"
+  },
+  {
+    "__type__": "cc.animation.State",
+    "__editorExtras__": {
+      "name": "",
+      "id": "3d5f87c1-11b7-46a6-9c8d-78e8a7384f1d",
+      "clone": null,
+      "centerX": 22.959183673469397,
+      "centerY": -77.55102040816325
+    },
+    "name": "Any"
+  }
+]

@@ -44,6 +44,7 @@ export class AuditionCharacterAnimation extends Component {
     private animNames: string[] = [];
     private allDanceStates: DanceAnimationState[] = [];
     private currentDanceIndex: number = 0;
+    private musicSpeed: number = 1.0; // Speed multiplier based on music BPM
 
     public loadDanceData(songId: string) {
         if (!this.animationController && this.character) {
@@ -231,6 +232,15 @@ export class AuditionCharacterAnimation extends Component {
     }
 
     /**
+     * Set the music speed multiplier based on BPM
+     * @param bpm The current music BPM
+     */
+    public setMusicSpeed(bpm: number): void {
+        // Assuming standard BPM is 120, adjust speed accordingly
+        this.musicSpeed = bpm / 100.0;
+    }
+
+    /**
      * Play an animation with optional speed and callback
      */
     private playAnimation(animationName: string, danceState: DanceAnimationState, speed: number = 1.0, callback?: () => void): void {
@@ -242,7 +252,8 @@ export class AuditionCharacterAnimation extends Component {
             return;
         }
 
-        state.speed = speed;
+        // Apply both the dance state speed and music speed
+        state.speed = speed * this.musicSpeed;
         // Get the dance state to determine exit time for blending
         if (danceState && danceState.transitions && danceState.transitions.length > 0) {
             // Use the exit time from the first transition as blend time

@@ -207,7 +207,10 @@ export class AuditionGameplayController extends Component {
             .then(([songLoaded, danceDataLoaded]) => {
                 console.log('Song and dance data loaded successfully');
                 // Get song duration from audio manager
+                
                 this.songDuration = audioManager.getDuration() * 1000.0;
+                this.characterAnimation.setMusicSpeed(this.currentSong.bpm);
+
                 this.startGameplay();
                 return this.songDuration;
             })
