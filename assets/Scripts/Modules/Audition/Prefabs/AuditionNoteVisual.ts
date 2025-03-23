@@ -1,6 +1,4 @@
-import { _decorator, Component, Node, Sprite, Color, Tween, tween, Vec3, UIOpacity, Label } from 'cc';
-import { AuditionNoteType } from '../Systems/AuditionNotePool';
-import { AuditionAccuracyRating } from '../Systems/AuditionBeatSystem';
+import { _decorator, Component, Node, Sprite, Color, Tween, tween, Vec3, UIOpacity, Label, director } from 'cc';
 const { ccclass, property } = _decorator;
 
 /**
@@ -49,7 +47,6 @@ export class AuditionNoteVisual extends Component {
     private appearAnimDuration: number = 0.05;
 
     // State
-    private noteType: AuditionNoteType = AuditionNoteType.LEFT;
     private activeTweens: Tween<any>[] = [];
     private originalScale: Vec3 = new Vec3(1, 1, 1);
     private isHit: boolean = false;
@@ -73,8 +70,7 @@ export class AuditionNoteVisual extends Component {
      * Initialize the note's appearance based on type
      * @param type Note type
      */
-    public initialize(type: AuditionNoteType): void {
-        this.noteType = type;
+    public initialize(): void {
         this.isHit = false;
 
         // Reset transforms
@@ -84,18 +80,6 @@ export class AuditionNoteVisual extends Component {
         // Set opacity to full
         if (this.opacity) {
             this.opacity.opacity = 255;
-        }
-
-        // Apply color based on note type
-        if (this.noteSprite) {
-            switch (type) {
-                case AuditionNoteType.LEFT:
-                    this.noteSprite.color = this.leftNoteColor;
-                    break;
-                case AuditionNoteType.RIGHT:
-                    this.noteSprite.color = this.rightNoteColor;
-                    break;
-            }
         }
 
         // Play appear animation
@@ -121,7 +105,7 @@ export class AuditionNoteVisual extends Component {
                 this.startPulseAnimation();
             })
             .start();
-        
+
         this.activeTweens.push(appearTween);
     }
 
@@ -147,7 +131,7 @@ export class AuditionNoteVisual extends Component {
             .union()
             .repeatForever()
             .start();
-        
+
         this.activeTweens.push(pulseTween);
     }
 
@@ -160,32 +144,13 @@ export class AuditionNoteVisual extends Component {
      * Show hit effect based on accuracy
      * @param accuracyRating Accuracy rating of the hit
      */
-    public showHitEffect(accuracyRating: AuditionAccuracyRating): void {
+    public showHitEffect(): void {
         if (!this.node) return;
 
         this.isHit = true;
 
         // Stop any existing animations
         this.stopAllTweens();
-
-        // Set color based on accuracy
-        let hitColor: Color;
-        switch (accuracyRating) {
-            case AuditionAccuracyRating.PERFECT:
-                hitColor = this.perfectColor;
-                break;
-            case AuditionAccuracyRating.GOOD:
-                hitColor = this.goodColor;
-                break;
-            default:
-                hitColor = this.missColor;
-        }
-
-        // Apply hit color to glow  
-        if (this.glowSprite) {
-            this.glowSprite.color = hitColor;
-            this.glowSprite.node.active = true;
-        }
 
         // Play hit animation
         const targetScale = new Vec3(
@@ -198,7 +163,7 @@ export class AuditionNoteVisual extends Component {
             .to(this.hitAnimDuration / 3, { scale: targetScale }, { easing: 'quadOut' })
             .to(this.hitAnimDuration * 2 / 3, { scale: this.originalScale }, { easing: 'quadIn' })
             .start();
-        
+
         this.activeTweens.push(hitTween);
 
         // Also animate opacity
@@ -206,7 +171,7 @@ export class AuditionNoteVisual extends Component {
             const opacityTween = tween(this.opacity)
                 .to(this.hitAnimDuration, { opacity: 50 })
                 .start();
-            
+
             this.activeTweens.push(opacityTween);
         }
     }
@@ -249,7 +214,7 @@ export class AuditionNoteVisual extends Component {
                 this.node.active = false;
             })
             .start();
-        
+
         this.activeTweens.push(missTween);
 
         // Also animate opacity
@@ -257,7 +222,7 @@ export class AuditionNoteVisual extends Component {
             const opacityTween = tween(this.opacity)
                 .to(this.missAnimDuration, { opacity: 0 })
                 .start();
-            
+
             this.activeTweens.push(opacityTween);
         }
     }

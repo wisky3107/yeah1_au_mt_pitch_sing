@@ -34,5 +34,10 @@
     "preserveSymlinks": true,
     "loose": true
   },
-  "layer": []
+  "layer": [
+    {
+      "name": "UI_GLOBAL",
+      "value": 1
+    }
+  ]
 }

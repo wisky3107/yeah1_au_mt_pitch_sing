@@ -3,13 +3,12 @@ import { resourceUtil } from "./resourceUtil";
 import { CurrentEnviroment, GameConstant } from "../Constant/Constants";
 import { PopupLoading } from "../Modules/Popup/Loading/PopupLoading";
 import { PopupBase } from "./UI/PopupBase";
+import { POPUP } from "../Constant/PopupDefine";
 const { ccclass, property } = _decorator;
 
 export enum PopupLayer {
-    LAYER_1 = "Game/Canvas/Popup",
-    LAYER_2 = "Game/Canvas/Popup-2",
-    LAYER_3 = "Game/Canvas/Popup-3",
-    LAYER_4 = "Game/Canvas/Popup-4",
+    LAYER_1 = "Canvas",
+    GLOBAL = "GlobalCanvas",
 }
 
 @ccclass("UIManager")
@@ -17,7 +16,8 @@ export class UIManager {
     public static instance: UIManager;
 
     preloadPrefabNames: string[] = [
-        GameConstant.POPUP.LOADING
+        POPUP.LOADING,
+        POPUP.MESSAGE
     ];
 
     private _dictSharedPanel: any = {}
@@ -275,7 +275,7 @@ export class UIManager {
 
     //#region message popup
     public showMessage(data: { message: string, buttonText?: string, buttonCallback?: Function, title?: string, }) {
-        this.showDialog(GameConstant.POPUP.MESSAGE, [data], (script: any) => {
+        this.showDialog(POPUP.MESSAGE, [data], (script: any) => {
         }, 9999, PopupLayer.LAYER_4);
     }
     //#endregion
@@ -285,7 +285,7 @@ export class UIManager {
     private blockNode: Node = null;
     public setBlock(isBlock: boolean) {
         if (!this.blockNode) {
-            this.blockNode = find("Game/Canvas/Block");
+            this.blockNode = find(PopupLayer.GLOBAL + "/Block");
         }
         this.blockNode.active = isBlock;
         this.blockNode.setSiblingIndex(999);
@@ -315,14 +315,14 @@ export class UIManager {
         else {
             clearTimeout(this.delayTimeoutDefine);
             this.setBlock(false)
-            this.hidePopup(GameConstant.POPUP.LOADING);
+            this.hidePopup(POPUP.LOADING);
             this.popupLoading = null;
             this.popupLoadingData = null;
         }
     }
 
     private showLoading() {
-        this.showDialog(GameConstant.POPUP.LOADING, [this.popupLoadingData], (script) => {
+        this.showDialog(POPUP.LOADING, [this.popupLoadingData], (script) => {
             this.popupLoading = script as PopupLoading;
         }, 1, PopupLayer.LAYER_4);
     }

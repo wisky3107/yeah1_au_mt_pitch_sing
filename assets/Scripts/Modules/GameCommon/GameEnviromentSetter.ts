@@ -6,6 +6,7 @@ import { PopupBase } from '../../Common/UI/PopupBase';
 import { AudioManager } from '../../Common/audioManager';
 import { UIManager } from '../../Common/uiManager';
 import { EffectController } from './EffectController';
+import { SCENE_NAME } from '../../Constant/SceneDefine';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameEnviromentSetter')
@@ -30,7 +31,7 @@ export class GameEnviromentSetter extends Component {
     @property(Label)
     lbError: Label = null;
 
-    private sceneName = GameConstant.SCENE_NAME.HOME;
+    private sceneName = SCENE_NAME.HOME;
     protected onLoad(): void {
         if (DEBUG) {
             this.LOG = true;

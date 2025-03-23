@@ -6,52 +6,199 @@ import { AudioManager } from '../audioManager';
 import { UIManager } from '../uiManager';
 const { ccclass, property } = _decorator;
 
+/**
+ * Animation panel that provides customizable show/hide animations for UI panels
+ * Supports position, scale, rotation, and opacity animations with various easing functions
+ */
 @ccclass('AnimationPanel')
 export class AnimationPanel extends VisiblePanel {
-
-    @property({ group: ("AnimationSetting") })
+    //#region Animation Settings
+    @property({
+        group: { name: "Animation Settings", id: "animation" },
+        tooltip: "Enable to customize animation settings"
+    })
     public isShowPopupsetting: boolean = false;
 
-    @property({ type: Enum(ViewBeginType), group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
+    @property({
+        type: Enum(ViewBeginType),
+        group: { name: "Animation Settings", id: "animation" },
+        tooltip: "Initial state of the panel",
+        visible() { return this.isShowPopupsetting }
+    })
     beginType: ViewBeginType = ViewBeginType.NONE;
 
-    @property({ type: Vec3, group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
+    @property({
+        type: Vec3,
+        group: { name: "Animation Settings", id: "animation" },
+        tooltip: "Initial position of the panel",
+        visible() { return this.isShowPopupsetting }
+    })
     beginPosition: Vec3 = v3(0.0, 0.0, 0.0);
 
-    @property({ group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
+    //#region Show Animation Settings
+    @property({
+        group: { name: "Show Animation", id: "show" },
+        tooltip: "Starting X position for show animation",
+        visible() { return this.isShowPopupsetting }
+    })
     private showFromPosX: number = -1080.0;
-    0
-    @property({ group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
-    private hideToPosX: number = 1080.0;
 
-    @property({ group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
+    @property({
+        group: { name: "Show Animation", id: "show" },
+        tooltip: "Starting Y position for show animation",
+        visible() { return this.isShowPopupsetting }
+    })
     private showFromPosY: number = 0.0;
 
-    @property({ group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
-    private hideToPosY: number = 0.0;
-
-    @property({ group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
+    @property({
+        group: { name: "Show Animation", id: "show" },
+        tooltip: "Starting scale for show animation",
+        visible() { return this.isShowPopupsetting }
+    })
     private showFromScale: number = 1.0;
 
-    @property({ group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
-    private hideToScale: number = 0.0;
-
-    @property({ type: Enum(EasingType), group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
+    @property({
+        type: Enum(EasingType),
+        group: { name: "Show Animation", id: "show" },
+        tooltip: "Easing function for show animation",
+        visible() { return this.isShowPopupsetting }
+    })
     showEasingType: EasingType = EasingType.BackOut;
 
-    @property({ type: Enum(EasingType), group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
+    //#endregion
+
+    //#region Hide Animation Settings
+    @property({
+        group: { name: "Hide Animation", id: "hide" },
+        tooltip: "Ending X position for hide animation",
+        visible() { return this.isShowPopupsetting }
+    })
+    private hideToPosX: number = 1080.0;
+
+    @property({
+        group: { name: "Hide Animation", id: "hide" },
+        tooltip: "Ending Y position for hide animation",
+        visible() { return this.isShowPopupsetting }
+    })
+    private hideToPosY: number = 0.0;
+
+    @property({
+        group: { name: "Hide Animation", id: "hide" },
+        tooltip: "Ending scale for hide animation",
+        visible() { return this.isShowPopupsetting }
+    })
+    private hideToScale: number = 0.0;
+
+    @property({
+        type: Enum(EasingType),
+        group: { name: "Hide Animation", id: "hide" },
+        tooltip: "Easing function for hide animation",
+        visible() { return this.isShowPopupsetting }
+    })
     hideEasingType: EasingType = EasingType.BackIn;
 
-    @property({ type: VisiblePanel, group: ("AnimationSetting"), visible() { return this.isShowPopupsetting } })
+    //#endregion
+
+    //#region Additional Animation Settings
+    @property({
+        group: { name: "Additional Settings", id: "additional" },
+        tooltip: "Duration of show animation in seconds",
+        visible() { return this.isShowPopupsetting }
+    })
+    private showDuration: number = 0.35;
+
+    @property({
+        group: { name: "Additional Settings", id: "additional" },
+        tooltip: "Duration of hide animation in seconds",
+        visible() { return this.isShowPopupsetting }
+    })
+    private hideDuration: number = 0.25;
+
+    @property({
+        group: { name: "Additional Settings", id: "additional" },
+        tooltip: "Enable rotation animation",
+        visible() { return this.isShowPopupsetting }
+    })
+    private enableRotation: boolean = false;
+
+    @property({
+        group: { name: "Additional Settings", id: "additional" },
+        tooltip: "Starting rotation for show animation (in degrees)",
+        visible() { return this.isShowPopupsetting && this.enableRotation }
+    })
+    private showFromRotation: number = -45;
+
+    @property({
+        group: { name: "Additional Settings", id: "additional" },
+        tooltip: "Ending rotation for hide animation (in degrees)",
+        visible() { return this.isShowPopupsetting && this.enableRotation }
+    })
+    private hideToRotation: number = 45;
+
+    @property({
+        group: { name: "Additional Settings", id: "additional" },
+        tooltip: "Enable opacity animation",
+        visible() { return this.isShowPopupsetting }
+    })
+    private enableOpacity: boolean = true;
+
+    @property({
+        group: { name: "Additional Settings", id: "additional" },
+        tooltip: "Starting opacity for show animation (0-255)",
+        visible() { return this.isShowPopupsetting && this.enableOpacity }
+    })
+    private showFromOpacity: number = 0;
+
+    @property({
+        group: { name: "Additional Settings", id: "additional" },
+        tooltip: "Ending opacity for hide animation (0-255)",
+        visible() { return this.isShowPopupsetting && this.enableOpacity }
+    })
+    private hideToOpacity: number = 0;
+
+    //#endregion
+
+    //#region Background Settings
+    @property({
+        type: VisiblePanel,
+        group: { name: "Background Settings", id: "background" },
+        tooltip: "Background panel that dims when this panel is shown",
+        visible() { return this.isShowPopupsetting }
+    })
     dimNode: VisiblePanel = null!;
 
-    @property({ group: ("AnimationSetting") })
+    @property({
+        group: { name: "Background Settings", id: "background" },
+        tooltip: "Duration of background dim animation in seconds",
+        visible() { return this.isShowPopupsetting }
+    })
+    private dimDuration: number = 0.2;
+
+    //#endregion
+
+    //#region Audio Settings
+    @property({
+        group: { name: "Audio Settings", id: "audio" },
+        tooltip: "Sound effect to play when panel is shown"
+    })
     public shownAudioName = "";
 
+    //#endregion
+
+    //#region Internal Properties
+    public opMain: UIOpacity = null!;
+    private visibleIndex = -1;
+    private visibleTween: Tween<Node> = null!;
+    private scheduleDim: void = null!;
+    //#endregion
+
+    //#region Public Properties
     public get isShowing(): boolean {
         return this.visibleIndex == 1;
     }
+    //#endregion
 
+    //#region Lifecycle Methods
     protected onLoad(): void {
         this.node.setPosition(this.beginPosition);
         switch (this.beginType) {
@@ -69,45 +216,90 @@ export class AnimationPanel extends VisiblePanel {
                 this.dimNode?.setPanelVisible(true, 0.0);
                 break;
         }
-
     }
+    //#endregion
 
-    opMain: UIOpacity = null!;
-    visibleIndex = -1;
-    visibleTween: Tween<Node> = null!;
+    //#region Animation Methods
     setAnimVisible(isVisible: boolean, callback: () => void = null, timeAction: number = 0.35) {
         if (this.visibleIndex == (isVisible ? 1 : 0)) {
             callback?.();
             return;
-        };
+        }
         this.visibleIndex = isVisible ? 1 : 0;
+
         if (isVisible) {
-            //do anim
-            this.node.active = true;
-            this.node.position = v3(this.showFromPosX, this.showFromPosY, 0.0);
-            this.node.setScale(v3(this.showFromScale, this.showFromScale, this.showFromScale));
-            this.visibleTween?.stop();
-            this.visibleTween = tween(this.node)
-                .to(timeAction, { scale: Vec3.ONE, position: Vec3.ZERO }, { easing: this.getEasingShowAnim() })
-                .call(() => callback?.())
-                .start();
-            this.setDimBackground(true, timeAction, 0.15);
+            this.showAnimation(callback, timeAction);
+        } else {
+            this.hideAnimation(callback, timeAction);
         }
-        else {
-            this.visibleTween?.stop();
-            this.visibleTween = tween(this.node)
-                .to(
-                    timeAction,
-                    { scale: v3(this.hideToScale, this.hideToScale, this.hideToScale), position: v3(this.hideToPosX, this.hideToPosY, 0.0) },
-                    { easing: this.getEasingHideAnim() })
-                .call(() => {
-                    this.node.active = false;
-                    callback?.();
-                })
-                .start();
-            this.setDimBackground(false, 0.0, 0.1);
+    }
+
+    private showAnimation(callback: () => void, timeAction: number) {
+        this.node.active = true;
+        this.node.position = v3(this.showFromPosX, this.showFromPosY, 0.0);
+        this.node.setScale(v3(this.showFromScale, this.showFromScale, this.showFromScale));
+        
+        if (this.enableRotation) {
+            this.node.setRotationFromEuler(0, 0, this.showFromRotation);
         }
-        this.setPanelVisible(isVisible, timeAction * 1.2);
+        
+        if (this.enableOpacity) {
+            this.opMain = this.getComponent(UIOpacity) || this.addComponent(UIOpacity);
+            this.opMain.opacity = this.showFromOpacity;
+        }
+
+        this.visibleTween?.stop();
+        this.visibleTween = tween(this.node);
+
+        // Position animation
+        this.visibleTween.to(timeAction, { position: Vec3.ZERO }, { easing: this.getEasingShowAnim() });
+
+        // Scale animation
+        this.visibleTween.to(timeAction, { scale: Vec3.ONE }, { easing: this.getEasingShowAnim() });
+
+        // Rotation animation
+        if (this.enableRotation) {
+            this.visibleTween.to(timeAction, { eulerAngles: new Vec3(0, 0, 0) }, { easing: this.getEasingShowAnim() });
+        }
+
+        // Opacity animation
+        if (this.enableOpacity) {
+            tween(this.opMain)
+                .to(timeAction, { opacity: 255 }, { easing: this.getEasingShowAnim() })
+                .start();
+        }
+
+        this.visibleTween.call(() => callback?.()).start();
+        this.setDimBackground(true, timeAction, this.dimDuration);
+    }
+
+    private hideAnimation(callback: () => void, timeAction: number) {
+        this.visibleTween?.stop();
+        this.visibleTween = tween(this.node);
+
+        // Position animation
+        this.visibleTween.to(timeAction, { position: v3(this.hideToPosX, this.hideToPosY, 0.0) }, { easing: this.getEasingHideAnim() });
+
+        // Scale animation
+        this.visibleTween.to(timeAction, { scale: v3(this.hideToScale, this.hideToScale, this.hideToScale) }, { easing: this.getEasingHideAnim() });
+
+        // Rotation animation
+        if (this.enableRotation) {
+            this.visibleTween.to(timeAction, { eulerAngles: new Vec3(0, 0, this.hideToRotation) }, { easing: this.getEasingHideAnim() });
+        }
+
+        // Opacity animation
+        if (this.enableOpacity) {
+            tween(this.opMain)
+                .to(timeAction, { opacity: this.hideToOpacity }, { easing: this.getEasingHideAnim() })
+                .start();
+        }
+
+        this.visibleTween.call(() => {
+            this.node.active = false;
+            callback?.();
+        }).start();
+        this.setDimBackground(false, 0.0, this.dimDuration);
     }
 
     getEasingShowAnim() {
@@ -118,7 +310,6 @@ export class AnimationPanel extends VisiblePanel {
         return getEasingFunction(this.hideEasingType);
     }
 
-    scheduleDim: void = null!;
     setDimBackground(isDim: boolean, delay: number, time: number = 0.2) {
         if (this.dimNode == null) return;
         if (this.scheduleDim != null) {
@@ -126,15 +317,17 @@ export class AnimationPanel extends VisiblePanel {
         }
         this.scheduleDim = this.scheduleOnce(() => this.dimNode.setPanelVisible(isDim, time), delay);
     }
+    //#endregion
 
+    //#region Public Interface
     show(data: any, callback?: () => void) {
-        if (this.shownAudioName && this.visibleIndex != 1) { //only call when hidden
+        if (this.shownAudioName && this.visibleIndex != 1) {
             AudioManager.instance.playSound(this.shownAudioName);
         }
         this.setAnimVisible(true, () => {
             this.shown();
             callback?.();
-        });
+        }, this.showDuration);
     }
 
     doShow() {
@@ -149,21 +342,23 @@ export class AnimationPanel extends VisiblePanel {
         this.setAnimVisible(false, () => {
             this.hided();
             callback?.();
-        }, 0.1);
+        }, this.hideDuration);
     }
 
     shown() {
-
+        // Override in derived classes
     }
 
     hided() {
-
+        // Override in derived classes
     }
+    //#endregion
 
-    //#region handle key down
+    //#region Input Handling
     protected get isEscable() {
         return false;
     }
+
     private onKeyDown(event: EventKeyboard) {
         if (this.isEscable == false) return;
         if (event.keyCode === KeyCode.ESCAPE) {
@@ -173,7 +368,6 @@ export class AnimationPanel extends VisiblePanel {
 
     onTouch_Close() {
         this.doHide();
-        // AudioManager.instance.playSound(GameConstant.SOUND_FILES.CLOSE);
     }
     //#endregion
 }

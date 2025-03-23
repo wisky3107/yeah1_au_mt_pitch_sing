@@ -1,7 +1,7 @@
-import { _decorator, Component, Node, Sprite, Color, tween, Vec3, UIOpacity } from 'cc';
+import { _decorator, Component, Node, Sprite, Color, tween, Vec3, UIOpacity, director } from 'cc';
 import { AuditionNoteType } from './AuditionNotePool';
-import { AuditionNoteVisual } from '../Prefabs/AuditionNoteVisual';
 import { AuditionAccuracyRating } from './AuditionBeatSystem';
+import { AuditionNoteVisual } from '../Prefabs/AuditionNoteVisual';
 const { ccclass, property } = _decorator;
 
 /**
@@ -9,11 +9,10 @@ const { ccclass, property } = _decorator;
  * Handles note appearance, movement, and hit effects
  */
 @ccclass('AuditionNote')
-
 export class AuditionNote extends Component {
     @property(AuditionNoteVisual)
     public noteVisual: AuditionNoteVisual = null;
-    
+
     // Note properties
     private noteType: AuditionNoteType = AuditionNoteType.LEFT;
     private beatTime: number = 0;
@@ -21,7 +20,7 @@ export class AuditionNote extends Component {
     private startY: number = 0;
     private isMoving: boolean = false;
     private noteId: number = -1;
-    
+
     /**
      * Initialize note with properties
      * @param noteType Type of note
@@ -32,14 +31,14 @@ export class AuditionNote extends Component {
         this.noteType = noteType;
         this.beatTime = beatTime;
         this.noteId = noteId;
-        
+
         // Initialize visual component
         if (this.noteVisual) {
-            this.noteVisual.initialize(noteType);
+            this.noteVisual.initialize();
         } else {
             console.warn('Note visual component is not assigned!');
         }
-        
+
         // The name could be updated to help with recycling identification
         switch (this.noteType) {
             case AuditionNoteType.LEFT:
@@ -58,41 +57,41 @@ export class AuditionNote extends Component {
     public playHitEffect(accuracyRating: AuditionAccuracyRating): void {
         // Stop movement
         this.isMoving = false;
-        
+
         // Use visual component to show hit effect
         if (this.noteVisual) {
             this.noteVisual.showHitEffect(accuracyRating);
         }
     }
-    
+
     /**
      * Play miss animation when note is missed
      */
     public playMissEffect(): void {
-    
+
         this.isMoving = false;
-        
+
         // Use visual component to show miss effect
         if (this.noteVisual) {
             this.noteVisual.showMissEffect();
         }
     }
-    
+
     /**
      * Reset the note for reuse
      */
     public reset(): void {
         this.isMoving = false;
-        
+
         // Reset visual component
         if (this.noteVisual) {
             this.noteVisual.reset();
         }
-        
+
         // Make sure node is active for next use
         this.node.active = true;
     }
-    
+
     /**
      * Check if this note matches the given input type
      * @param inputType The input type to check against
@@ -101,7 +100,7 @@ export class AuditionNote extends Component {
     public matchesInput(inputType: AuditionNoteType): boolean {
         return this.noteType === inputType;
     }
-    
+
     /**
      * Get the note's unique ID (for recycling)
      * @returns The note ID
@@ -109,7 +108,7 @@ export class AuditionNote extends Component {
     public getNoteId(): number {
         return this.noteId;
     }
-    
+
     /**
      * Get the note type
      * @returns The note type

@@ -7,9 +7,7 @@ export const GameConstant = {
         USERCOIN_UPDATED: "USERCOIN_UPDATED", //if listen to USERDATA_UPDATED do not listen this 
     },
 
-    SCENE_NAME: {
-        HOME: "Home",
-    },
+   
 
     RESOURCE_PATH: {
         GAME_MAIN_PATH: "prefab/Game",
@@ -48,11 +46,6 @@ export const GameConstant = {
 
     VIEW: {
         TOPHUB: "ViewTopHub",
-    },
-    POPUP: {
-        MESSAGE: "PopupMessage",
-        LOADING: "PopupLoading",
-       
     },
 }
 

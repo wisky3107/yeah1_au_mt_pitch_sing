@@ -255,10 +255,7 @@
       "b": 0,
       "a": 225
     },
-    "_spriteFrame": {
-      "__uuid__": "f22b34e4-84d8-4e38-98fa-192d88f3c5fc@f9941",
-      "__expectedType__": "cc.SpriteFrame"
-    },
+    "_spriteFrame": null,
     "_type": 0,
     "_fillType": 0,
     "_sizeMode": 0,
@@ -1123,10 +1120,7 @@
       "b": 255,
       "a": 255
     },
-    "_spriteFrame": {
-      "__uuid__": "257738a3-ea28-4d24-8ff1-ad4f3e5423cc@f9941",
-      "__expectedType__": "cc.SpriteFrame"
-    },
+    "_spriteFrame": null,
     "_type": 1,
     "_fillType": 0,
     "_sizeMode": 0,
@@ -1353,10 +1347,7 @@
       "b": 255,
       "a": 255
     },
-    "_spriteFrame": {
-      "__uuid__": "ac84ae50-c436-49eb-85e7-4eb126f71db0@f9941",
-      "__expectedType__": "cc.SpriteFrame"
-    },
+    "_spriteFrame": null,
     "_type": 1,
     "_fillType": 0,
     "_sizeMode": 0,
@@ -1466,7 +1457,7 @@
       "__id__": 64
     },
     "indicator": null,
-    "isShowPopupsetting": true,
+    "isShowPopupsetting": false,
     "beginType": 0,
     "beginPosition": {
       "__type__": "cc.Vec3",
@@ -1475,16 +1466,25 @@
       "z": 0
     },
     "showFromPosX": -1080,
-    "hideToPosX": 1080,
     "showFromPosY": 0,
-    "hideToPosY": 0,
     "showFromScale": 1,
-    "hideToScale": 0,
     "showEasingType": 26,
+    "hideToPosX": 1080,
+    "hideToPosY": 0,
+    "hideToScale": 0,
     "hideEasingType": 25,
+    "showDuration": 0.35,
+    "hideDuration": 0.25,
+    "enableRotation": false,
+    "showFromRotation": -45,
+    "hideToRotation": 45,
+    "enableOpacity": true,
+    "showFromOpacity": 0,
+    "hideToOpacity": 0,
     "dimNode": {
       "__id__": 5
     },
+    "dimDuration": 0.2,
     "shownAudioName": "",
     "lbContent": {
       "__id__": 28

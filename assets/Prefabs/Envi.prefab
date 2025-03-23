@@ -936,7 +936,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 278.3229064941406,
+      "width": 281.00146484375,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -972,7 +972,7 @@
       "b": 0,
       "a": 255
     },
-    "_string": "20250301145007",
+    "_string": "20250323233646",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 36.1,
@@ -1254,10 +1254,7 @@
       "b": 0,
       "a": 225
     },
-    "_spriteFrame": {
-      "__uuid__": "f22b34e4-84d8-4e38-98fa-192d88f3c5fc@f9941",
-      "__expectedType__": "cc.SpriteFrame"
-    },
+    "_spriteFrame": null,
     "_type": 0,
     "_fillType": 0,
     "_sizeMode": 0,
@@ -1432,7 +1429,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "20250301145013",
+    "_string": "20250323233651",
     "_horizontalAlign": 1,
     "_verticalAlign": 2,
     "_actualFontSize": 41,
@@ -2045,14 +2042,23 @@
       "z": 0
     },
     "showFromPosX": -1080,
-    "hideToPosX": 1080,
     "showFromPosY": 0,
-    "hideToPosY": 0,
     "showFromScale": 1,
-    "hideToScale": 0,
     "showEasingType": 26,
+    "hideToPosX": 1080,
+    "hideToPosY": 0,
+    "hideToScale": 0,
     "hideEasingType": 25,
+    "showDuration": 0.35,
+    "hideDuration": 0.25,
+    "enableRotation": false,
+    "showFromRotation": -45,
+    "hideToRotation": 45,
+    "enableOpacity": true,
+    "showFromOpacity": 0,
+    "hideToOpacity": 0,
     "dimNode": null,
+    "dimDuration": 0.2,
     "shownAudioName": "",
     "_id": ""
   },

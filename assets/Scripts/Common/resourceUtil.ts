@@ -1,4 +1,4 @@
-import { _decorator, Prefab, Node, SpriteComponent, SpriteFrame, ImageAsset, resources, error, Texture2D, instantiate, isValid, find, TextAsset, JsonAsset, SpriteRenderer, SpriteAtlas } from "cc";
+import { _decorator, Prefab, Node, SpriteComponent, SpriteFrame, ImageAsset, resources, error, Texture2D, instantiate, isValid, find, TextAsset, JsonAsset, SpriteRenderer, SpriteAtlas, Canvas } from "cc";
 const { ccclass } = _decorator;
 
 @ccclass("resourceUtil")
@@ -170,13 +170,25 @@ export class resourceUtil {
      * @param cb 
      * @param parent 
      */
-    public static createUI(path: string, cb?: Function, parent?: Node, parentPath: string = "Game/Canvas/Popup") {
+    public static createUI(path: string, cb?: Function, parent?: Node, parentPath: string = "Canvas/Popup") {
         this.getUIPrefabRes(path, function (err: {}, prefab: Prefab) {
             if (err) return;
             let node: Node = instantiate(prefab);
             node.setPosition(0, 0, 0);
             if (!parent) {
                 parent = find(parentPath) as Node;
+                if (!parent) {
+                    // Try to find the Canvas node in the scene
+                    parent = find("Canvas");
+                    if (!parent) {
+                        // If Canvas not found, try to find it in the scene root
+                        parent = find("/Canvas");
+                    }
+                    // If still not found, log an error
+                    if (!parent) {
+                        console.error("Canvas node not found in the scene");
+                    }
+                }
             }
 
             if (!parent) {

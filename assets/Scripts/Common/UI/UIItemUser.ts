@@ -2,10 +2,7 @@ import { _decorator, Component, Label, Node } from 'cc';
 import { UICoins } from './UICoins';
 import { UIAvatar } from '../UIAvatar';
 import { UserModel } from '../../Models/UserModel';
-import { UIDiamond } from './UIDiamond';
 import { UIName } from './UIName';
-import { UITon } from './UITon';
-import { UITicket } from './UITicket';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIItemUser')
@@ -19,15 +16,6 @@ export class UIItemUser extends Component {
 
     @property({ type: UICoins, group: { name: "User Info", id: "1" } })
     lbCoins: UICoins = null;
-
-    @property({ type: UIDiamond, group: { name: "User Info", id: "1" } })
-    lbDiamond: UIDiamond = null;
-
-    @property({ type: UITon, group: { name: "User Info", id: "1" } })
-    lbTon: UITon = null;
-
-    @property({ type: UITicket, group: { name: "User Info", id: "1" } })
-    lbTicket: UITicket = null;
 
     @property({ type: UIAvatar, group: { name: "User Info", id: "1" } })
     avatarUser: UIAvatar = null;
@@ -44,10 +32,7 @@ export class UIItemUser extends Component {
         this.lbUserName?.setName((user?.first_name ?? "") + " " + (user?.last_name ?? ""));
         this.lbUserUserName?.setName("@" + (user?.username ?? ""));
         this.lbCoins?.updateData();
-        this.lbDiamond?.updateData();
-        this.lbTon?.updateData();
-        this.lbTicket?.updateData();
-        this.avatarUser?.setData(user.photo_url, user.telegram_id);
+        this.avatarUser?.setData(user.photo_url, "");
     }
 
     public setFechtingData(placeholder: string = "loading...") {
@@ -56,7 +41,7 @@ export class UIItemUser extends Component {
         }
 
         if (this.lbUserUserName) {
-            this.lbUserUserName.setName("@" + placeholder);
+            this.lbUserUserName.setName(placeholder);
         }
 
         if (this.avatarUser) {
