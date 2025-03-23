@@ -1,4 +1,6 @@
 import { _decorator, Component, Node, Label, Button, UITransform, Sprite, Color, Tween, tween, Vec3, game, UIOpacity, ParticleSystem2D, Animation } from 'cc';
+import { SongData } from '../Data/SongData';
+import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
 const { ccclass, property } = _decorator;
 
 /**
@@ -28,52 +30,71 @@ export enum FeedbackType {
  */
 @ccclass('AuditionUIManager')
 export class AuditionUIManager extends Component {
-    // Singleton instance
+    //#region Singleton
     private static _instance: AuditionUIManager = null;
 
-    // UI screens
-    @property(Node)
+    public static get instance(): AuditionUIManager {
+        return this._instance;
+    }
+    //#endregion
+
+    //#region UI Screen Properties
+    @property({type: Node, group: {name: "UI Screens", id: "screens"}})
     private mainMenuScreen: Node = null;
 
-    @property(Node)
+    @property({type: Node, group: {name: "UI Screens", id: "screens"}})
     private songSelectionScreen: Node = null;
 
-    @property(Node)
+    @property({type: Node, group: {name: "UI Screens", id: "screens"}})
     private gameplayScreen: Node = null;
 
-    @property(Node)
+    @property({type: Node, group: {name: "UI Screens", id: "screens"}})
     private resultsScreen: Node = null;
 
-    @property(Node)
+    @property({type: Node, group: {name: "UI Screens", id: "screens"}})
     private settingsScreen: Node = null;
+    //#endregion
 
-    // Gameplay UI elements
-    @property(Label)
+    //#region Gameplay UI Properties
+    @property({type: Label, group: {name: "Gameplay UI", id: "gameplay"}})
     private scoreLabel: Label = null;
 
-    @property(Label)
+    @property({type: Label, group: {name: "Gameplay UI", id: "gameplay"}})
     private comboCountLabel: Label = null;
 
-    @property(Sprite)
+    @property({type: Sprite, group: {name: "Gameplay UI", id: "gameplay"}})
     private progressBar: Sprite = null;
 
-    // Results UI elements
-    @property(Label)
+    @property({type: Animation, group: {name: "Gameplay UI", id: "gameplay"}})
+    private readyGoAnimation: Animation = null;
+    //#endregion
+
+    //#region Results UI Properties
+    @property({type: Label, group: {name: "Results UI", id: "results"}})
     private finalScoreLabel: Label = null;
 
-    @property(Label)
+    @property({type: Label, group: {name: "Results UI", id: "results"}})
     private accuracyLabel: Label = null;
 
-    @property(Label)
+    @property({type: Label, group: {name: "Results UI", id: "results"}})
     private maxComboLabel: Label = null;
 
-    @property(Label)
+    @property({type: Label, group: {name: "Results UI", id: "results"}})
     private gradeLabel: Label = null;
+    //#endregion
 
-    @property(Animation)
-    animScoreFeedBacks: Animation = null;
+    //#region Song Info Properties
+    @property({type: Label, group: {name: "Song Info", id: "songInfo"}})
+    private songNameLabel: Label = null;
 
-    // Individual feedback nodes
+    @property({type: Label, group: {name: "Song Info", id: "songInfo"}})
+    private artistNameLabel: Label = null;
+
+    @property({type: Label, group: {name: "Song Info", id: "songInfo"}})
+    private bpmLabel: Label = null;
+    //#endregion
+
+    //#region Feedback Properties
     @property({
         type: [Node],
         tooltip: "Feedback animation nodes in order: perfect, good, cool, miss"
@@ -83,23 +104,18 @@ export class AuditionUIManager extends Component {
     @property(ParticleSystem2D)
     particleSystemPerfectFragments: ParticleSystem2D = null!;
 
-    @property(Node)
-    private comboLabel: Node = null;
+    @property({type: Animation, group: {name: "Feedback", id: "feedback"}})
+    animScoreFeedBacks: Animation = null;
+    //#endregion
 
-    // Current state
+    //#region State Management
     private currentUIState: UIState = UIState.MAIN_MENU;
-
-    // Animations
     private feedbackTween: Tween<Node> = null;
     private comboTween: Tween<Node> = null;
+    //#endregion
 
-    // Singleton pattern implementation
-    public static get instance(): AuditionUIManager {
-        return this._instance;
-    }
-
+    //#region Lifecycle Methods
     onLoad() {
-        // Make this a singleton
         if (AuditionUIManager._instance === null) {
             AuditionUIManager._instance = this;
         } else {
@@ -107,14 +123,9 @@ export class AuditionUIManager extends Component {
         }
     }
 
-    start() {
-        // Initialize UI state
-        this.showMainMenu();
-    }
+    //#endregion
 
-    /**
-     * Show the main menu screen
-     */
+    //#region Screen Management
     public showMainMenu(): void {
         this.hideAllScreens();
         if (this.mainMenuScreen) {
@@ -124,9 +135,6 @@ export class AuditionUIManager extends Component {
         console.log('Showing main menu');
     }
 
-    /**
-     * Show the song selection screen
-     */
     public showSongSelection(): void {
         this.hideAllScreens();
         if (this.songSelectionScreen) {
@@ -136,21 +144,27 @@ export class AuditionUIManager extends Component {
         console.log('Showing song selection');
     }
 
-    /**
-     * Show the gameplay screen
-     */
-    public showGameplay(): void {
+    public showGameplay(songData: SongData): void {
         this.hideAllScreens();
         if (this.gameplayScreen) {
             this.gameplayScreen.active = true;
             this.currentUIState = UIState.GAMEPLAY;
         }
         console.log('Showing gameplay');
+
+        if (this.songNameLabel) {
+            this.songNameLabel.string = songData.title;
+        }
+
+        if (this.artistNameLabel) {
+            this.artistNameLabel.string = songData.artist;
+        }
+
+        if (this.bpmLabel) {
+            this.bpmLabel.string = songData.bpm.toString() + " BPM";
+        }
     }
 
-    /**
-     * Show the results screen
-     */
     public showResults(): void {
         this.hideAllScreens();
         if (this.resultsScreen) {
@@ -160,9 +174,6 @@ export class AuditionUIManager extends Component {
         console.log('Showing results');
     }
 
-    /**
-     * Show the settings screen
-     */
     public showSettings(): void {
         this.hideAllScreens();
         if (this.settingsScreen) {
@@ -172,9 +183,6 @@ export class AuditionUIManager extends Component {
         console.log('Showing settings');
     }
 
-    /**
-     * Hide all UI screens
-     */
     private hideAllScreens(): void {
         if (this.mainMenuScreen) this.mainMenuScreen.active = false;
         if (this.songSelectionScreen) this.songSelectionScreen.active = false;
@@ -182,66 +190,39 @@ export class AuditionUIManager extends Component {
         if (this.resultsScreen) this.resultsScreen.active = false;
         if (this.settingsScreen) this.settingsScreen.active = false;
     }
+    //#endregion
 
-    /**
-     * Update the score display
-     * @param score Current score
-     */
+    //#region Gameplay UI Updates
     public updateScore(score: number): void {
         if (this.scoreLabel) {
             this.scoreLabel.string = this.formatNumberWithZeros(score, 8);
         }
     }
 
-    /**
-     * Format number with leading zeros
-     * @param num Number to format
-     * @param length Desired length
-     * @returns Formatted string
-     */
-    private formatNumberWithZeros(num: number, length: number): string {
-        let result = num.toString();
-        while (result.length < length) {
-            result = '0' + result;
-        }
-        return result;
-    }
-
-    /**
-     * Update the combo display
-     * @param combo Current combo
-     */
     public updateCombo(combo: number): void {
         if (this.comboCountLabel) {
             this.comboCountLabel.string = "x" + combo.toString();
             this.comboCountLabel.node.active = combo > 1;
-
-            // Animate combo label on milestone
-            // if (combo > 0 && combo % 10 === 0) {
-            //     this.showComboFeedback(combo);
-            // }
         }
     }
 
-    /**
-     * Update the progress bar
-     * @param progress Progress value (0-1)
-     */
     public updateProgress(progress: number): void {
         if (this.progressBar) {
-            // Update fill amount (0-1)
             this.progressBar.fillRange = Math.max(0, Math.min(1, progress));
         }
     }
 
+    public playReadyGoAnimation(): void {
+        this.readyGoAnimation.node.active = true;
+        this.readyGoAnimation.play();
+        AuditionAudioManager.instance.playSound("s_ready");
+        this.scheduleOnce(() => {
+            AuditionAudioManager.instance.playSound("s_go");
+        }, 1.0);
+    }
+    //#endregion
 
-    /**
-     * Update results screen with final stats
-     * @param score Final score
-     * @param accuracy Accuracy percentage
-     * @param maxCombo Maximum combo
-     * @param grade Grade (S, A, B, C, D, F)
-     */
+    //#region Results UI Updates
     public updateResults(score: number, accuracy: number, maxCombo: number, grade: string): void {
         if (this.finalScoreLabel) {
             this.finalScoreLabel.string = this.formatNumberWithZeros(score, 8);
@@ -257,60 +238,62 @@ export class AuditionUIManager extends Component {
 
         if (this.gradeLabel) {
             this.gradeLabel.string = grade;
-
-            // Set color based on grade
-            switch (grade) {
-                case 'S':
-                    this.gradeLabel.color = new Color(255, 215, 0, 255); // Gold
-                    break;
-                case 'A':
-                    this.gradeLabel.color = new Color(0, 191, 255, 255); // Blue
-                    break;
-                case 'B':
-                    this.gradeLabel.color = new Color(50, 205, 50, 255); // Green
-                    break;
-                case 'C':
-                    this.gradeLabel.color = new Color(255, 165, 0, 255); // Orange
-                    break;
-                case 'D':
-                    this.gradeLabel.color = new Color(255, 69, 0, 255); // Red
-                    break;
-                case 'F':
-                    this.gradeLabel.color = new Color(128, 128, 128, 255); // Gray
-                    break;
-            }
+            this.setGradeColor(grade);
         }
     }
 
-    /**
-     * Get current UI state
-     * @returns Current UI state
-     */
+    private setGradeColor(grade: string): void {
+        switch (grade) {
+            case 'S':
+                this.gradeLabel.color = new Color(255, 215, 0, 255); // Gold
+                break;
+            case 'A':
+                this.gradeLabel.color = new Color(0, 191, 255, 255); // Blue
+                break;
+            case 'B':
+                this.gradeLabel.color = new Color(50, 205, 50, 255); // Green
+                break;
+            case 'C':
+                this.gradeLabel.color = new Color(255, 165, 0, 255); // Orange
+                break;
+            case 'D':
+                this.gradeLabel.color = new Color(255, 69, 0, 255); // Red
+                break;
+            case 'F':
+                this.gradeLabel.color = new Color(128, 128, 128, 255); // Gray
+                break;
+        }
+    }
+    //#endregion
+
+    //#region Utility Methods
+    private formatNumberWithZeros(num: number, length: number): string {
+        let result = num.toString();
+        while (result.length < length) {
+            result = '0' + result;
+        }
+        return result;
+    }
+
     public getCurrentUIState(): UIState {
         return this.currentUIState;
     }
+    //#endregion
 
-    //#region feedbacks animation
-
-    // For backward compatibility and easier reference
+    //#region Feedback System
     get perfectAnimNode(): Node { return this.feedbackNodes[0]; }
     get goodNode(): Node { return this.feedbackNodes[1]; }
     get coolNode(): Node { return this.feedbackNodes[2]; }
     get missNode(): Node { return this.feedbackNodes[3]; }
     private feedbackAnimNames = ["perfect", "great", "cool", "miss"];
-    /**
-        * Show visual feedback for note hit
-        * @param type Type of feedback
-        */
+
     public showFeedback(type: FeedbackType): void {
         for (const node of this.feedbackNodes) {
             node.active = false;
         }
 
-        // Show the requested feedback
         if (this.feedbackNodes[type]) {
             this.feedbackNodes[type].active = true;
-            // Add any animation or other logic here
         }
 
         const animName = this.feedbackAnimNames[type];

@@ -9,6 +9,7 @@ const { ccclass, property } = _decorator;
  * Handles note appearance, movement, and hit effects
  */
 @ccclass('AuditionNote')
+
 export class AuditionNote extends Component {
     @property(AuditionNoteVisual)
     public noteVisual: AuditionNoteVisual = null;

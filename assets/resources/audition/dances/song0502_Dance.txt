@@ -1,0 +1,136 @@
+ DefaultState:first_stand
+[first_stand]
+	Speed:1
+	Motion:first_stand
+	Transition:
+		SrcState:first_stand
+		DestState:boy_start
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+	Transition:
+		SrcState:first_stand
+		DestState:girl_start
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[boy_start]
+	Speed:1
+	Motion:boy_start
+	Transition:
+		SrcState:boy_start
+		DestState:dance_start
+		TransitionDuration:.0625
+		TransitionOffset:0
+		ExitTime:.9375
+[girl_start]
+	Speed:1
+	Motion:girl_start
+	Transition:
+		SrcState:girl_start
+		DestState:dance_start
+		TransitionDuration:.0500000007
+		TransitionOffset:0
+		ExitTime:.949999988
+[dance_start]
+	Speed:1
+	Motion:dance_start
+	Transition:
+		SrcState:dance_start
+		DestState:breakdance
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[breakdance]
+	Speed:1
+	Motion:breakdance
+	Transition:
+		SrcState:breakdance
+		DestState:hiphop
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[hiphop]
+	Speed:1
+	Motion:hiphop
+	Transition:
+		SrcState:hiphop
+		DestState:salsa
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[salsa]
+	Speed:1
+	Motion:salsa
+	Transition:
+		SrcState:salsa
+		DestState:breakdance
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[dance_end]
+	Speed:1
+	Motion:dance_end
+	Transition:
+		SrcState:dance_end
+		DestState:boy_win
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+	Transition:
+		SrcState:dance_end
+		DestState:boy_lose
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+	Transition:
+		SrcState:dance_end
+		DestState:girl_win
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+	Transition:
+		SrcState:dance_end
+		DestState:girl_lose
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[boy_win]
+	Speed:1
+	Motion:boy_win
+	Transition:
+		SrcState:boy_win
+		DestState:last_stand
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[boy_lose]
+	Speed:1
+	Motion:boy_lose
+	Transition:
+		SrcState:boy_lose
+		DestState:last_stand
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[girl_win]
+	Speed:1
+	Motion:girl_win
+	Transition:
+		SrcState:girl_win
+		DestState:last_stand
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[girl_lose]
+	Speed:1
+	Motion:girl_lose
+	Transition:
+		SrcState:girl_lose
+		DestState:last_stand
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[last_stand]
+	Speed:1
+	Motion:last_stand

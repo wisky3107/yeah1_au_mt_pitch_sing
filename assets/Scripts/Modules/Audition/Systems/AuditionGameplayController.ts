@@ -3,8 +3,8 @@ import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
 import { AuditionBeatSystem, AuditionAccuracyRating } from '../Systems/AuditionBeatSystem';
 import { AuditionScoringSystem } from '../Systems/AuditionScoringSystem';
 import { AuditionCharacterAnimation } from '../Systems/AuditionCharacterAnimation';
-import { AuditionInputType } from '../Systems/AuditionInputHandler';
 import { AuditionUIManager, FeedbackType } from '../UI/AuditionUIManager';
+import { SongData } from '../Data/SongData';
 
 // Game state enum
 enum GameState {
@@ -14,16 +14,6 @@ enum GameState {
     GAME_OVER
 }
 
-interface SongData {
-    id: string;
-    title: string;
-    artist: string;
-    difficulty: number;
-    bpm: number;
-    audioPath: string;
-    previewStart: number; // Start time for preview (ms)
-    previewEnd: number;   // End time for preview (ms)
-}
 
 const { ccclass, property } = _decorator;
 
@@ -92,6 +82,16 @@ export class AuditionGameplayController extends Component {
             audioPath: 'song0211',
             previewStart: 30000,
             previewEnd: 45000
+        },
+        {
+            id: 'song0502',
+            title: 'Growl',
+            artist: 'EXO',
+            difficulty: 2,
+            bpm: 90,
+            audioPath: 'song0502',
+            previewStart: 25000,
+            previewEnd: 40000
         }
     ];
 
@@ -143,7 +143,6 @@ export class AuditionGameplayController extends Component {
 
     start() {
         // Setup UI
-        AuditionUIManager.instance.showGameplay();
         // Setup button events
         this.setupButtonEvents();
 
@@ -163,7 +162,15 @@ export class AuditionGameplayController extends Component {
             this.characterAnimation.resetToIdle();
         }
 
-        this.startSong('song0211');
+        // Select a random song from available songs
+        if (this.availableSongs && this.availableSongs.length > 0) {
+            const randomIndex = Math.floor(Math.random() * this.availableSongs.length);
+            const randomSong = this.availableSongs[randomIndex];
+            this.startSong(randomSong.id);
+            console.log(`Starting random song: ${randomSong.id}`);
+        } else {
+            console.error('No available songs found');
+        }
     }
 
     public startSong(songId: string): void {
@@ -180,6 +187,7 @@ export class AuditionGameplayController extends Component {
         this.currentSong = songData;
         // Initialize gameplay
         this.initGameplay();
+        AuditionUIManager.instance.showGameplay(this.currentSong);
     }
 
     /**
@@ -225,6 +233,10 @@ export class AuditionGameplayController extends Component {
      */
     private startGameplay(): void {
         // Record start time
+        this.beatSystem.setReadyCallback(() => {
+            AuditionUIManager.instance.playReadyGoAnimation();
+        });
+
         this.songStartTime = Date.now();
         // Start audio
         AuditionAudioManager.instance.playSong();
@@ -294,10 +306,10 @@ export class AuditionGameplayController extends Component {
         if (!audioManager) return;
 
         const currentTime = audioManager.getCurrentTime();
-        const progress = Math.min(1.0, currentTime / this.songDuration);
+        const progress = Math.min(1.0, currentTime / this.songDuration) * 0.9;
 
         // Update UI progress bar
-        this.songProgressBar.progress = progress;
+        this.songProgressBar.progress = progress + 0.1;
 
         // Also update UI manager progress
         AuditionUIManager.instance.updateProgress(progress);

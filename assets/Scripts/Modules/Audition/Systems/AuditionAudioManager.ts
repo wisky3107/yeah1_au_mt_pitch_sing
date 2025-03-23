@@ -27,7 +27,7 @@ export class AuditionAudioManager extends Component {
     
     @property({ range: [0, 1] })
     private musicVolume: number = 0.7;
-    
+
     @property({ range: [0, 1] })
     private sfxVolume: number = 1.0;
     
@@ -71,7 +71,7 @@ export class AuditionAudioManager extends Component {
      */
     private loadSoundEffects(): void {
         // const sfxList = ['perfect', 'good', 'miss', 'click', 'combo'];
-        const sfxList = ['good', 'miss'];
+        const sfxList = ['good', 'miss', 's_ready', 's_go'];
         
         // Load base sound effects
         sfxList.forEach(sfx => {

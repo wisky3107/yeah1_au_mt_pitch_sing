@@ -594,9 +594,9 @@
     "_lrot": {
       "__type__": "cc.Quat",
       "x": 0,
-      "y": 1,
+      "y": 0,
       "z": 0,
-      "w": 6.123233995736766e-17
+      "w": 1
     },
     "_lscale": {
       "__type__": "cc.Vec3",
@@ -609,7 +609,7 @@
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 180,
+      "y": 0,
       "z": 0
     },
     "_id": ""
@@ -665,7 +665,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "3484701e-c1f2-468e-869e-973c2c24a675@f9941",
+      "__uuid__": "795d921a-3b2a-44a9-85c7-dd62f0f07f2b@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -767,7 +767,6 @@
     "glowSprite": {
       "__id__": 5
     },
-    "keyLabel": null,
     "opacity": {
       "__id__": 36
     },
@@ -808,9 +807,6 @@
       "b": 47,
       "a": 255
     },
-    "hitAnimDuration": 0.2,
-    "missAnimDuration": 0.4,
-    "appearAnimDuration": 0.05,
     "_id": ""
   },
   {

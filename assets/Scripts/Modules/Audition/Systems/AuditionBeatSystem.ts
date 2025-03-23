@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Vec3, Sprite, tween, math, CCFloat, UIOpacity } from 'cc';
+import { _decorator, Component, Node, Vec3, Sprite, tween, math, CCFloat, UIOpacity, Label, LabelShadow, Tween, Color } from 'cc';
 import { AuditionAudioManager } from './AuditionAudioManager';
 import { AuditionInputHandler, AuditionInputType } from './AuditionInputHandler';
 import { AuditionNotePool, AuditionNoteType } from './AuditionNotePool';
@@ -59,6 +59,10 @@ export class AuditionBeatSystem extends Component {
 
     @property({ type: UIOpacity, group: { name: "Visual Elements", id: "visual" } })
     private opacityGameplay: UIOpacity = null;
+
+    @property({ type: Label, group: { name: "Visual Elements", id: "visual" } })
+    private levelLabel: Label = null;
+
     //#endregion
 
     //#region Properties - Beat Settings
@@ -103,6 +107,8 @@ export class AuditionBeatSystem extends Component {
     private songDuration: number = 0;
     private isAutoPlay: boolean = false;
     private scoringCallback: (rating: AuditionAccuracyRating) => void = null;
+    private readyCallback: () => void = null;
+    private levelChangedCallback: (level: number, sequenceType: LevelSequenceType) => void = null;
     //#endregion
 
     //#region Note Movement
@@ -125,7 +131,7 @@ export class AuditionBeatSystem extends Component {
     private levelSequences: LevelSequence[] = [];
     private currentSequenceIndex: number = 0;
     private penaltyPatternLoops: number = 0;
-    
+
     private get isInPenalty(): boolean {
         return this.penaltyPatternLoops > 0;
     }
@@ -166,7 +172,7 @@ export class AuditionBeatSystem extends Component {
         }
 
         //test auto plays
-        // this.setAutoPlay(true);s 
+        this.setAutoPlay(true);
     }
     //#endregion
 
@@ -206,7 +212,7 @@ export class AuditionBeatSystem extends Component {
 
         this.updateBeatNoteMoving(currentTime);
         this.updateHeartBeatEffect(currentTime, beatTime, beatInterval);
-        
+
         // Handle auto-play
         this.handleAutoPlay();
     }
@@ -226,7 +232,6 @@ export class AuditionBeatSystem extends Component {
             { type: LevelSequenceType.LEVEL, loop: 4, notes: 8, delay: 1 },
             { type: LevelSequenceType.LEVEL, loop: 4, notes: 9, delay: 1 },
             { type: LevelSequenceType.FINISH, loop: 1, notes: 9 },
-            { type: LevelSequenceType.OFF, loop: 4, notes: 0 }
         ];
     }
 
@@ -276,6 +281,16 @@ export class AuditionBeatSystem extends Component {
         this.delayLoops = 0;
         this.currentLevelLoop = 0;
         this.updateGameplayInteractableVisualize();
+
+        const beatTime = (60000 / this.bpm) / 1000; // Convert to seconds
+        const beatInterval = beatTime * this.beatsPerLoop * 4;
+        const readyCallbackTime = Math.max(0, beatInterval - 1.0);
+        this.scheduleOnce(() => {
+            if (this.readyCallback) {
+                this.readyCallback();
+                this.readyCallback = null;
+            }
+        }, readyCallbackTime);
     }
 
     private updateLevelSystem(): void {
@@ -319,14 +334,21 @@ export class AuditionBeatSystem extends Component {
             const nextSequence = this.levelSequences[this.currentSequenceIndex];
             if (nextSequence.type === LevelSequenceType.OFF) {
                 this.delayLoops = nextSequence.loop;
+                this.currentLevelLoop = nextSequence.loop;//no need wait loop cause already wait in InDelay
                 this.isInDelay = true;
             } else if (nextSequence.type === LevelSequenceType.LEVEL) {
                 this.currentLevel = nextSequence.notes;
-                this.currentLevelLoop = 0;
+                this.currentLevelLoop = 1;
+                this.updateLevelTextNormal(this.currentLevel);
+                if (this.levelChangedCallback) {
+                    this.levelChangedCallback(this.currentLevel, nextSequence.type);
+                }
                 startNewSequence(nextSequence);
             } else if (nextSequence.type === LevelSequenceType.FINISH) {
                 // Handle finish sequence
-                this.handleFinishSequence();
+                this.currentLevelLoop = 1;
+                startNewSequence(nextSequence);
+                this.updateLevelTextFinish();
             }
         }
         else {
@@ -365,14 +387,57 @@ export class AuditionBeatSystem extends Component {
             }
         }
 
-        this.currentLevelLoop++;
         this.updateGameplayInteractableVisualize();
     }
 
-    private handleFinishSequence(): void {
-        // Implement finish sequence logic here
-        console.log('Finish sequence started');
-        // You can add special effects or final pattern here
+    private updateLevelTextNormal(level: number): void {
+        if (this.levelLabel) {
+            this.levelLabel.string = "Level " + level.toString();
+            // Set shadow color based on level
+            if (level <= 3) {
+                this.levelLabel.shadowColor = new Color(0, 0, 0, 255); // Black shadow for early levels
+            } else if (level <= 6) {
+                this.levelLabel.shadowColor = new Color(0, 0, 128, 255); // Navy blue for mid levels
+            } else if (level <= 9) {
+                this.levelLabel.shadowColor = new Color(128, 0, 128, 255); // Purple for higher levels
+            } else {
+                this.levelLabel.shadowColor = new Color(178, 34, 34, 255); // Firebrick red for top levels
+            }
+        }
+
+        // Animate the level label with a scale tween
+        if (this.levelLabel) {
+            // Stop any existing tween
+            Tween.stopAllByTarget(this.levelLabel.node);
+            // Set initial scale
+            this.levelLabel.node.setScale(new Vec3(1.5, 1.5, 1));
+            // Create and play the scale animation
+            tween(this.levelLabel.node)
+                .to(0.3, { scale: new Vec3(1, 1, 1) }, { easing: 'bounceOut' })
+                .start();
+        }
+    }
+
+    private updateLevelTextFinish(): void {
+        if (this.levelLabel) {
+            this.levelLabel.string = "Finish Move";
+            // Set shadow color for finish move to a vibrant gold/orange color
+            this.levelLabel.shadowColor = new Color(255, 165, 0, 255); // Gold/Orange for finish move
+
+            // Stop any existing tween
+            Tween.stopAllByTarget(this.levelLabel.node);
+
+            // Set initial scale
+            this.levelLabel.node.setScale(new Vec3(1, 1, 1));
+
+            // Create a looping scale animation
+            tween(this.levelLabel.node)
+                .to(0.5, { scale: new Vec3(1.2, 1.2, 1) })
+                .to(0.5, { scale: new Vec3(1, 1, 1) })
+                .union()
+                .repeatForever()
+                .start();
+        }
     }
     //#endregion
 
@@ -556,6 +621,14 @@ export class AuditionBeatSystem extends Component {
 
     public setScoreCallback(callback: (rating: AuditionAccuracyRating) => void): void {
         this.scoringCallback = callback;
+    }
+
+    public setReadyCallback(callback: () => void): void {
+        this.readyCallback = callback;
+    }
+
+    public setLevelChangedCallback(callback: (level: number, sequenceType: LevelSequenceType) => void): void {
+        this.levelChangedCallback = callback;
     }
 
     public getBPM(): number {
