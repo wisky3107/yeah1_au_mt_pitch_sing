@@ -1,11 +1,10 @@
 import { _decorator, Component, Node, Button, Label, ProgressBar, director } from 'cc';
-import { AuditionGameManager } from '../Core/AuditionGameManager';
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
-import { AuditionUIManager, FeedbackType } from './AuditionUIManager';
 import { AuditionBeatSystem, AuditionAccuracyRating } from '../Systems/AuditionBeatSystem';
 import { AuditionScoringSystem } from '../Systems/AuditionScoringSystem';
 import { AuditionCharacterAnimation } from '../Systems/AuditionCharacterAnimation';
 import { AuditionInputType } from '../Systems/AuditionInputHandler';
+import { AuditionUIManager, FeedbackType } from '../UI/AuditionUIManager';
 
 // Game state enum
 enum GameState {
@@ -13,6 +12,17 @@ enum GameState {
     PLAYING,
     PAUSED,
     GAME_OVER
+}
+
+interface SongData {
+    id: string;
+    title: string;
+    artist: string;
+    difficulty: number;
+    bpm: number;
+    audioPath: string;
+    previewStart: number; // Start time for preview (ms)
+    previewEnd: number;   // End time for preview (ms)
 }
 
 const { ccclass, property } = _decorator;
@@ -23,6 +33,17 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('AuditionGameplayController')
 export class AuditionGameplayController extends Component {
+
+    // Singleton instance
+    private static _instance: AuditionGameplayController = null;
+
+    /**
+     * Get the singleton instance
+     */
+    public static get instance(): AuditionGameplayController {
+        return this._instance;
+    }
+
     // Core gameplay components
     @property(AuditionBeatSystem)
     private beatSystem: AuditionBeatSystem = null;
@@ -57,8 +78,67 @@ export class AuditionGameplayController extends Component {
     private songStartTime: number = 0;
     private songDuration: number = 0;
     private notesProcessed: number = 0;
+    private currentSong: SongData = null;
+
+    //test data should load from csv
+    // Available songs in the game
+    private availableSongs: SongData[] = [
+        {
+            id: 'song0211',
+            title: '삐딱하게 (Crooked)',
+            artist: 'G-Dragon',
+            difficulty: 3,
+            bpm: 130,
+            audioPath: 'song0211',
+            previewStart: 30000,
+            previewEnd: 45000
+        }
+    ];
+
+    /**
+     * Returns the list of available songs in the game
+     * @returns Array of SongData objects
+     */
+    public getAvailableSongs(): SongData[] {
+        return this.availableSongs;
+    }
+
+    /**
+     * Returns the list of unlocked songs in the game
+     * @returns Array of SongData objects
+     */
+    public getUnlockedSongs(): SongData[] {
+        return this.availableSongs;
+    }
+
+    /**
+     * Returns the high score for a given song
+     * @param songId The ID of the song
+     * @returns The high score for the song
+     */
+    public getHighScore(songId: string): number {
+        return 0;
+    }
+
+    /**
+     * Returns true if a song is unlocked
+     * @param songId The ID of the song 
+     * @returns True if the song is unlocked, false otherwise
+     */
+    public isSongUnlocked(songId: string): boolean {
+        return true;
+    }
+
+
 
     onLoad() {
+        // Set up singleton instance
+        if (AuditionGameplayController._instance !== null) {
+            this.node.destroy();
+            return;
+        }
+
+        AuditionGameplayController._instance = this;
     }
 
     start() {
@@ -74,6 +154,8 @@ export class AuditionGameplayController extends Component {
             // Connect scoring system to UI
             this.scoringSystem.onScoreUpdate(this.updateScoreDisplay.bind(this));
             this.scoringSystem.onComboUpdate(this.updateComboDisplay.bind(this));
+            this.beatSystem.setScoreCallback(this.onScoringProcessed.bind(this));
+
         }
 
         // Reset character animation
@@ -81,6 +163,21 @@ export class AuditionGameplayController extends Component {
             this.characterAnimation.resetToIdle();
         }
 
+        this.startSong('song0211');
+    }
+
+    public startSong(songId: string): void {
+        this.gameState = GameState.INIT;
+        console.log(`Starting song: ${songId}`);
+
+        // Find the song data
+        const songData = this.availableSongs.find(song => song.id === songId);
+        if (!songData) {
+            console.error(`Song with id ${songId} not found`);
+            return;
+        }
+
+        this.currentSong = songData;
         // Initialize gameplay
         this.initGameplay();
     }
@@ -89,50 +186,41 @@ export class AuditionGameplayController extends Component {
      * Initialize gameplay with current song
      */
     private initGameplay(): void {
-        const gameManager = AuditionGameManager.instance;
         const audioManager = AuditionAudioManager.instance;
 
-        if (!gameManager || !audioManager || !this.beatSystem) {
+        if (!audioManager || !this.beatSystem) {
             console.error('Required components not found');
             return;
         }
 
         // Get current song
-        const currentSong = gameManager.getCurrentSong();
-        if (!currentSong) {
+        if (!this.currentSong) {
             console.error('No song selected');
-            gameManager.changeScene('AuditionSongSelection');
             return;
         }
 
-        // Load beatmap
-        // Load song audio first
-        audioManager.loadSong(currentSong.audioPath)
-            .then(() => {
+        // Load both song audio and dance data concurrently
+        Promise.all([
+            audioManager.loadSong(this.currentSong.audioPath),
+            this.characterAnimation.loadDanceData(this.currentSong.id)
+        ])
+            .then(([songLoaded, danceDataLoaded]) => {
+                console.log('Song and dance data loaded successfully');
                 // Get song duration from audio manager
                 this.songDuration = audioManager.getDuration() * 1000.0;
-                // Load beatmap with song duration
+                this.startGameplay();
                 return this.songDuration;
             })
-            .then(() => {
-                // Setup scoring callback
-                this.beatSystem.setScoreCallback(this.onScoringProcessed.bind(this));
-                // Set total notes count
-                // Start gameplay
-                this.startGameplay();
-            })
             .catch(error => {
-                console.error('Failed to initialize gameplay:', error);
-                gameManager.changeScene('AuditionSongSelection');
-            });
+                console.error('Failed to load song or dance data:', error);
+                throw error; // Re-throw to be caught by the outer catch
+            })
     }
 
     /**
      * Start gameplay
      */
     private startGameplay(): void {
-        const currentSong = AuditionGameManager.instance.getCurrentSong();
-
         // Record start time
         this.songStartTime = Date.now();
 
@@ -148,7 +236,7 @@ export class AuditionGameplayController extends Component {
         audioManager.playSong();
 
         // Start beatmap
-        this.beatSystem.startBeatSystem(currentSong.bpm, this.songDuration);
+        this.beatSystem.startBeatSystem(this.currentSong.bpm, this.songDuration);
 
         // Set game state to playing
         this.gameState = GameState.PLAYING;
@@ -309,13 +397,6 @@ export class AuditionGameplayController extends Component {
         // Calculate experience
         const experiencePoints = this.scoringSystem.calculateExperiencePoints();
 
-        // Update game manager with results
-        const gameManager = AuditionGameManager.instance;
-        if (gameManager) {
-            gameManager.endSong(score, maxCombo);
-            gameManager.addExperience(experiencePoints);
-        }
-
         // Show results screen
         AuditionUIManager.instance.showResults();
         AuditionUIManager.instance.updateResults(score, accuracy, maxCombo, grade);
@@ -375,9 +456,6 @@ export class AuditionGameplayController extends Component {
 
         // Reset game state
         this.gameState = GameState.INIT;
-
-        // Return to song selection
-        AuditionGameManager.instance.changeScene('AuditionSongSelection');
     }
 
     /**

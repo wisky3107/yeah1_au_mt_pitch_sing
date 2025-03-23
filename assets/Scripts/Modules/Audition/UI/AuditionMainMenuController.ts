@@ -1,7 +1,5 @@
 import { _decorator, Component, Node, Button, Label, Sprite, tween, Vec3, UIOpacity } from 'cc';
-import { AuditionGameManager } from '../Core/AuditionGameManager';
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
-import { AuditionUIManager } from './AuditionUIManager';
 const { ccclass, property } = _decorator;
 
 /**
@@ -62,8 +60,6 @@ export class AuditionMainMenuController extends Component {
         // Play background music
         this.playBackgroundMusic();
         
-        // Update player level display
-        this.updatePlayerLevel();
     }
     
     /**
@@ -171,27 +167,10 @@ export class AuditionMainMenuController extends Component {
     }
     
     /**
-     * Update player level display based on experience
-     */
-    private updatePlayerLevel(): void {
-        const gameManager = AuditionGameManager.instance;
-        if (!gameManager || !this.playerLevelLabel) return;
-        
-        const experience = gameManager.getExperience();
-        
-        // Calculate player level (simple formula, can be adjusted)
-        const level = Math.floor(Math.sqrt(experience / 100)) + 1;
-        
-        // Display level
-        this.playerLevelLabel.string = `Level ${level}`;
-    }
-    
-    /**
      * Handle play button click
      */
     private onPlayButtonClicked(): void {
         AuditionAudioManager.instance.playSound(this.buttonSound);
-        AuditionGameManager.instance.changeScene('AuditionSongSelection');
     }
     
     /**

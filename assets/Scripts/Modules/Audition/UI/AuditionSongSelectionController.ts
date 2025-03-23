@@ -1,8 +1,7 @@
 import { _decorator, Component, Node, Button, Label, ScrollView, Prefab, instantiate, Layout } from 'cc';
-import { AuditionGameManager } from '../Core/AuditionGameManager';
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
 import { AuditionUIManager } from './AuditionUIManager';
-import { AuditionSongItemComponent } from './AuditionSongItemComponent';
+import { AuditionGameplayController } from '../Systems/AuditionGameplayController';
 const { ccclass, property } = _decorator;
 
 /**
@@ -126,7 +125,7 @@ export class AuditionSongSelectionController extends Component {
         }
         
         // Get songs from game manager
-        const gameManager = AuditionGameManager.instance;
+        const gameManager = AuditionGameplayController.instance;
         if (!gameManager) return;
         
         const availableSongs = gameManager.getAvailableSongs();
@@ -200,7 +199,7 @@ export class AuditionSongSelectionController extends Component {
         this.selectedSongId = songId;
         
         // Update UI with song details
-        const gameManager = AuditionGameManager.instance;
+        const gameManager = AuditionGameplayController.instance;
         if (!gameManager) return;
         
         const selectedSong = gameManager.getAvailableSongs().find(song => song.id === songId);
@@ -322,7 +321,6 @@ export class AuditionSongSelectionController extends Component {
      */
     private onBackButtonClicked(): void {
         AuditionAudioManager.instance.playSound(this.buttonSound);
-        AuditionGameManager.instance.changeScene('AuditionMainMenu');
     }
     
     /**
@@ -332,9 +330,6 @@ export class AuditionSongSelectionController extends Component {
         if (!this.selectedSongId) return;
         
         AuditionAudioManager.instance.playSound(this.buttonSound);
-        
-        // Start the selected song
-        AuditionGameManager.instance.startSong(this.selectedSongId);
     }
     
     onDestroy() {

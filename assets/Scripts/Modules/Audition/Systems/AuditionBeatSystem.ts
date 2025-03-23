@@ -3,6 +3,7 @@ import { AuditionAudioManager } from './AuditionAudioManager';
 import { AuditionInputHandler, AuditionInputType } from './AuditionInputHandler';
 import { AuditionNotePool, AuditionNoteType } from './AuditionNotePool';
 import { AuditionNote } from './AuditionNote';
+import { EDITOR } from 'cc/env';
 const { ccclass, property } = _decorator;
 
 /**
@@ -100,6 +101,7 @@ export class AuditionBeatSystem extends Component {
     private currentLoop: number = 0;
     private lastBeatTime: number = 0;
     private songDuration: number = 0;
+    private isAutoPlay: boolean = false;
     private scoringCallback: (rating: AuditionAccuracyRating) => void = null;
     //#endregion
 
@@ -162,6 +164,9 @@ export class AuditionBeatSystem extends Component {
         if (this.heartBeatSprite) {
             this.heartBeatSprite.node.scale = new Vec3(1, 1, 1);
         }
+
+        //test auto play
+        this.setAutoPlay(true);
     }
     //#endregion
 
@@ -201,6 +206,9 @@ export class AuditionBeatSystem extends Component {
 
         this.updateBeatNoteMoving(currentTime);
         this.updateHeartBeatEffect(currentTime, beatTime, beatInterval);
+        
+        // Handle auto-play
+        this.handleAutoPlay();
     }
     //#endregion
 
@@ -380,7 +388,6 @@ export class AuditionBeatSystem extends Component {
 
         } else {
             // Wrong note pressed
-
             this.currentNotes = 0;
             this.currentSequenceNotes.forEach(note => note.reset());
         }
@@ -417,6 +424,39 @@ export class AuditionBeatSystem extends Component {
         }
         else {
             this.handleScored(accuracyRating);
+        }
+    }
+
+    private handleAutoPlay(): void {
+        if (!this.isAutoPlay || !this.isPlaying || this.isInPenalty) return;
+
+        const currentTime = this.getCurrentTime();
+        const beatInterval = (60000 / this.bpm) * this.beatsPerLoop;
+        const timeSinceLastBeat = currentTime - this.lastBeatTime;
+        const targetProgress = 1.0;
+        const currentProgress = (timeSinceLastBeat) / (beatInterval);
+        const distanceFromTarget = Math.abs(targetProgress - currentProgress);
+
+        // Auto-play logic
+        if (this.noteSequence.length > 0 && this.currentNotes < this.noteSequence.length) {
+            // Auto-press the correct note
+            const inputHandler = AuditionInputHandler.instance;
+            if (inputHandler) {
+                const noteType = this.noteSequence[this.currentNotes];
+                if (noteType === AuditionNoteType.LEFT) {
+                    inputHandler.simulateInput(AuditionInputType.LEFT, currentTime);
+                } else if (noteType === AuditionNoteType.RIGHT) {
+                    inputHandler.simulateInput(AuditionInputType.RIGHT, currentTime);
+                }
+            }
+        }
+
+        // Auto-press space at the right time
+        if (distanceFromTarget <= this.timingWindows.get(AuditionAccuracyRating.PERFECT) / beatInterval) {
+            const inputHandler = AuditionInputHandler.instance;
+            if (inputHandler) {
+                inputHandler.simulateInput(AuditionInputType.SPACE, currentTime);
+            }
         }
     }
     //#endregion
@@ -498,6 +538,7 @@ export class AuditionBeatSystem extends Component {
     //#region Public Interface
     public stopBeatSystem(): void {
         this.isPlaying = false;
+        this.isAutoPlay = false;
 
         // Unregister input callback
         const inputHandler = AuditionInputHandler.instance;
@@ -533,6 +574,15 @@ export class AuditionBeatSystem extends Component {
     public setBeatsPerLoop(beats: number): void {
         this.beatsPerLoop = Math.max(1, Math.min(8, beats));
         console.log(`Beats per loop set to ${this.beatsPerLoop}`);
+    }
+
+    public setAutoPlay(enabled: boolean): void {
+        this.isAutoPlay = enabled;
+        console.log(`Auto-play ${enabled ? 'enabled' : 'disabled'}`);
+    }
+
+    public isAutoPlayEnabled(): boolean {
+        return this.isAutoPlay;
     }
     //#endregion
 } 

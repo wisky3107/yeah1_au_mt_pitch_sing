@@ -211,4 +211,22 @@ export class AuditionInputHandler extends Component {
     public getInputDebounceTime(): number {
         return this.inputDebounceTime;
     }
+
+    /**
+     * Simulate an input event for auto-play functionality
+     * @param inputType Type of input to simulate
+     * @param time Time of the input event
+     */
+    public simulateInput(inputType: AuditionInputType, time: number): void {
+        // Update last input time
+        this.lastInputTime.set(inputType, time);
+        
+        // Call all registered callbacks for this input type
+        const callbacks = this.inputCallbacks.get(inputType);
+        if (callbacks) {
+            callbacks.forEach(callback => callback(time));
+        }
+        
+        console.log(`Simulated input: ${AuditionInputType[inputType]}`);
+    }
 } 

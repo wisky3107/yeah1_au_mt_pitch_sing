@@ -64,7 +64,7 @@
 	Motion:salsa
 	Transition:
 		SrcState:salsa
-		DestState:dance_end
+		DestState:breakdance
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875

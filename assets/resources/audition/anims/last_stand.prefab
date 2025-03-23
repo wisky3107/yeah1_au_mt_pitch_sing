@@ -79,7 +79,7 @@
       "__uuid__": "45f69bdd-8afe-436d-a7a7-1163d42b6339@18d6f",
       "__expectedType__": "cc.AnimationClip"
     },
-    "_useBakedAnimation": true,
+    "_useBakedAnimation": false,
     "_sockets": [],
     "_id": ""
   },

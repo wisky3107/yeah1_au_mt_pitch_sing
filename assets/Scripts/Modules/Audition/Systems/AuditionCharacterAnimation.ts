@@ -1,7 +1,6 @@
-import { _decorator, Component, Node, Animation, AnimationState, Enum, Skeleton, Prefab, SkeletalAnimation, instantiate, AnimationClip } from 'cc';
+import { _decorator, Component, Node, Animation, Prefab, SkeletalAnimation, instantiate, AnimationClip } from 'cc';
 import { AuditionAccuracyRating } from './AuditionBeatSystem';
-import { AuditionCharacterAnimationData, SpecialStateType, AnimationState as DanceState } from './AuditionCharacterAnimationData';
-import { AuditionGameManager } from '../Core/AuditionGameManager';
+import { AuditionCharacterAnimationData, SpecialStateType, DanceAnimationState } from './AuditionCharacterAnimationData';
 import { resourceUtil } from '../../../Common/resourceUtil';
 const { ccclass, property } = _decorator;
 
@@ -38,11 +37,13 @@ export class AuditionCharacterAnimation extends Component {
     private inputHistorySize: number = 20; // Number of recent inputs to track
 
     // Current state
-    private currentAnimation: string = '';
     private currentCombo: number = 0;
-    private isPlayingSpecial: boolean = false;
     private inputHistory: InputRecord[] = [];
     private isMale: boolean = true; // Default to male, should be set based on character selection
+    private animMap: Map<string, AnimationClip> = new Map();
+    private animNames: string[] = [];
+    private allDanceStates: DanceAnimationState[] = [];
+    private currentDanceIndex: number = 0;
 
     public loadDanceData(songId: string) {
         if (!this.animationController && this.character) {
@@ -56,14 +57,17 @@ export class AuditionCharacterAnimation extends Component {
             AuditionCharacterAnimationData.loadDanceData(songDance)
                 .then(() => {
                     // Get all animation names from the loaded dance data
-                    const animNames = AuditionCharacterAnimationData.getAllAnimationNames();
-                    console.log(`Loading ${animNames.length} dance animations for song: ${songId}`);
+                    this.animNames = AuditionCharacterAnimationData.getAllAnimationNames();
+                    console.log(`Loading ${this.animNames.length} dance animations for song: ${songId}`);
                     // Load all animations for this dance
-                    return this.loadDanceAnims(animNames)
+                    return this.loadDanceAnims(this.animNames)
                 })
                 .then((clips) => {
                     console.log(`Successfully loaded ${clips.length} dance animations`);
-                    this.setClips(clips);
+                    this.setClips(clips, this.animNames);
+
+                    this.allDanceStates = AuditionCharacterAnimationData.getAllDanceStates();
+                    this.currentDanceIndex = -1;
                     this.playSpecialAnimation(SpecialStateType.FIRST_STAND);
                     resolve("success");
                 }).catch((error) => {
@@ -73,9 +77,11 @@ export class AuditionCharacterAnimation extends Component {
         });
     }
 
-    private setClips(clips: AnimationClip[]) {
-        for (const clip of clips) {
-            this.animationController.createState(clip, clip.name);
+    private setClips(clips: AnimationClip[], animNames: string[]) {
+        for (let i = 0; i < clips.length; i++) {
+            const clip = clips[i];
+            const animName = animNames[i];
+            this.animationController.createState(clip, animName);
         }
     }
 
@@ -126,46 +132,26 @@ export class AuditionCharacterAnimation extends Component {
 
                     if (!skeletalAnimation) {
                         console.error(`No SkeletalAnimation component found in prefab: ${animName}`);
-                        this.node.destroy();
+                        prefabNode.destroy();
                         reject(new Error('Missing SkeletalAnimation component'));
                         return;
                     }
 
                     // Get animation clips from the skeletal animation
-                    const clips = skeletalAnimation.clips;
+                    const clip = skeletalAnimation.defaultClip;
 
-                    if (!clips || clips.length === 0) {
+                    if (!clip) {
                         console.error(`No animation clips found in prefab: ${animName}`);
-                        this.node.destroy();
+                        prefabNode.destroy();
                         reject(new Error('No animation clips found'));
                         return;
                     }
 
-                    // Set the clips to our animation controller
-                    // if (this.animationController) {
-                    //     // Add each clip to the animation controller
-                    //     for (const clip of clips) {
-                    //         if (clip) {
-                    //             // Check if the clip already exists in the controller
-                    //             if (!this.animationController.getState(clip.name)) {
-                    //                 this.animationController.createState(clip, clip.name);
-                    //             }
-                    //         }
-                    //     }
-
-                    //     // Play the first animation clip
-                    //     if (clips[0]) {
-                    //         this.animationController.play(clips[0].name);
-                    //     }
-                    // } else {
-                    //     console.error('Animation controller not initialized');
-                    //     reject(new Error('Animation controller not initialized'));
-                    // }
-
-                    // Destroy the instantiated prefab node as we no longer need it
                     prefabNode.destroy();
                     console.log(`Successfully loaded and setup animation prefab: ${animName}`);
-                    resolve(clips[0]);//return to clips index 0
+                    clip.name = animName;//set anim name
+                    this.animMap.set(animName, clip);
+                    resolve(clip);//return to clips index 0
                 } catch (error) {
                     console.error('Error processing animation prefab:', error);
                     reject(error);
@@ -183,38 +169,22 @@ export class AuditionCharacterAnimation extends Component {
     }
 
     /**
-     * Start the dance sequence
-     */
-    public startDanceSequence(): void {
-        // Play gender-specific start animation
-        const startAnim = this.isMale ? SpecialStateType.BOY_START : SpecialStateType.GIRL_START;
-        this.playSpecialAnimation(startAnim, () => {
-            // After start animation, transition to dance start
-            this.playSpecialAnimation(SpecialStateType.DANCE_START, () => {
-                // Start the regular dance sequence
-                this.playNextDanceState();
-            });
-        });
-    }
-
-    /**
      * React to player input with appropriate animation
      * @param accuracyRating Accuracy rating of the hit
      * @param combo Current combo
      */
     public reactToInput(accuracyRating: AuditionAccuracyRating, combo: number): void {
+        console.log(`reactToInput: ${accuracyRating} ${combo}`);
         // Update combo count
         this.currentCombo = combo;
 
         // Record input for sequence detection
         this.recordInput(accuracyRating);
 
-        // If we're in a special animation, don't process input
-        if (this.isPlayingSpecial) return;
-
         // Handle miss animation if accuracy is poor
         if (accuracyRating === AuditionAccuracyRating.MISS) {
             this.playMissAnimation();
+            this.nextDanceState();
             return;
         }
 
@@ -222,23 +192,17 @@ export class AuditionCharacterAnimation extends Component {
         this.playNextDanceState();
     }
 
+    private nextDanceState() {
+        this.currentDanceIndex = ++this.currentDanceIndex % this.allDanceStates.length;
+    }
+
     /**
      * Play the next dance state in sequence
      */
     private playNextDanceState(): void {
-        const currentState = AuditionCharacterAnimationData.getDanceState(this.currentAnimation);
-        if (!currentState) {
-            // If no current state, start from default
-            const defaultState = AuditionCharacterAnimationData.getDefaultState();
-            this.playAnimation(defaultState);
-            return;
-        }
-
-        // Find next transition
-        const nextTransition = currentState.transitions[0];
-        if (nextTransition) {
-            this.playAnimation(nextTransition.destState);
-        }
+        this.nextDanceState();
+        const currentStateName = this.allDanceStates[this.currentDanceIndex].transitions[0].srcState;
+        this.playAnimation(currentStateName, this.allDanceStates[this.currentDanceIndex], 1.0);
     }
 
     /**
@@ -253,22 +217,23 @@ export class AuditionCharacterAnimation extends Component {
             return;
         }
 
-        this.isPlayingSpecial = true;
-        this.playAnimation(state.motion, state.speed, callback);
+        this.playAnimation(state.motion, state, state.speed, callback);
     }
 
     /**
      * Play a miss animation
      */
     private playMissAnimation(): void {
+        const state = AuditionCharacterAnimationData.getSpecialState(SpecialStateType.MISS);
         // TODO: Implement miss animation logic
         // This should play a brief "miss" animation and then return to the current dance state
+        this.playAnimation(state.motion, state, state.speed);
     }
 
     /**
      * Play an animation with optional speed and callback
      */
-    private playAnimation(animationName: string, speed: number = 1.0, callback?: () => void): void {
+    private playAnimation(animationName: string, danceState: DanceAnimationState, speed: number = 1.0, callback?: () => void): void {
         if (!this.animationController) return;
 
         const state = this.animationController.getState(animationName);
@@ -279,16 +244,15 @@ export class AuditionCharacterAnimation extends Component {
 
         state.speed = speed;
         // Get the dance state to determine exit time for blending
-        const danceState = AuditionCharacterAnimationData.getDanceState(animationName);
         if (danceState && danceState.transitions && danceState.transitions.length > 0) {
             // Use the exit time from the first transition as blend time
             const exitTime = danceState.transitions[0].exitTime || 0.95;
-            state.play();
+            this.animationController.crossFade(animationName, exitTime);
+            // state.play();
         } else {
             // Default play without blend time if no transition data
-            state.play();
+            this.animationController.crossFade(animationName, 0.3);
         }
-        
 
         if (callback) {
             state.on('finished', callback, this);
@@ -331,25 +295,10 @@ export class AuditionCharacterAnimation extends Component {
     }
 
     /**
-     * Check if a special animation is currently playing
-     */
-    public isPlayingSpecialAnimation(): boolean {
-        return this.isPlayingSpecial;
-    }
-
-    /**
-     * Get the current animation name
-     */
-    public getCurrentAnimation(): string {
-        return this.currentAnimation;
-    }
-
-    /**
      * Reset to idle animation
      */
     public resetToIdle(): void {
         this.currentCombo = 0;
-        this.isPlayingSpecial = false;
         this.inputHistory = [];
         this.playSpecialAnimation(SpecialStateType.FIRST_STAND);
     }

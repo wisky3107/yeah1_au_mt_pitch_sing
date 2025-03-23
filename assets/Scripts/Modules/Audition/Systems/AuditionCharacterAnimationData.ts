@@ -22,6 +22,10 @@ export enum SpecialStateType {
     GIRL_START = 'girl_start',
     DANCE_START = 'dance_start',
     DANCE_END = 'dance_end',
+    BOY_WIN = 'boy_win',
+    BOY_LOSE = 'boy_lose',
+    GIRL_WIN = 'girl_win',
+    GIRL_LOSE = 'girl_lose',
     END1 = 'end1', // Boy loser
     END2 = 'end2', // Boy winner
     END3 = 'end3', // Girl loser
@@ -44,7 +48,7 @@ export interface AnimationTransition {
 /**
  * Interface for animation state
  */
-export interface AnimationState {
+export interface DanceAnimationState {
     speed: number;
     motion: string;
     transitions: AnimationTransition[];
@@ -58,13 +62,15 @@ export interface AnimationState {
 @ccclass('AuditionCharacterAnimationData')
 export class AuditionCharacterAnimationData {
     // Special states
-    private static specialStates: Map<SpecialStateType, AnimationState> = new Map();
+    private static specialStates: Map<SpecialStateType, DanceAnimationState> = new Map();
 
     // Dance state data
-    private static danceStates: Map<string, AnimationState> = new Map();
+    private static danceStates: Map<string, DanceAnimationState> = new Map();
 
     // Default state
     private static defaultState: string = '';
+
+    private static beginDanceState: string = '';
 
     // Current dance sequence
     private static currentSequence: string[] = [];
@@ -155,22 +161,8 @@ export class AuditionCharacterAnimationData {
             transitions: [],
             isLooping: false
         });
-
-        // End animations
-        this.specialStates.set(SpecialStateType.END1, {
-            speed: 1.0,
-            motion: 'boy_lose',
-            transitions: [{
-                srcState: 'boy_lose',
-                destState: 'last_stand',
-                transitionDuration: 0.2,
-                transitionOffset: 0,
-                exitTime: 0.9
-            }],
-            isLooping: false
-        });
-
-        this.specialStates.set(SpecialStateType.END2, {
+        // Win/lose animations for both genders
+        this.specialStates.set(SpecialStateType.BOY_WIN, {
             speed: 1.0,
             motion: 'boy_win',
             transitions: [{
@@ -183,7 +175,33 @@ export class AuditionCharacterAnimationData {
             isLooping: false
         });
 
-        this.specialStates.set(SpecialStateType.END3, {
+        this.specialStates.set(SpecialStateType.BOY_LOSE, {
+            speed: 1.0,
+            motion: 'boy_lose',
+            transitions: [{
+                srcState: 'boy_lose',
+                destState: 'last_stand',
+                transitionDuration: 0.2,
+                transitionOffset: 0,
+                exitTime: 0.9
+            }],
+            isLooping: false
+        });
+
+        this.specialStates.set(SpecialStateType.GIRL_WIN, {
+            speed: 1.0,
+            motion: 'girl_win',
+            transitions: [{
+                srcState: 'girl_win',
+                destState: 'last_stand',
+                transitionDuration: 0.2,
+                transitionOffset: 0,
+                exitTime: 0.9
+            }],
+            isLooping: false
+        });
+
+        this.specialStates.set(SpecialStateType.GIRL_LOSE, {
             speed: 1.0,
             motion: 'girl_lose',
             transitions: [{
@@ -196,18 +214,58 @@ export class AuditionCharacterAnimationData {
             isLooping: false
         });
 
-        this.specialStates.set(SpecialStateType.END4, {
-            speed: 1.0,
-            motion: 'girl_win',
-            transitions: [{
-                srcState: 'girl_win',
-                destState: 'last_stand',
-                transitionDuration: 0.2,
-                transitionOffset: 0,
-                exitTime: 0.9
-            }],
-            isLooping: false
-        });
+        // End animations
+        // this.specialStates.set(SpecialStateType.END1, {
+        //     speed: 1.0,
+        //     motion: 'boy_lose',
+        //     transitions: [{
+        //         srcState: 'boy_lose',
+        //         destState: 'last_stand',
+        //         transitionDuration: 0.2,
+        //         transitionOffset: 0,
+        //         exitTime: 0.9
+        //     }],
+        //     isLooping: false
+        // });
+
+        // this.specialStates.set(SpecialStateType.END2, {
+        //     speed: 1.0,
+        //     motion: 'boy_win',
+        //     transitions: [{
+        //         srcState: 'boy_win',
+        //         destState: 'last_stand',
+        //         transitionDuration: 0.2,
+        //         transitionOffset: 0,
+        //         exitTime: 0.9
+        //     }],
+        //     isLooping: false
+        // });
+
+        // this.specialStates.set(SpecialStateType.END3, {
+        //     speed: 1.0,
+        //     motion: 'girl_lose',
+        //     transitions: [{
+        //         srcState: 'girl_lose',
+        //         destState: 'last_stand',
+        //         transitionDuration: 0.2,
+        //         transitionOffset: 0,
+        //         exitTime: 0.9
+        //     }],
+        //     isLooping: false
+        // });
+
+        // this.specialStates.set(SpecialStateType.END4, {
+        //     speed: 1.0,
+        //     motion: 'girl_win',
+        //     transitions: [{
+        //         srcState: 'girl_win',
+        //         destState: 'last_stand',
+        //         transitionDuration: 0.2,
+        //         transitionOffset: 0,
+        //         exitTime: 0.9
+        //     }],
+        //     isLooping: false
+        // });
 
         // Miss animation
         this.specialStates.set(SpecialStateType.MISS, {
@@ -223,14 +281,14 @@ export class AuditionCharacterAnimationData {
      */
     public static loadDanceData(dataName: string): Promise<void> {
         return new Promise((resolve, reject) => {
-            resourceUtil.loadRes('audition/dances/' + dataName, TextAsset, (err: any, content: string) => {
+            resourceUtil.loadRes('audition/dances/' + dataName, TextAsset, (err: any, content: TextAsset) => {
                 if (err) {
                     console.error('Failed to load dance data:', err);
                     reject(err);
                     return;
                 }
 
-                this.parseDanceData(content);
+                this.parseDanceData(content.text);
                 resolve();
             });
         });
@@ -243,6 +301,7 @@ export class AuditionCharacterAnimationData {
         const lines = content.split('\n');
         let currentState: string = '';
         let currentTransitions: AnimationTransition[] = [];
+        this.beginDanceState = '';
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
@@ -259,7 +318,10 @@ export class AuditionCharacterAnimationData {
             // Check for state definition
             if (line.startsWith('[') && line.endsWith(']')) {
                 // Save previous state if exists
-                if (currentState) {
+                const isSpecialState = Array.from(this.specialStates.keys()).some(key => 
+                    this.specialStates.get(key).motion === currentState
+                );
+                if (currentState && !isSpecialState) {
                     this.saveState(currentState, currentTransitions);
                     currentTransitions = [];
                 }
@@ -270,35 +332,62 @@ export class AuditionCharacterAnimationData {
 
             // Parse state properties
             if (currentState) {
+                // Check if current state is a special state
+                const isSpecialState = Array.from(this.specialStates.keys()).some(key => 
+                    this.specialStates.get(key).motion === currentState
+                );
+
                 if (line.startsWith('Speed:')) {
                     const speed = parseFloat(line.split(':')[1].trim());
-                    this.updateStateSpeed(currentState, speed);
+                    if (isSpecialState) {
+                        this.updateSpecialStateSpeed(currentState, speed);
+                    } else {
+                        this.updateStateSpeed(currentState, speed);
+                    }
                 }
                 else if (line.startsWith('Motion:')) {
                     const motion = line.split(':')[1].trim();
-                    this.updateStateMotion(currentState, motion);
+                    if (isSpecialState) {
+                        this.updateSpecialStateMotion(currentState, motion);
+                    } else {
+                        this.updateStateMotion(currentState, motion);
+                        // If this is the first dance motion and not a special state, set it as the begin dance state
+                        if (!this.beginDanceState && !this.specialStates.has(motion as SpecialStateType)) {
+                            this.beginDanceState = currentState;
+                        }
+                    }
                 }
                 else if (line.startsWith('Transition:')) {
                     const transition = this.parseTransition(lines, i);
                     if (transition) {
-                        currentTransitions.push(transition);
+                        if (isSpecialState) {
+                            this.updateSpecialStateTransitions(currentState, transition);
+                        } else {
+                            currentTransitions.push(transition);
+                        }
                     }
                 }
                 else if (line.startsWith('IsLooping:')) {
                     const isLooping = line.split(':')[1].trim().toLowerCase() === 'true';
-                    this.updateStateLooping(currentState, isLooping);
+                    if (isSpecialState) {
+                        this.updateSpecialStateLooping(currentState, isLooping);
+                    } else {
+                        this.updateStateLooping(currentState, isLooping);
+                    }
                 }
                 else if (line.startsWith('NextState:')) {
                     const nextState = line.split(':')[1].trim();
-                    this.updateStateNext(currentState, nextState);
+                    if (!isSpecialState) {
+                        this.updateStateNext(currentState, nextState);
+                    }
                 }
             }
         }
 
-        // Save last state
-        if (currentState) {
-            this.saveState(currentState, currentTransitions);
-        }
+        // // Save last state
+        // if (currentState) {
+        //     this.saveState(currentState, currentTransitions);
+        // }
 
         // Build dance sequence
         this.buildDanceSequence();
@@ -322,6 +411,13 @@ export class AuditionCharacterAnimationData {
     }
 
     /**
+     * Get all dance states
+     */
+    public static getAllDanceStates(): DanceAnimationState[] {
+        return Array.from(this.danceStates.values());
+    }
+
+    /**
      * Parse transition data
      */
     private static parseTransition(lines: string[], startIndex: number): AnimationTransition {
@@ -334,7 +430,7 @@ export class AuditionCharacterAnimationData {
         };
 
         let i = startIndex + 1;
-        while (i < lines.length && lines[i].trim().startsWith('\t')) {
+        while (i < lines.length && lines[i].startsWith('\t')) {
             const line = lines[i].trim();
 
             if (line.startsWith('SrcState:')) {
@@ -454,7 +550,7 @@ export class AuditionCharacterAnimationData {
     /**
      * Get a dance state by name
      */
-    public static getDanceState(stateName: string): AnimationState {
+    public static getDanceState(stateName: string): DanceAnimationState {
         return this.danceStates.get(stateName) || null;
     }
 
@@ -465,10 +561,14 @@ export class AuditionCharacterAnimationData {
         return this.defaultState;
     }
 
+    public static getBeginDanceState(): string {
+        return this.beginDanceState;
+    }
+
     /**
      * Get a special state
      */
-    public static getSpecialState(type: SpecialStateType): AnimationState {
+    public static getSpecialState(type: SpecialStateType): DanceAnimationState {
         return this.specialStates.get(type) || null;
     }
 
@@ -483,6 +583,62 @@ export class AuditionCharacterAnimationData {
      * Get all animation names from the loaded dance data
      */
     public static getAllAnimationNames(): string[] {
-        return Array.from(this.danceStates.keys());
+        const danceStateKeys = Array.from(this.danceStates.keys());
+        const specialStateKeys = Array.from(this.specialStates.keys());
+
+        // Combine both arrays and remove duplicates using Set
+        return [...new Set([...danceStateKeys, ...specialStateKeys])];
     }
-} ()
+
+    /**
+     * Update special state speed
+     */
+    private static updateSpecialStateSpeed(stateName: string, speed: number): void {
+        for (const [key, state] of this.specialStates.entries()) {
+            if (state.motion === stateName) {
+                state.speed = speed;
+                this.specialStates.set(key, state);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Update special state motion
+     */
+    private static updateSpecialStateMotion(stateName: string, motion: string): void {
+        for (const [key, state] of this.specialStates.entries()) {
+            if (state.motion === stateName) {
+                state.motion = motion;
+                this.specialStates.set(key, state);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Update special state transitions
+     */
+    private static updateSpecialStateTransitions(stateName: string, transition: AnimationTransition): void {
+        for (const [key, state] of this.specialStates.entries()) {
+            if (state.motion === stateName) {
+                state.transitions.push(transition);
+                this.specialStates.set(key, state);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Update special state looping
+     */
+    private static updateSpecialStateLooping(stateName: string, isLooping: boolean): void {
+        for (const [key, state] of this.specialStates.entries()) {
+            if (state.motion === stateName) {
+                state.isLooping = isLooping;
+                this.specialStates.set(key, state);
+                break;
+            }
+        }
+    }
+} 

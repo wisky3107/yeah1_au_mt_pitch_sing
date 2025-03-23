@@ -1,5 +1,4 @@
 import { _decorator, Component, Node, Button, Label, Sprite, tween, Vec3, UIOpacity } from 'cc';
-import { AuditionGameManager } from '../Core/AuditionGameManager';
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
 import { AuditionUIManager } from './AuditionUIManager';
 const { ccclass, property } = _decorator;
@@ -155,10 +154,6 @@ export class AuditionResultsController extends Component {
     private showExperienceGain(): void {
         if (!this.expGainDisplay || !this.expGainLabel) return;
         
-        // Get experience from game manager
-        const gameManager = AuditionGameManager.instance;
-        if (!gameManager) return;
-        
         // Set experience gain text - Using a default value of 100 EXP
         // Note: Implement getLastExperienceGain in AuditionGameManager
         const lastSongExp = 100; // Default value until proper implementation
@@ -206,15 +201,6 @@ export class AuditionResultsController extends Component {
         // Play click sound
         AuditionAudioManager.instance.playSound(this.buttonClickSound);
         
-        // Get current song ID
-        const gameManager = AuditionGameManager.instance;
-        if (!gameManager) return;
-        
-        const currentSong = gameManager.getCurrentSong();
-        if (!currentSong) return;
-        
-        // Restart the song
-        gameManager.startSong(currentSong.id);
     }
     
     /**
@@ -223,9 +209,6 @@ export class AuditionResultsController extends Component {
     private onNextButtonClicked(): void {
         // Play click sound
         AuditionAudioManager.instance.playSound(this.buttonClickSound);
-        
-        // Return to song selection
-        AuditionGameManager.instance.changeScene('AuditionSongSelection');
     }
     
     /**
@@ -234,9 +217,6 @@ export class AuditionResultsController extends Component {
     private onMainMenuButtonClicked(): void {
         // Play click sound
         AuditionAudioManager.instance.playSound(this.buttonClickSound);
-        
-        // Return to main menu
-        AuditionGameManager.instance.changeScene('AuditionMainMenu');
     }
     
     onDestroy() {
