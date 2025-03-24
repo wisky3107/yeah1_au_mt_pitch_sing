@@ -5,6 +5,8 @@ import { AuditionScoringSystem } from '../Systems/AuditionScoringSystem';
 import { AuditionCharacterAnimation } from '../Systems/AuditionCharacterAnimation';
 import { AuditionUIManager, FeedbackType } from '../UI/AuditionUIManager';
 import { SongData } from '../Data/SongData';
+import { POPUP } from '../../../Constant/PopupDefine';
+import { UIManager } from '../../../Common/uiManager';
 
 // Game state enum
 enum GameState {
@@ -163,14 +165,23 @@ export class AuditionGameplayController extends Component {
         }
 
         // Select a random song from available songs
-        if (this.availableSongs && this.availableSongs.length > 0) {
-            const randomIndex = Math.floor(Math.random() * this.availableSongs.length);
-            const randomSong = this.availableSongs[randomIndex];
-            this.startSong(randomSong.id);
-            console.log(`Starting random song: ${randomSong.id}`);
-        } else {
-            console.error('No available songs found');
-        }
+        // if (this.availableSongs && this.availableSongs.length > 0) {
+        //     const randomIndex = Math.floor(Math.random() * this.availableSongs.length);
+        //     const randomSong = this.availableSongs[randomIndex];
+        //     this.startSong(randomSong.id);
+        //     console.log(`Starting random song: ${randomSong.id}`);
+        // } else {
+        //     console.error('No available songs found');
+        // }
+
+        UIManager.instance.showDialog(POPUP.MESSAGE, [{
+            title: "Hello",
+            message: "This is a test message",
+            buttonText: "OK",
+            buttonCallback: () => {
+                this.startSong("song0211");
+            }
+        }]);
     }
 
     public startSong(songId: string): void {

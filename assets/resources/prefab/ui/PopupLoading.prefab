@@ -63,7 +63,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 1,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -119,7 +119,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 1,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -310,7 +310,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 1,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -472,7 +472,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 1,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -643,16 +643,25 @@
       "z": 0
     },
     "showFromPosX": -1080,
-    "hideToPosX": 1080,
     "showFromPosY": 0,
-    "hideToPosY": 0,
     "showFromScale": 1,
-    "hideToScale": 0,
     "showEasingType": 26,
+    "hideToPosX": 1080,
+    "hideToPosY": 0,
+    "hideToScale": 0,
     "hideEasingType": 25,
+    "showDuration": 0.35,
+    "hideDuration": 0.25,
+    "enableRotation": false,
+    "showFromRotation": -45,
+    "hideToRotation": 45,
+    "enableOpacity": true,
+    "showFromOpacity": 0,
+    "hideToOpacity": 0,
     "dimNode": {
       "__id__": 9
     },
+    "dimDuration": 0.2,
     "shownAudioName": "",
     "lbDetail": {
       "__id__": 21

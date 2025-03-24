@@ -191,7 +191,7 @@
       "__id__": 5
     },
     "_projection": 0,
-    "_priority": 1073741824,
+    "_priority": 6553,
     "_fov": 45,
     "_fovAxis": 0,
     "_orthoHeight": 960,
@@ -338,9 +338,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
+      "r": 51,
+      "g": 51,
+      "b": 51,
       "a": 255
     },
     "_spriteFrame": {

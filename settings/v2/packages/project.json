@@ -36,8 +36,12 @@
   },
   "layer": [
     {
-      "name": "UI_GLOBAL",
+      "name": "POPUP_2D",
       "value": 1
+    },
+    {
+      "name": "POPUP_3D",
+      "value": 2
     }
   ]
 }

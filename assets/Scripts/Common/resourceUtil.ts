@@ -3,7 +3,6 @@ const { ccclass } = _decorator;
 
 @ccclass("resourceUtil")
 export class resourceUtil {
-
     private static resLoadedMap: Map<string, any> = new Map<string, any>();
     public static loadRes(url: string, type: any, cb: Function = () => { }) {
         if (this.resLoadedMap.has(url)) {
@@ -49,23 +48,15 @@ export class resourceUtil {
                     reject && reject();
                     return;
                 }
-
                 resolve && resolve(prefab);
             })
         })
     }
 
-    /**
-     * @param path 
-     * @param arrName 
-     * @param progressCb 
-     * @param completeCb 
-     */
     public static loadModelResArr(path: string, arrName: Array<string>, progressCb: any, completeCb: any) {
         let arrUrls = arrName.map((item) => {
             return `${path}/${item}`;
         })
-
         resources.load(arrUrls, Prefab, progressCb, completeCb);
     }
 
@@ -73,10 +64,6 @@ export class resourceUtil {
         resources.load(arrName, Prefab, progressCb, completeCb);
     }
 
-    /**
-     * @param path 
-     * @returns 
-     */
     public static loadSpriteFrameRes(path: string) {
         return new Promise((resolve, reject) => {
             this.loadRes(path, SpriteFrame, (err: any, img: ImageAsset) => {
@@ -97,10 +84,6 @@ export class resourceUtil {
         })
     }
 
-    /**
-     * @param level 
-     * @param cb 
-     */
     public static getMap(level: number, cb: Function) {
         let levelStr: string = 'map';
         if (level >= 100) {
@@ -142,12 +125,6 @@ export class resourceUtil {
         });
     }
 
-    /**
-     * @param type 
-     * @param arrName 
-     * @param progressCb 
-     * @param completeCb 
-     */
     public static getMapObj(type: string, arrName: Array<string>, progressCb?: any, completeCb?: any) {
         let arrUrls: string[] = [];
         for (let idx = 0; idx < arrName.length; idx++) {
@@ -157,19 +134,10 @@ export class resourceUtil {
         resources.load(arrUrls, Prefab, progressCb, completeCb);
     }
 
-    /**
-     * @param prefabPath  
-     * @param cb 
-     */
     public static getUIPrefabRes(prefabPath: string, cb?: Function) {
         this.loadRes("prefab/ui/" + prefabPath, Prefab, cb);
     }
 
-    /**
-     * @param path 
-     * @param cb 
-     * @param parent 
-     */
     public static createUI(path: string, cb?: Function, parent?: Node, parentPath: string = "Canvas/Popup") {
         this.getUIPrefabRes(path, function (err: {}, prefab: Prefab) {
             if (err) return;
@@ -214,10 +182,6 @@ export class resourceUtil {
     }
 
 
-    /**
-     * @param fileName 
-     * @param cb  
-     */
     public static getJsonData(fileName: string, cb: Function) {
         this.loadRes("datas/" + fileName, null, function (err: any, content: JsonAsset) {
             if (err) {
@@ -233,10 +197,6 @@ export class resourceUtil {
         });
     }
 
-    /**
-     * @param fileName 
-     * @param cb  
-     */
     public static getTextData(fileName: string, cb: Function) {
         this.loadRes("datas/" + fileName, null, function (err: any, content: TextAsset) {
             if (err) {
@@ -249,11 +209,6 @@ export class resourceUtil {
         });
     }
 
-    /**
-     * @param path 
-     * @param sprite 
-     * @param cb 
-     */
     public static setSpriteFrame(path: string, sprite: SpriteComponent, cb: Function) {
         resources.load<SpriteFrame>(path, (err: any, spriteFrame: SpriteFrame) => {
             if (err) {

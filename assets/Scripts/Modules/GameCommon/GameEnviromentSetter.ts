@@ -7,6 +7,7 @@ import { AudioManager } from '../../Common/audioManager';
 import { UIManager } from '../../Common/uiManager';
 import { EffectController } from './EffectController';
 import { SCENE_NAME } from '../../Constant/SceneDefine';
+import { POPUP } from '../../Constant/PopupDefine';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameEnviromentSetter')
@@ -141,6 +142,7 @@ export class GameEnviromentSetter extends Component {
     loadGame() {
         this.sprtProcessBar.fillRange = 1.0;
         if (CurrentEnviroment.LOG) console.log(`doneLoadAssets`);
+        
         director.loadScene(this.sceneName, () => {
             if (CurrentEnviroment.LOG) console.log(`Scene ${this.sceneName} loaded successfully`);
         });

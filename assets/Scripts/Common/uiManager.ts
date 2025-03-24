@@ -7,8 +7,10 @@ import { POPUP } from "../Constant/PopupDefine";
 const { ccclass, property } = _decorator;
 
 export enum PopupLayer {
-    LAYER_1 = "Canvas",
-    GLOBAL = "GlobalCanvas",
+    LAYER_1 = "GlobalCanvas/Layer1",
+    LAYER_2 = "GlobalCanvas/Layer2",
+    LAYER_3 = "GlobalCanvas/Layer3",
+    LAYER_4 = "GlobalCanvas/Layer4",
 }
 
 @ccclass("UIManager")
@@ -145,23 +147,6 @@ export class UIManager {
         }, null, layer);
     }
 
-    private createUI(name: string, callback: (error, node: Node) => void, parent: Node = null, parentPath: string = "Game/Canvas/Popup") {
-        // const prefab = this.uiPrefabs.find(prefab => prefab.name === name);
-        // if (!prefab) {
-        //     callback(new Error(`Can not find prefab ${name}`), null);
-        //     return;
-        // }
-
-        // let node: Node = instantiate(prefab);
-        // node.setPosition(0, 0, 0);
-        // if (!parent) {
-        //     parent = find(parentPath) as Node;
-        // }
-
-        // parent.addChild(node);
-        // callback(null, node);
-    }
-
     public preloadDialog(uiName: string, callback?: Function) {
         this._dictLoading[uiName] = true;
         resourceUtil.preloadUI(uiName, (error, node: Node) => {
@@ -285,7 +270,7 @@ export class UIManager {
     private blockNode: Node = null;
     public setBlock(isBlock: boolean) {
         if (!this.blockNode) {
-            this.blockNode = find(PopupLayer.GLOBAL + "/Block");
+            this.blockNode = find("GlobalCanvas/Block");
         }
         this.blockNode.active = isBlock;
         this.blockNode.setSiblingIndex(999);
@@ -324,7 +309,7 @@ export class UIManager {
     private showLoading() {
         this.showDialog(POPUP.LOADING, [this.popupLoadingData], (script) => {
             this.popupLoading = script as PopupLoading;
-        }, 1, PopupLayer.LAYER_4);
+        }, 1, PopupLayer.LAYER_3);
     }
 
     //#endregion

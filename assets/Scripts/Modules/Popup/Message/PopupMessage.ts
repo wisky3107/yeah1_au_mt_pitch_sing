@@ -28,9 +28,7 @@ export class PopupMessage extends PopupBase {
 
     public onTouch_Confirm() {
         this.confirmCallback?.();
-        this.hide(() => {
-            UIManager.instance.hideDialog(POPUP.MESSAGE);
-        });
+        this.doUImanagerHide();
     }
 }
 
