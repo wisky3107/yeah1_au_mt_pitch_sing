@@ -10,5 +10,4 @@ export class PopupBase extends AnimationPanel {
             UIManager.instance.hideDialog(this.node.name);
         })
     }
-
 }
