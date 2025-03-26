@@ -143,7 +143,7 @@ export class AuditionCharacterAnimation extends Component {
                     }
 
                     // Get animation clips from the skeletal animation
-                    const clip = skeletalAnimation.defaultClip;
+                    const clip = skeletalAnimation.clips[0];
 
                     if (!clip) {
                         console.error(`No animation clips found in prefab: ${animName}`);

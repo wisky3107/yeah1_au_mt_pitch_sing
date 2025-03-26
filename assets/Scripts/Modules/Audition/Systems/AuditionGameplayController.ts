@@ -75,26 +75,46 @@ export class AuditionGameplayController extends Component {
     //test data should load from csv
     // Available songs in the game
     private availableSongs: SongData[] = [
+        // {
+        //     id: 'song0211',
+        //     title: '삐딱하게 (Crooked)',
+        //     artist: 'G-Dragon',
+        //     difficulty: 3,
+        //     bpm: 130,
+        //     audioPath: 'song0211',
+        //     previewStart: 30000,
+        //     previewEnd: 45000
+        // },
+        // {
+        //     id: 'song0502',
+        //     title: 'Growl',
+        //     artist: 'EXO',
+        //     difficulty: 2,
+        //     bpm: 90,
+        //     audioPath: 'song0502',
+        //     previewStart: 25000,
+        //     previewEnd: 40000
+        // }, 
         {
-            id: 'song0211',
-            title: '삐딱하게 (Crooked)',
-            artist: 'G-Dragon',
-            difficulty: 3,
-            bpm: 130,
-            audioPath: 'song0211',
-            previewStart: 30000,
-            previewEnd: 45000
+            id: 'DauCoLoiLam_ATVNCG_Full',
+            title: 'Đâu Có Lỗi Lầm',
+            artist: 'ATVNCG',
+            difficulty: 1,
+            bpm: 128,
+            audioPath: 'DauCoLoiLam_ATVNCG_Full',
+            previewStart: 35000,
+            previewEnd: 50000
         },
         {
-            id: 'song0502',
-            title: 'Growl',
-            artist: 'EXO',
+            id: 'TrongCom_ATVNCG',
+            title: 'Trống Cơm',
+            artist: 'ATVNCG',
             difficulty: 2,
-            bpm: 90,
-            audioPath: 'song0502',
-            previewStart: 25000,
-            previewEnd: 40000
-        }
+            bpm: 86,
+            audioPath: 'TrongCom_ATVNCG',
+            previewStart: 35000,
+            previewEnd: 50000
+        },
     ];
 
     /**
@@ -165,23 +185,23 @@ export class AuditionGameplayController extends Component {
         }
 
         // Select a random song from available songs
-        // if (this.availableSongs && this.availableSongs.length > 0) {
-        //     const randomIndex = Math.floor(Math.random() * this.availableSongs.length);
-        //     const randomSong = this.availableSongs[randomIndex];
-        //     this.startSong(randomSong.id);
-        //     console.log(`Starting random song: ${randomSong.id}`);
-        // } else {
-        //     console.error('No available songs found');
-        // }
+        if (this.availableSongs && this.availableSongs.length > 0) {
+            const randomIndex = Math.floor(Math.random() * this.availableSongs.length);
+            const randomSong = this.availableSongs[randomIndex];
+            this.startSong(randomSong.id);
+            console.log(`Starting random song: ${randomSong.id}`);
+        } else {
+            console.error('No available songs found');
+        }
 
-        UIManager.instance.showDialog(POPUP.MESSAGE, [{
-            title: "Hello",
-            message: "This is a test message",
-            buttonText: "OK",
-            buttonCallback: () => {
-                this.startSong("song0211");
-            }
-        }]);
+        // UIManager.instance.showDialog(POPUP.MESSAGE, [{
+        //     title: "Hello",
+        //     message: "This is a test message",
+        //     buttonText: "OK",
+        //     buttonCallback: () => {
+        //         this.startSong("song0211");
+        //     }
+        // }]);
     }
 
     public startSong(songId: string): void {

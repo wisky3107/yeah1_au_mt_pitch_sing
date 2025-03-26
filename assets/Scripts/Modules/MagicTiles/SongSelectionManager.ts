@@ -1,8 +1,9 @@
 import { _decorator, Component, Node, ScrollView, instantiate, Prefab, Label, Sprite, Button, UITransform, tween, Vec3, AudioSource, Tween, ProgressBar, Toggle, ToggleContainer, Layout, EventHandler } from 'cc';
-import { BeatmapManager, Beatmap, BeatmapMetadata } from './BeatmapManager';
+import { BeatmapManager } from './BeatmapManager';
 import { MagicTilesAudioManager } from './AudioManager';
 import { GameplayManager } from './GameplayManager';
 import { MTUIManager } from './MTUIManager';
+import { BeatmapMetadata } from './MTDefines';
 
 const { ccclass, property } = _decorator;
 

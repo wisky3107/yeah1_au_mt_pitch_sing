@@ -71,14 +71,11 @@
     "playOnLoad": false,
     "_clips": [
       {
-        "__uuid__": "2b6b4c7c-9441-461e-b900-63cc3e12024b@18d6f",
+        "__uuid__": "1e0e2cd3-f808-46cd-b3c6-274c2fe9303a@73b7f",
         "__expectedType__": "cc.AnimationClip"
       }
     ],
-    "_defaultClip": {
-      "__uuid__": "2b6b4c7c-9441-461e-b900-63cc3e12024b@18d6f",
-      "__expectedType__": "cc.AnimationClip"
-    },
+    "_defaultClip": null,
     "_useBakedAnimation": false,
     "_sockets": [],
     "_id": ""

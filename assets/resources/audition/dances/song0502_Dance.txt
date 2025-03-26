@@ -37,34 +37,115 @@
 	Motion:dance_start
 	Transition:
 		SrcState:dance_start
-		DestState:breakdance
+		DestState:ac01_buocqua
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[breakdance]
+[ac01_buocqua]
 	Speed:1
-	Motion:breakdance
+	Motion:ac01_buocqua
 	Transition:
-		SrcState:breakdance
-		DestState:hiphop
+		SrcState:ac01_buocqua
+		DestState:ac02_channhipnhip
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[hiphop]
+[ac02_channhipnhip]
 	Speed:1
-	Motion:hiphop
+	Motion:ac02_channhipnhip
 	Transition:
-		SrcState:hiphop
-		DestState:salsa
+		SrcState:ac02_channhipnhip
+		DestState:ac03_daytaybuocngang
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[salsa]
+[ac03_daytaybuocngang]
 	Speed:1
-	Motion:salsa
+	Motion:ac03_daytaybuocngang
 	Transition:
-		SrcState:salsa
-		DestState:breakdance
+		SrcState:ac03_daytaybuocngang
+		DestState:ac04_daytayxuongduoi
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[ac04_daytayxuongduoi]
+	Speed:1
+	Motion:ac04_daytayxuongduoi
+	Transition:
+		SrcState:ac04_daytayxuongduoi
+		DestState:ac05_giutay
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[ac05_giutay]
+	Speed:1
+	Motion:ac05_giutay
+	Transition:
+		SrcState:ac05_giutay
+		DestState:ac06_giotaylenvadecheonguc
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[ac06_giotaylenvadecheonguc]
+	Speed:1
+	Motion:ac06_giotaylenvadecheonguc
+	Transition:
+		SrcState:ac06_giotaylenvadecheonguc
+		DestState:ac07_giotay
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[ac07_giotay]
+	Speed:1
+	Motion:ac07_giotay
+	Transition:
+		SrcState:ac07_giotay
+		DestState:ac11_nhap1chan
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[ac11_nhap1chan]
+	Speed:1
+	Motion:ac11_nhap1chan
+	Transition:
+		SrcState:ac11_nhap1chan
+		DestState:ac13_quaylungvagiotay
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[ac13_quaylungvagiotay]
+	Speed:1
+	Motion:ac13_quaylungvagiotay
+	Transition:
+		SrcState:ac13_quaylungvagiotay
+		DestState:ac14_quotay2bentren
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[ac14_quotay2bentren]
+	Speed:1
+	Motion:ac14_quotay2bentren
+	Transition:
+		SrcState:ac14_quotay2bentren
+		DestState:ac16_shuffledance
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[ac16_shuffledance]
+	Speed:1
+	Motion:ac16_shuffledance
+	Transition:
+		SrcState:ac16_shuffledance
+		DestState:ac17_uta
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[ac17_uta]
+	Speed:1
+	Motion:ac17_uta
+	Transition:
+		SrcState:ac17_uta
+		DestState:dance_end
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875

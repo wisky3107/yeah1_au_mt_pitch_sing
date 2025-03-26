@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, sys } from 'cc';
-import { BeatmapManager, BeatmapMetadata } from './BeatmapManager';
+import { BeatmapManager } from './BeatmapManager';
 
 const { ccclass, property } = _decorator;
 
