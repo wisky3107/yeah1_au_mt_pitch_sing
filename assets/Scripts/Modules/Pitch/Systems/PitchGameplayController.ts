@@ -69,7 +69,8 @@ export class PitchGameplayController extends Component {
         this.setupEventListeners();
         
         // Show main menu initially
-        PitchUIManager.instance.showMainMenu();
+        // PitchUIManager.instance.showMainMenu();
+        this.startGame('sequence_1');
     }
     
     /**

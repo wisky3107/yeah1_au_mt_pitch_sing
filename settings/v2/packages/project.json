@@ -42,6 +42,18 @@
     {
       "name": "POPUP_3D",
       "value": 2
+    },
+    {
+      "name": "GAME_LAYER_1",
+      "value": 16
+    },
+    {
+      "name": "GAME_LAYER_2",
+      "value": 32
+    },
+    {
+      "name": "GAME_LAYER_3",
+      "value": 64
     }
   ]
 }
