@@ -40,15 +40,15 @@ export class PitchDetectionSystem extends Component {
     private detectionIntervalMs: number = 50; // Detection interval in milliseconds
     
     // Smoothing for pitch detection
-    private smoothingFactor: number = 0.8;
+    private smoothingFactor: number = 0.6;
     private lastFrequency: number = 0;
     private lastNote: MusicalNote = null;
     private noteStabilityCounter: Map<MusicalNote, number> = new Map();
-    private noteStabilityThreshold: number = 3; // Number of consecutive detections to confirm a note
+    private noteStabilityThreshold: number = 2;
     
     // Volume threshold for detection
     @property({ range: [0, 1], slide: true, tooltip: "Minimum volume level to detect pitch" })
-    private volumeThreshold: number = 0.05;
+    private volumeThreshold: number = 0.005;
     
     // Calibration
     private isCalibrating: boolean = false;
@@ -112,35 +112,98 @@ export class PitchDetectionSystem extends Component {
      * Request microphone access
      * @returns Promise that resolves when microphone access is granted
      */
-    public async requestMicrophoneAccess(): Promise<boolean> {
-        try {
-            // Check if getUserMedia is supported
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                console.error('getUserMedia is not supported in this browser');
-                return false;
-            }
-            
-            // Request microphone access
-            this.microphoneStream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: false
+    public requestMicrophoneAccess(): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // Find the correct getUserMedia function
+                let getUserMediaFn: (constraints: MediaStreamConstraints, successCallback: (stream: MediaStream) => void, errorCallback: (error: any) => void) => void;
+                let getUserMediaPromiseFn: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
+
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    // Standard Promise-based API
+                    getUserMediaPromiseFn = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+                } else {
+                    // Check for older versions (callback-based)
+                    getUserMediaFn = (
+                        (navigator as any).getUserMedia ||
+                        (navigator as any).webkitGetUserMedia ||
+                        (navigator as any).mozGetUserMedia ||
+                        (navigator as any).msGetUserMedia
+                    );
                 }
-            });
-            
-            // Create microphone source
-            this.microphone = this.audioContext.createMediaStreamSource(this.microphoneStream);
-            
-            // Connect microphone to analyzer
-            this.microphone.connect(this.analyzer);
-            
-            console.log('Microphone access granted');
-            return true;
-        } catch (error) {
-            console.error('Failed to access microphone:', error);
-            return false;
-        }
+
+                // Check if any getUserMedia is supported
+                if (!getUserMediaPromiseFn && !getUserMediaFn) {
+                    console.error('getUserMedia is not supported in this browser');
+                    resolve(false);
+                    return;
+                }
+
+                // Define constraints
+                const constraints: MediaStreamConstraints = {
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: false
+                    }
+                };
+
+                // Use the appropriate method
+                try {
+                    if (getUserMediaPromiseFn) {
+                        // Modern Promise-based API
+                        this.microphoneStream = await getUserMediaPromiseFn(constraints);
+                    } else {
+                        // Older callback-based API - Wrap in a Promise
+                        this.microphoneStream = await new Promise<MediaStream>((res, rej) => {
+                            getUserMediaFn(constraints, res, rej);
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error accessing media devices.', err);
+                    resolve(false);
+                    return;
+                }
+
+                // Check if AudioContext is ready (sometimes needs user interaction to start)
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                   await this.audioContext.resume();
+                }
+
+                // Ensure AudioContext is available before creating source
+                if (!this.audioContext) {
+                     console.error('AudioContext not initialized before microphone access.');
+                     // Attempt to reinitialize or handle gracefully
+                     if (!(await this.initialize())) {
+                         resolve(false);
+                         return;
+                     }
+                     // If initialize creates the context, resume it if needed
+                     if (this.audioContext && this.audioContext.state === 'suspended') {
+                        await this.audioContext.resume();
+                     }
+                }
+                
+                // Defensive check again after potential re-initialization
+                if (!this.audioContext) {
+                     console.error('AudioContext still not available after attempting initialization.');
+                     resolve(false);
+                     return;
+                }
+
+                // Create microphone source
+                this.microphone = this.audioContext.createMediaStreamSource(this.microphoneStream);
+                
+                // Connect microphone to analyzer
+                this.microphone.connect(this.analyzer);
+                
+                console.log('Microphone access granted');
+                resolve(true);
+            } catch (error) {
+                console.error('Failed to access microphone:', error);
+                resolve(false);
+            }
+        });
     }
     
     /**
@@ -197,6 +260,11 @@ export class PitchDetectionSystem extends Component {
         }
         const volume = Math.sqrt(sum / this.analyzerBuffer.length);
         
+        // Log volume level periodically
+        if (Math.random() < 0.1) { // Log about 10% of the time to avoid console spam
+            console.log('Current volume:', volume.toFixed(4), 'Threshold:', this.volumeThreshold);
+        }
+        
         // Skip detection if volume is too low
         if (volume < this.volumeThreshold) {
             this.resetNoteStability();
@@ -211,12 +279,26 @@ export class PitchDetectionSystem extends Component {
         const smoothedFrequency = this.smoothingFactor * this.lastFrequency + (1 - this.smoothingFactor) * frequency;
         this.lastFrequency = smoothedFrequency;
         
+        // Log smoothed frequency periodically
+        if (Math.random() < 0.1) {
+            console.log('Smoothed frequency:', smoothedFrequency.toFixed(2), 'Hz');
+        }
+        
         // Map frequency to note
         const { note, accuracy } = this.mapFrequencyToNote(smoothedFrequency);
         
         // Update note stability
         if (note !== null) {
             this.updateNoteStability(note);
+            
+            // Log stability counter periodically
+            if (Math.random() < 0.1) {
+                console.log('Note stability counter:', {
+                    note: PitchConstants.NOTE_NAMES[note],
+                    count: this.noteStabilityCounter.get(note),
+                    threshold: this.noteStabilityThreshold
+                });
+            }
             
             // Emit event if note is stable
             if (this.noteStabilityCounter.get(note) >= this.noteStabilityThreshold) {
@@ -244,7 +326,9 @@ export class PitchDetectionSystem extends Component {
         rms = Math.sqrt(rms / bufferSize);
         
         // Return 0 if the signal is too quiet
+        // Note: Volume check already done in detectPitch, but keeping RMS check here is fine too.
         if (rms < this.volumeThreshold) {
+             console.log('Autocorrelation RMS below threshold');
             return 0;
         }
         
@@ -258,21 +342,65 @@ export class PitchDetectionSystem extends Component {
         }
         
         // Find the peak of the correlation
-        let peak = 0;
-        for (let i = 1; i < bufferSize; i++) {
-            if (correlation[i] > correlation[peak]) {
-                peak = i;
+        // We need to start searching for the peak from a non-zero index
+        // to avoid detecting DC offset or very low frequencies.
+        // Let's find the first minimum and start searching after that.
+        let firstMinimum = -1;
+        for(let i = 1; i < bufferSize / 2; i++) { // Search only in the first half
+            if (correlation[i] < correlation[i-1] && correlation[i] < correlation[i+1]) {
+                firstMinimum = i;
+                break;
             }
         }
         
-        // Refine the peak by interpolating
-        let peakValue = correlation[peak];
-        let leftValue = correlation[peak - 1];
-        let rightValue = correlation[peak + 1];
-        let refinedPeak = peak + 0.5 * (leftValue - rightValue) / (leftValue - 2 * peakValue + rightValue);
+        // If no clear minimum found, maybe the signal is noisy or constant?
+        // Or if the minimum is too close to the start.
+        if (firstMinimum <= 1) {
+             firstMinimum = 1; // Default to starting search from index 1
+        }
+        
+        // Find the absolute peak after the first minimum
+        let peakIndex = firstMinimum;
+        for (let i = firstMinimum + 1; i < bufferSize / 2; i++) { // Search only in the first half
+            if (correlation[i] > correlation[peakIndex]) {
+                peakIndex = i;
+            }
+        }
+        
+        // Check if a peak was actually found (correlation[peakIndex] should be positive)
+        if (correlation[peakIndex] <= 0 || peakIndex === 0) {
+            return 0; // No reliable peak found
+        }
+        
+        // Refine the peak by interpolating using quadratic interpolation
+        // Ensure we don't go out of bounds
+        let refinedPeak = peakIndex;
+        if (peakIndex > 0 && peakIndex < bufferSize - 1) {
+            let peakValue = correlation[peakIndex];
+            let leftValue = correlation[peakIndex - 1];
+            let rightValue = correlation[peakIndex + 1];
+            // Formula for quadratic interpolation of the peak
+            let interpolation = 0.5 * (leftValue - rightValue) / (leftValue - 2 * peakValue + rightValue);
+             // Check if interpolation is NaN or infinite, which can happen if denominator is zero
+             if (isFinite(interpolation)) {
+                 refinedPeak += interpolation;
+             } else {
+             }
+        }
         
         // Calculate the frequency
-        let frequency = this.audioContext.sampleRate / refinedPeak;
+        let frequency = 0;
+        if (refinedPeak > 0) { // Avoid division by zero
+             frequency = this.audioContext.sampleRate / refinedPeak;
+        } else {
+             console.log('Autocorrelation: Refined peak is zero or negative.');
+        }
+        
+        // Basic sanity check for frequency range (e.g., human voice/instrument range)
+        if (frequency < 50 || frequency > 2000) { // Adjust range as needed
+             // console.log(`Autocorrelation: Frequency ${frequency.toFixed(2)} out of expected range (50-2000 Hz). Returning 0.`);
+            // return 0; // Optionally filter out out-of-range frequencies
+        }
         
         return frequency;
     }
@@ -284,26 +412,36 @@ export class PitchDetectionSystem extends Component {
      */
     private mapFrequencyToNote(frequency: number): { note: MusicalNote | null, accuracy: PitchAccuracy } {
         if (frequency <= 0) {
+            console.log('Invalid frequency detected:', frequency);
             return { note: null, accuracy: PitchAccuracy.MISS };
         }
+
+        console.log('Detected frequency:', frequency.toFixed(2), 'Hz');
         
         // Check each note's frequency range
         for (let noteValue = 0; noteValue < 7; noteValue++) {
             const note = noteValue as MusicalNote;
             const [minFreq, maxFreq] = PitchConstants.FREQUENCY_RANGES[note];
+            const centerFreq = PitchConstants.CENTER_FREQUENCIES[note];
             
             if (frequency >= minFreq && frequency <= maxFreq) {
-                // Calculate how close to the center of the range
-                const centerFreq = (minFreq + maxFreq) / 2;
-                const distance = Math.abs(frequency - centerFreq);
-                const rangeWidth = (maxFreq - minFreq) / 2;
-                const normalizedDistance = distance / rangeWidth;
+                // Calculate the difference from center frequency
+                const diffFromCenter = Math.abs(frequency - centerFreq);
+                const percentDiff = (diffFromCenter / centerFreq) * 100;
                 
-                // Determine accuracy based on distance from center
+                console.log(`Note ${PitchConstants.NOTE_NAMES[note]} detected:`, {
+                    frequency: frequency.toFixed(2),
+                    centerFreq: centerFreq.toFixed(2),
+                    diffFromCenter: diffFromCenter.toFixed(2),
+                    percentDiff: percentDiff.toFixed(2) + '%',
+                    range: `[${minFreq.toFixed(2)}, ${maxFreq.toFixed(2)}]`
+                });
+                
+                // Determine accuracy based on percentage difference from center
                 let accuracy: PitchAccuracy;
-                if (normalizedDistance < 0.3) {
+                if (percentDiff <= 1.0) { // Within 1% of center frequency
                     accuracy = PitchAccuracy.PERFECT;
-                } else if (normalizedDistance < 0.7) {
+                } else if (percentDiff <= 2.5) { // Within 2.5% of center frequency
                     accuracy = PitchAccuracy.GOOD;
                 } else {
                     accuracy = PitchAccuracy.MISS;
@@ -313,6 +451,7 @@ export class PitchDetectionSystem extends Component {
             }
         }
         
+        console.log('No matching note found for frequency:', frequency.toFixed(2), 'Hz');
         return { note: null, accuracy: PitchAccuracy.MISS };
     }
     

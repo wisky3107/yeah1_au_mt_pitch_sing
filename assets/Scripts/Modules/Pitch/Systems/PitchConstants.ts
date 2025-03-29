@@ -70,15 +70,27 @@ export class PitchConstants {
         "Do", "Re", "Mi", "Fa", "Sol", "La", "Si"
     ];
     
+    // Center frequencies for notes (Hz)
+    public static readonly CENTER_FREQUENCIES: { [key in MusicalNote]: number } = {
+        [MusicalNote.DO]: 261.63,  // C4
+        [MusicalNote.RE]: 293.66,  // D4
+        [MusicalNote.MI]: 329.63,  // E4
+        [MusicalNote.FA]: 349.23,  // F4
+        [MusicalNote.SOL]: 392.00, // G4
+        [MusicalNote.LA]: 440.00,  // A4
+        [MusicalNote.SI]: 493.88   // B4
+    };
+    
     // Note frequency ranges (Hz) - Alias for compatibility
+    // Updated ranges based on +/- 100 cents (1 semitone) for better tolerance and overlapping ranges
     public static readonly FREQUENCY_RANGES: { [key in MusicalNote]: [number, number] } = {
-        [MusicalNote.DO]: [261.63 - 10, 261.63 + 10],  // C4
-        [MusicalNote.RE]: [293.66 - 10, 293.66 + 10],  // D4
-        [MusicalNote.MI]: [329.63 - 10, 329.63 + 10],  // E4
-        [MusicalNote.FA]: [349.23 - 10, 349.23 + 10],  // F4
-        [MusicalNote.SOL]: [392.00 - 10, 392.00 + 10], // G4
-        [MusicalNote.LA]: [440.00 - 10, 440.00 + 10],  // A4
-        [MusicalNote.SI]: [493.88 - 10, 493.88 + 10]   // B4
+        [MusicalNote.DO]: [247.22, 277.18],  // C4 +/- 100 cents
+        [MusicalNote.RE]: [277.18, 311.13],  // D4 +/- 100 cents
+        [MusicalNote.MI]: [311.13, 349.23],  // E4 +/- 100 cents
+        [MusicalNote.FA]: [329.63, 369.99],  // F4 +/- 100 cents
+        [MusicalNote.SOL]: [369.99, 415.30], // G4 +/- 100 cents
+        [MusicalNote.LA]: [415.30, 466.16],  // A4 +/- 100 cents
+        [MusicalNote.SI]: [466.16, 523.25]   // B4 +/- 100 cents
     };
     
     // Animation names

@@ -183,7 +183,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "volumeThreshold": 0.05,
+    "volumeThreshold": 0.01,
     "_id": "8flO+BGd5NhocJKnmVaOI3"
   },
   {
@@ -13404,7 +13404,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 540,
-      "y": 960,
+      "y": 959.9999999999999,
       "z": 0
     },
     "_lrot": {
@@ -13489,7 +13489,7 @@
     "_priority": 10,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 960,
+    "_orthoHeight": 959.9999999999999,
     "_near": 1,
     "_far": 2000,
     "_color": {
@@ -13722,7 +13722,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 525.198,
-      "y": 913.142,
+      "y": 913.1419999999999,
       "z": 0
     },
     "_lrot": {
@@ -14284,7 +14284,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 7.334,
-      "y": 206.66599999999994,
+      "y": 206.66599999999983,
       "z": 0
     },
     "_lrot": {
@@ -15690,7 +15690,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 1080,
-      "height": 1920
+      "height": 1919.9999999999998
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -15742,7 +15742,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 1080,
-      "height": 1920
+      "height": 1919.9999999999998
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -15861,7 +15861,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 1080,
-      "height": 1920
+      "height": 1919.9999999999998
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -16036,7 +16036,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 1080,
-      "height": 1920
+      "height": 1919.9999999999998
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -20013,7 +20013,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 540,
-      "y": 960,
+      "y": 959.9999999999999,
       "z": 0
     },
     "_lrot": {
@@ -20052,7 +20052,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 1080,
-      "height": 1920
+      "height": 1919.9999999999998
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -20091,7 +20091,7 @@
     "_priority": 20,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 960,
+    "_orthoHeight": 959.9999999999999,
     "_near": 1,
     "_far": 2000,
     "_color": {
