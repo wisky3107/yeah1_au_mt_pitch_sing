@@ -10,9 +10,7 @@
   },
   "_techIdx": 1,
   "_defines": [
-    {
-      "ROTATION_OVER_TIME_MODULE_ENABLE": true
-    },
+    {},
     {}
   ],
   "_states": [

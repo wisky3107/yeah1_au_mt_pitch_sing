@@ -93,11 +93,17 @@ export class PitchGameplayController extends Component {
     @property({ type: Node, group: { name: "Gameplay UI", id: "gameplay" } })
     private butterfly: Node = null;
 
+    @property({ type: Node, group: { name: "Gameplay UI", id: "gameplay" } })
+    private butterflyCamera: Node = null;
+
     @property({ type: ParticleSystem2D, group: { name: "Feedback", id: "feedback" } })
     private butterflyParticles: ParticleSystem2D = null;
 
-    private readonly BUTTERFLY_MOVE_DURATION: number = 0.3;
+    private readonly BUTTERFLY_MOVE_DURATION: number = 1.0;
+    private readonly BUTTERFLY_CAMERA_SPEED: number = 300; // pixels per second
     private butterflyTween: any = null;
+    private butterflyTargetY: number = -150; // Default position at the bottom
+    private isFirstNoteCorrect: boolean = false;
     private transNotes: UITransform[] = [];
     private noteYPositions: number[] = [];
     //#endregion
@@ -509,6 +515,24 @@ export class PitchGameplayController extends Component {
 
         // Update scrolling
         this.updateScrolling(dt);
+
+        // Update butterfly camera movement after first correct note
+        if (this.isFirstNoteCorrect && this.butterflyCamera) {
+            const currentPos = this.butterflyCamera.position;
+            this.butterflyCamera.setPosition(new Vec3(
+                currentPos.x + this.BUTTERFLY_CAMERA_SPEED * dt,
+                currentPos.y,
+                currentPos.z
+            ));
+            console.log('Butterfly camera position:', this.butterflyCamera.position);
+        }
+
+        // Update butterfly Y position smoothly
+        if (this.butterfly) {
+            const currentPos = this.butterfly.position;
+            const newY = currentPos.y + (this.butterflyTargetY - currentPos.y) * dt * 2.0;
+            this.butterfly.setPosition(new Vec3(currentPos.x, newY, currentPos.z));
+        }
     }
 
     /**
@@ -569,7 +593,7 @@ export class PitchGameplayController extends Component {
 
     //#region Butterfly Management
     private moveButterfly(note: MusicalNote | null, volume: number, frequency: number = 0): void {
-        if (!this.butterfly || !this.noteIndicators) return;
+        if (!this.butterfly || !this.noteIndicators || !this.butterflyCamera) return;
 
         // Cancel any existing tween
         if (this.butterflyTween) {
@@ -620,13 +644,19 @@ export class PitchGameplayController extends Component {
             }
         }
 
-        // Create tween to move butterfly
-        const currentPos = this.butterfly.position;
-        this.butterflyTween = tween(this.butterfly)
-            .to(this.BUTTERFLY_MOVE_DURATION, { position: new Vec3(currentPos.x, targetY, -20.0) }, {
-                easing: 'cubicOut'
-            })
-            .start();
+        // Update butterfly target Y position
+        this.butterflyTargetY = targetY;
+
+        // If this is the first correct note, move butterfly to center
+        if (!this.isFirstNoteCorrect && note === this.getCurrentTargetNote()) {
+            this.isFirstNoteCorrect = true;
+            // Move butterfly to center
+            tween(this.butterfly)
+                .to(this.BUTTERFLY_MOVE_DURATION, { position: new Vec3(0, targetY, -20.0) }, {
+                    easing: 'cubicOut'
+                })
+                .start();
+        }
     }
     //#endregion
 
