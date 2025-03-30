@@ -9,93 +9,97 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('PitchUIManager')
 export class PitchUIManager extends Component {
-    // Singleton instance
+    //#region Singleton
     private static _instance: PitchUIManager = null;
 
-    // UI screens
-    @property(Node)
+    public static get instance(): PitchUIManager {
+        return this._instance;
+    }
+    //#endregion
+
+    //#region UI Screens
+    @property({ type: Node, group: { name: "UI Screens", id: "screens" } })
     private mainMenuScreen: Node = null;
 
-    @property(Node)
+    @property({ type: Node, group: { name: "UI Screens", id: "screens" } })
     private gameplayScreen: Node = null;
 
-    @property(Node)
+    @property({ type: Node, group: { name: "UI Screens", id: "screens" } })
     private resultsScreen: Node = null;
 
-    @property(Node)
+    @property({ type: Node, group: { name: "UI Screens", id: "screens" } })
     private calibrationScreen: Node = null;
+    //#endregion
 
-    // Gameplay UI elements
-    @property(Node)
+    //#region Gameplay UI Elements
+    @property({ type: Node, group: { name: "Gameplay UI", id: "gameplay" } })
     private musicalStaff: Node = null;
 
-    @property(Node)
+    @property({ type: Node, group: { name: "Gameplay UI", id: "gameplay" } })
     private butterfly: Node = null;
 
-    @property(Node)
+    @property({ type: Node, group: { name: "Gameplay UI", id: "gameplay" } })
     private progressLine: Node = null;
 
-    @property(Label)
+    @property({ type: Label, group: { name: "Gameplay UI", id: "gameplay" } })
     private timerLabel: Label = null;
 
-    @property(Label)
+    @property({ type: Label, group: { name: "Gameplay UI", id: "gameplay" } })
     private currentNoteLabel: Label = null;
 
-    @property(Label)
+    @property({ type: Label, group: { name: "Gameplay UI", id: "gameplay" } })
     private targetNoteLabel: Label = null;
 
-    @property(Sprite)
+    @property({ type: Sprite, group: { name: "Gameplay UI", id: "gameplay" } })
     private microphone: Sprite = null;
 
-    // Note indicators on the musical staff
-    @property({ type: [Node] })
+    @property({ type: [Node], group: { name: "Gameplay UI", id: "gameplay" } })
     private noteIndicators: Node[] = [];
+    //#endregion
 
-    // Feedback elements
-    @property({ type: [Node] })
+    //#region Feedback Elements
+    @property({ type: [Node], group: { name: "Feedback", id: "feedback" } })
     private feedbackNodes: Node[] = [];
 
-    @property(ParticleSystem2D)
+    @property({ type: ParticleSystem2D, group: { name: "Feedback", id: "feedback" } })
     private butterflyParticles: ParticleSystem2D = null;
 
-    @property(Animation)
+    @property({ type: Animation, group: { name: "Feedback", id: "feedback" } })
     private feedbackAnimation: Animation = null;
+    //#endregion
 
-    // Results UI elements
-    @property(Label)
+    //#region Results UI Elements
+    @property({ type: Label, group: { name: "Results UI", id: "results" } })
     private resultsTitleLabel: Label = null;
 
-    @property(Label)
+    @property({ type: Label, group: { name: "Results UI", id: "results" } })
     private resultsTimeLabel: Label = null;
 
-    @property(Label)
+    @property({ type: Label, group: { name: "Results UI", id: "results" } })
     private resultsAccuracyLabel: Label = null;
 
-    @property(Button)
+    @property({ type: Button, group: { name: "Results UI", id: "results" } })
     private retryButton: Button = null;
 
-    @property(Button)
+    @property({ type: Button, group: { name: "Results UI", id: "results" } })
     private mainMenuButton: Button = null;
+    //#endregion
 
-    // Animation properties
+    //#region Animation Properties
     private readonly BUTTERFLY_MOVE_DURATION: number = 0.3;
     private readonly PROGRESS_LINE_MOVE_DURATION: number = 0.5;
+    //#endregion
 
-    // Current state
+    //#region Current State
     private currentGameState: GameState = GameState.INIT;
     private currentSequence: PitchNoteSequence = null;
     private currentNoteIndex: number = 0;
     private butterflyTween: any = null;
     private transNotes: UITransform[] = [];
     private noteYPositions: number[] = [];
+    //#endregion
 
-    /**
-     * Get the singleton instance
-     */
-    public static get instance(): PitchUIManager {
-        return this._instance;
-    }
-
+    //#region Lifecycle Methods
     onLoad() {
         // Set up singleton instance
         if (PitchUIManager._instance !== null) {
@@ -107,21 +111,16 @@ export class PitchUIManager extends Component {
 
     start() {
         // Hide all screens initially
-        this.hideAllScreens();
-
         // Show main menu by default
-        this.showMainMenu();
-        
         this.transNotes = this.noteIndicators.map(indicator => indicator.getComponent(UITransform));
         const noteHeight = this.transNotes[0].height;
         this.noteYPositions = this.noteIndicators.map(trans => {
             return trans.position.y + this.musicalStaff.position.y + noteHeight / 2;
         });
     }
+    //#endregion
 
-    /**
-     * Hide all UI screens
-     */
+    //#region Screen Management
     private hideAllScreens(): void {
         if (this.mainMenuScreen) this.mainMenuScreen.active = false;
         if (this.gameplayScreen) this.gameplayScreen.active = false;
@@ -129,9 +128,6 @@ export class PitchUIManager extends Component {
         if (this.calibrationScreen) this.calibrationScreen.active = false;
     }
 
-    /**
-     * Show the main menu screen
-     */
     public showMainMenu(): void {
         this.hideAllScreens();
         if (this.mainMenuScreen) {
@@ -140,10 +136,6 @@ export class PitchUIManager extends Component {
         }
     }
 
-    /**
-     * Show the gameplay screen
-     * @param sequence Note sequence for the level
-     */
     public showGameplay(sequence: PitchNoteSequence): void {
         this.hideAllScreens();
         if (this.gameplayScreen) {
@@ -157,9 +149,6 @@ export class PitchUIManager extends Component {
         }
     }
 
-    /**
-     * Show the calibration screen
-     */
     public showCalibration(): void {
         this.hideAllScreens();
         if (this.calibrationScreen) {
@@ -168,12 +157,6 @@ export class PitchUIManager extends Component {
         }
     }
 
-    /**
-     * Show the results screen
-     * @param success Whether the player completed the sequence successfully
-     * @param timeRemaining Time remaining in seconds
-     * @param accuracy Overall accuracy percentage
-     */
     public showResults(success: boolean, timeRemaining: number, accuracy: number): void {
         this.hideAllScreens();
         if (this.resultsScreen) {
@@ -194,10 +177,9 @@ export class PitchUIManager extends Component {
             }
         }
     }
+    //#endregion
 
-    /**
-     * Initialize gameplay UI elements
-     */
+    //#region Gameplay UI Management
     private initializeGameplayUI(): void {
         // Reset butterfly position to the bottom
         if (this.butterfly) {
@@ -226,9 +208,6 @@ export class PitchUIManager extends Component {
         }
     }
 
-    /**
-     * Set up note indicators on the musical staff
-     */
     private setupNoteIndicators(): void {
         if (!this.noteIndicators || !this.currentSequence) return;
 
@@ -250,10 +229,6 @@ export class PitchUIManager extends Component {
         this.highlightNoteIndicator(notes[0].note);
     }
 
-    /**
-     * Highlight a specific note indicator
-     * @param note Note to highlight
-     */
     private highlightNoteIndicator(note: MusicalNote): void {
         if (!this.noteIndicators) return;
 
@@ -279,10 +254,9 @@ export class PitchUIManager extends Component {
             }
         }
     }
+    //#endregion
 
-    /**
-     * Update the target note label
-     */
+    //#region Label Updates
     private updateTargetNoteLabel(): void {
         if (!this.targetNoteLabel || !this.currentSequence) return;
 
@@ -295,10 +269,6 @@ export class PitchUIManager extends Component {
         }
     }
 
-    /**
-     * Update the current note label
-     * @param note Detected note
-     */
     public updateCurrentNoteLabel(note: MusicalNote | null): void {
         if (!this.currentNoteLabel) return;
 
@@ -310,10 +280,6 @@ export class PitchUIManager extends Component {
         }
     }
 
-    /**
-     * Update the timer display
-     * @param remainingTime Remaining time in seconds
-     */
     public updateTimer(remainingTime: number): void {
         if (!this.timerLabel) return;
 
@@ -328,13 +294,9 @@ export class PitchUIManager extends Component {
             this.timerLabel.color = new Color(255, 255, 255, 255); // White for normal
         }
     }
+    //#endregion
 
-    /**
-     * Move the butterfly to indicate the current pitch
-     * @param note Detected note
-     * @param volume Voice volume
-     * @param frequency Current frequency (used when note is null)
-     */
+    //#region Animation Control
     public moveButterfly(note: MusicalNote | null, volume: number, frequency: number = 0): void {
         if (!this.butterfly || !this.noteIndicators) return;
 
@@ -388,15 +350,12 @@ export class PitchUIManager extends Component {
         // Create tween to move butterfly
         const currentPos = this.butterfly.position;
         this.butterflyTween = tween(this.butterfly)
-            .to(this.BUTTERFLY_MOVE_DURATION, { position: new Vec3(currentPos.x, targetY, currentPos.z) }, {
+            .to(this.BUTTERFLY_MOVE_DURATION, { position: new Vec3(currentPos.x, targetY, -20.0) }, {
                 easing: 'cubicOut'
             })
             .start();
     }
 
-    /**
-     * Advance the progress line
-     */
     public advanceProgressLine(): void {
         if (!this.progressLine || !this.currentSequence) return;
 
@@ -417,11 +376,9 @@ export class PitchUIManager extends Component {
             })
             .start();
     }
+    //#endregion
 
-    /**
-     * Show feedback for note detection
-     * @param type Feedback type
-     */
+    //#region Feedback Management
     public showFeedback(type: FeedbackType): void {
         if (!this.feedbackNodes || !this.feedbackAnimation) return;
 
@@ -446,10 +403,22 @@ export class PitchUIManager extends Component {
         this.feedbackAnimation.play(animationName);
     }
 
-    /**
-     * Advance to the next note in the sequence
-     * @returns True if there are more notes, false if the sequence is complete
-     */
+    public showTimeWarning(remainingTime: number): void {
+        // Flash the timer
+        if (this.timerLabel && this.timerLabel.node) {
+            tween(this.timerLabel.node)
+                .to(0.2, { scale: new Vec3(1.5, 1.5, 1.5) })
+                .to(0.2, { scale: new Vec3(1.0, 1.0, 1.0) })
+                .repeat(2)
+                .start();
+        }
+
+        // Show time warning feedback
+        this.showFeedback(FeedbackType.TIME_WARNING);
+    }
+    //#endregion
+
+    //#region Game State Management
     public advanceToNextNote(): boolean {
         if (!this.currentSequence) return false;
 
@@ -467,10 +436,6 @@ export class PitchUIManager extends Component {
         }
     }
 
-    /**
-     * Get the current target note
-     * @returns Current target note or null if no sequence is active
-     */
     public getCurrentTargetNote(): MusicalNote | null {
         if (!this.currentSequence || this.currentNoteIndex >= this.currentSequence.notes.length) {
             return null;
@@ -479,29 +444,8 @@ export class PitchUIManager extends Component {
         return this.currentSequence.notes[this.currentNoteIndex].note;
     }
 
-    /**
-     * Show a time warning effect
-     * @param remainingTime Remaining time in seconds
-     */
-    public showTimeWarning(remainingTime: number): void {
-        // Flash the timer
-        if (this.timerLabel && this.timerLabel.node) {
-            tween(this.timerLabel.node)
-                .to(0.2, { scale: new Vec3(1.5, 1.5, 1.5) })
-                .to(0.2, { scale: new Vec3(1.0, 1.0, 1.0) })
-                .repeat(2)
-                .start();
-        }
-
-        // Show time warning feedback
-        this.showFeedback(FeedbackType.TIME_WARNING);
-    }
-
-    /**
-     * Get the current game state
-     * @returns Current game state
-     */
     public getGameState(): GameState {
         return this.currentGameState;
     }
+    //#endregion
 }

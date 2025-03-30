@@ -18,49 +18,46 @@ interface PitchDetectionResult {
  */
 @ccclass('PitchDetectionSystem')
 export class PitchDetectionSystem extends Component {
-    // Singleton instance
+    //#region Singleton
     private static _instance: PitchDetectionSystem = null;
-    
-    // Event target for pitch detection events
     private static eventTarget: EventTarget = new EventTarget();
     
-    // Audio context and analyzer
+    public static get instance(): PitchDetectionSystem {
+        return this._instance;
+    }
+    //#endregion
+
+    //#region Audio Properties
     private audioContext: AudioContext = null;
     private analyzer: AnalyserNode = null;
     private microphone: MediaStreamAudioSourceNode = null;
     private microphoneStream: MediaStream = null;
-    
-    // Buffer for audio analysis
     private analyzerBuffer: Float32Array = null;
     private bufferSize: number = 2048;
-    
-    // Detection state
+    //#endregion
+
+    //#region Detection Properties
     private isDetecting: boolean = false;
     private detectionInterval: number = null;
     private detectionIntervalMs: number = 50; // Detection interval in milliseconds
-    
-    // Smoothing for pitch detection
     private smoothingFactor: number = 0.6;
     private lastFrequency: number = 0;
     private lastNote: MusicalNote = null;
     private noteStabilityCounter: Map<MusicalNote, number> = new Map();
     private noteStabilityThreshold: number = 2;
-    
-    // Volume threshold for detection
-    @property({ range: [0, 1], slide: true, tooltip: "Minimum volume level to detect pitch" })
+    //#endregion
+
+    //#region Configuration Properties
+    @property({ range: [0, 1], slide: true, tooltip: "Minimum volume level to detect pitch", group: { name: "Detection Settings", id: "detection" } })
     private volumeThreshold: number = 0.005;
-    
-    // Calibration
+    //#endregion
+
+    //#region Calibration Properties
     private isCalibrating: boolean = false;
     private calibrationCallback: (success: boolean) => void = null;
-    
-    /**
-     * Get the singleton instance
-     */
-    public static get instance(): PitchDetectionSystem {
-        return this._instance;
-    }
-    
+    //#endregion
+
+    //#region Lifecycle Methods
     onLoad() {
         // Set up singleton instance
         if (PitchDetectionSystem._instance !== null) {
@@ -75,11 +72,24 @@ export class PitchDetectionSystem extends Component {
             this.noteStabilityCounter.set(i as MusicalNote, 0);
         }
     }
-    
-    /**
-     * Initialize the pitch detection system
-     * @returns Promise that resolves when initialization is complete
-     */
+
+    onDestroy() {
+        // Clean up resources
+        this.stopDetection();
+        
+        if (this.microphoneStream) {
+            this.microphoneStream.getTracks().forEach(track => track.stop());
+            this.microphoneStream = null;
+        }
+        
+        if (this.audioContext) {
+            this.audioContext.close();
+            this.audioContext = null;
+        }
+    }
+    //#endregion
+
+    //#region Initialization Methods
     public async initialize(): Promise<boolean> {
         try {
             // Check if AudioContext is supported
@@ -107,11 +117,7 @@ export class PitchDetectionSystem extends Component {
             return false;
         }
     }
-    
-    /**
-     * Request microphone access
-     * @returns Promise that resolves when microphone access is granted
-     */
+
     public requestMicrophoneAccess(): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -205,10 +211,9 @@ export class PitchDetectionSystem extends Component {
             }
         });
     }
-    
-    /**
-     * Start pitch detection
-     */
+    //#endregion
+
+    //#region Detection Control Methods
     public startDetection(): void {
         if (this.isDetecting) return;
         
@@ -227,9 +232,6 @@ export class PitchDetectionSystem extends Component {
         console.log('Pitch detection started');
     }
     
-    /**
-     * Stop pitch detection
-     */
     public stopDetection(): void {
         if (!this.isDetecting) return;
         
@@ -243,10 +245,9 @@ export class PitchDetectionSystem extends Component {
         
         console.log('Pitch detection stopped');
     }
-    
-    /**
-     * Detect pitch from microphone input
-     */
+    //#endregion
+
+    //#region Pitch Detection Methods
     private detectPitch(): void {
         if (!this.analyzer || !this.isDetecting) return;
         
@@ -309,11 +310,7 @@ export class PitchDetectionSystem extends Component {
             this.emitPitchDetected(smoothedFrequency, null, PitchAccuracy.MISS, volume);
         }
     }
-    
-    /**
-     * Detect pitch using autocorrelation algorithm
-     * @returns Detected frequency
-     */
+
     private detectPitchAutocorrelation(): number {
         const buffer = this.analyzerBuffer;
         const bufferSize = buffer.length;
@@ -326,7 +323,6 @@ export class PitchDetectionSystem extends Component {
         rms = Math.sqrt(rms / bufferSize);
         
         // Return 0 if the signal is too quiet
-        // Note: Volume check already done in detectPitch, but keeping RMS check here is fine too.
         if (rms < this.volumeThreshold) {
              console.log('Autocorrelation RMS below threshold');
             return 0;
@@ -342,74 +338,53 @@ export class PitchDetectionSystem extends Component {
         }
         
         // Find the peak of the correlation
-        // We need to start searching for the peak from a non-zero index
-        // to avoid detecting DC offset or very low frequencies.
-        // Let's find the first minimum and start searching after that.
         let firstMinimum = -1;
-        for(let i = 1; i < bufferSize / 2; i++) { // Search only in the first half
+        for(let i = 1; i < bufferSize / 2; i++) {
             if (correlation[i] < correlation[i-1] && correlation[i] < correlation[i+1]) {
                 firstMinimum = i;
                 break;
             }
         }
         
-        // If no clear minimum found, maybe the signal is noisy or constant?
-        // Or if the minimum is too close to the start.
         if (firstMinimum <= 1) {
-             firstMinimum = 1; // Default to starting search from index 1
+             firstMinimum = 1;
         }
         
         // Find the absolute peak after the first minimum
         let peakIndex = firstMinimum;
-        for (let i = firstMinimum + 1; i < bufferSize / 2; i++) { // Search only in the first half
+        for (let i = firstMinimum + 1; i < bufferSize / 2; i++) {
             if (correlation[i] > correlation[peakIndex]) {
                 peakIndex = i;
             }
         }
         
-        // Check if a peak was actually found (correlation[peakIndex] should be positive)
         if (correlation[peakIndex] <= 0 || peakIndex === 0) {
-            return 0; // No reliable peak found
+            return 0;
         }
         
         // Refine the peak by interpolating using quadratic interpolation
-        // Ensure we don't go out of bounds
         let refinedPeak = peakIndex;
         if (peakIndex > 0 && peakIndex < bufferSize - 1) {
             let peakValue = correlation[peakIndex];
             let leftValue = correlation[peakIndex - 1];
             let rightValue = correlation[peakIndex + 1];
-            // Formula for quadratic interpolation of the peak
             let interpolation = 0.5 * (leftValue - rightValue) / (leftValue - 2 * peakValue + rightValue);
-             // Check if interpolation is NaN or infinite, which can happen if denominator is zero
              if (isFinite(interpolation)) {
                  refinedPeak += interpolation;
-             } else {
              }
         }
         
         // Calculate the frequency
         let frequency = 0;
-        if (refinedPeak > 0) { // Avoid division by zero
+        if (refinedPeak > 0) {
              frequency = this.audioContext.sampleRate / refinedPeak;
         } else {
              console.log('Autocorrelation: Refined peak is zero or negative.');
         }
         
-        // Basic sanity check for frequency range (e.g., human voice/instrument range)
-        if (frequency < 50 || frequency > 2000) { // Adjust range as needed
-             // console.log(`Autocorrelation: Frequency ${frequency.toFixed(2)} out of expected range (50-2000 Hz). Returning 0.`);
-            // return 0; // Optionally filter out out-of-range frequencies
-        }
-        
         return frequency;
     }
-    
-    /**
-     * Map frequency to musical note
-     * @param frequency Frequency in Hz
-     * @returns Musical note and accuracy
-     */
+
     private mapFrequencyToNote(frequency: number): { note: MusicalNote | null, accuracy: PitchAccuracy } {
         if (frequency <= 0) {
             console.log('Invalid frequency detected:', frequency);
@@ -439,9 +414,9 @@ export class PitchDetectionSystem extends Component {
                 
                 // Determine accuracy based on percentage difference from center
                 let accuracy: PitchAccuracy;
-                if (percentDiff <= 1.0) { // Within 1% of center frequency
+                if (percentDiff <= 1.0) {
                     accuracy = PitchAccuracy.PERFECT;
-                } else if (percentDiff <= 2.5) { // Within 2.5% of center frequency
+                } else if (percentDiff <= 2.5) {
                     accuracy = PitchAccuracy.GOOD;
                 } else {
                     accuracy = PitchAccuracy.MISS;
@@ -454,11 +429,9 @@ export class PitchDetectionSystem extends Component {
         console.log('No matching note found for frequency:', frequency.toFixed(2), 'Hz');
         return { note: null, accuracy: PitchAccuracy.MISS };
     }
-    
-    /**
-     * Update note stability counter
-     * @param note Detected note
-     */
+    //#endregion
+
+    //#region Note Stability Methods
     private updateNoteStability(note: MusicalNote): void {
         // Reset counters for other notes
         for (let i = 0; i < 7; i++) {
@@ -472,22 +445,14 @@ export class PitchDetectionSystem extends Component {
         this.noteStabilityCounter.set(note, currentCount + 1);
     }
     
-    /**
-     * Reset all note stability counters
-     */
     private resetNoteStability(): void {
         for (let i = 0; i < 7; i++) {
             this.noteStabilityCounter.set(i as MusicalNote, 0);
         }
     }
-    
-    /**
-     * Emit pitch detected event
-     * @param frequency Detected frequency
-     * @param note Detected note
-     * @param accuracy Detection accuracy
-     * @param volume Audio volume
-     */
+    //#endregion
+
+    //#region Event Management
     private emitPitchDetected(frequency: number, note: MusicalNote | null, accuracy: PitchAccuracy, volume: number): void {
         const result: PitchDetectionResult = {
             frequency,
@@ -499,10 +464,20 @@ export class PitchDetectionSystem extends Component {
         PitchDetectionSystem.emit(PitchConstants.EVENTS.PITCH_DETECTED, result);
     }
     
-    /**
-     * Start calibration process
-     * @param callback Callback function called when calibration is complete
-     */
+    public static on(eventName: string, callback: (...args: any[]) => void, target?: any): void {
+        this.eventTarget.on(eventName, callback, target);
+    }
+    
+    public static off(eventName: string, callback: (...args: any[]) => void, target?: any): void {
+        this.eventTarget.off(eventName, callback, target);
+    }
+    
+    private static emit(eventName: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
+        this.eventTarget.emit(eventName, arg1, arg2, arg3, arg4, arg5);
+    }
+    //#endregion
+
+    //#region Calibration Methods
     public startCalibration(callback: (success: boolean) => void): void {
         if (this.isCalibrating) return;
         
@@ -521,11 +496,9 @@ export class PitchDetectionSystem extends Component {
         
         console.log('Calibration started');
     }
-    
-    /**
-     * Get the current volume level
-     * @returns Volume level (0-1)
-     */
+    //#endregion
+
+    //#region Volume Management
     public getVolumeLevel(): number {
         if (!this.analyzer) return 0;
         
@@ -539,67 +512,12 @@ export class PitchDetectionSystem extends Component {
         return Math.sqrt(sum / this.analyzerBuffer.length);
     }
     
-    /**
-     * Set the volume threshold for detection
-     * @param threshold Volume threshold (0-1)
-     */
     public setVolumeThreshold(threshold: number): void {
         this.volumeThreshold = Math.max(0, Math.min(1, threshold));
     }
     
-    /**
-     * Get the current volume threshold
-     * @returns Volume threshold (0-1)
-     */
     public getVolumeThreshold(): number {
         return this.volumeThreshold;
     }
-    
-    /**
-     * Add a listener for pitch detection events
-     * @param eventName Event name
-     * @param callback Callback function
-     * @param target Target object
-     */
-    public static on(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.on(eventName, callback, target);
-    }
-    
-    /**
-     * Remove a listener for pitch detection events
-     * @param eventName Event name
-     * @param callback Callback function
-     * @param target Target object
-     */
-    public static off(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.off(eventName, callback, target);
-    }
-    
-    /**
-     * Emit a pitch detection event
-     * @param eventName Event name
-     * @param arg1 First argument
-     * @param arg2 Second argument
-     * @param arg3 Third argument
-     * @param arg4 Fourth argument
-     * @param arg5 Fifth argument
-     */
-    private static emit(eventName: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
-        this.eventTarget.emit(eventName, arg1, arg2, arg3, arg4, arg5);
-    }
-    
-    onDestroy() {
-        // Clean up resources
-        this.stopDetection();
-        
-        if (this.microphoneStream) {
-            this.microphoneStream.getTracks().forEach(track => track.stop());
-            this.microphoneStream = null;
-        }
-        
-        if (this.audioContext) {
-            this.audioContext.close();
-            this.audioContext = null;
-        }
-    }
+    //#endregion
 }
