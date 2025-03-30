@@ -24,9 +24,9 @@ export class PitchTile extends Component {
     private isActive: boolean = false;
 
     private readonly gradientColors: Color[] = [
-        new Color(255, 255, 255, 150), // White
+        new Color(0, 255, 0, 150),      // Green
         new Color(255, 255, 0, 150),   // Yellow
-        new Color(0, 255, 0, 150)      // Green
+        new Color(0, 0, 0, 150), // black
     ];
 
     private readonly gradientStops: number[] = [0, 0.8, 1];
@@ -44,30 +44,9 @@ export class PitchTile extends Component {
             this.transform.setContentSize(width, this.transform.height);
         }
 
-        // Reset progress sprite
-        if (this.progressTransform) {
-            this.progressTransform.setContentSize(0, this.progressTransform.height);
-        }
-        if (this.progressSprite) {
-            this.progressSprite.color = this.gradientColors[0];
-        }
+        this.updateDurationProgress(0);
     }
 
-    public updateProgress(deltaTime: number): void {
-        if (!this.isActive) return;
-
-        this.currentProgress = Math.min(1, this.currentProgress + (deltaTime / this.duration));
-        
-        if (this.progressTransform && this.transform) {
-            const targetWidth = this.transform.width * this.currentProgress;
-            this.progressTransform.setContentSize(targetWidth, this.progressTransform.height);
-            
-            // Update color based on progress using gradient
-            if (this.progressSprite) {
-                this.progressSprite.color = this.getGradientColor(this.currentProgress);
-            }
-        }
-    }
 
     public setActive(active: boolean): void {
         this.isActive = active;
@@ -119,10 +98,11 @@ export class PitchTile extends Component {
     }
 
     public updateDurationProgress(progress: number): void {
+        progress = 1.0 - progress;//reverse the progress
         if (this.progressTransform && this.transform) {
             const targetWidth = this.transform.width * progress;
             this.progressTransform.setContentSize(targetWidth, this.progressTransform.height);
-            
+
             // Update color based on progress using gradient
             if (this.progressSprite) {
                 this.progressSprite.color = this.getGradientColor(progress);
