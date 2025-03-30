@@ -243,7 +243,7 @@ export class PitchGameplayController extends Component {
         PitchUIManager.instance.updateCurrentNoteLabel(result.note);
         
         // Move butterfly to indicate current pitch
-        PitchUIManager.instance.moveButterfly(result.note, result.volume);
+        PitchUIManager.instance.moveButterfly(result.note, result.volume, result.frequency);
         
         // Check if the detected note matches the target note
         const targetNote = PitchUIManager.instance.getCurrentTargetNote();
