@@ -59,13 +59,21 @@ export class PitchSequenceLibrary {
                 'Basic Scale',
                 1,
                 [
-                    { note: MusicalNote.DO, duration: 2 },
-                    { note: MusicalNote.RE, duration: 2 },
-                    { note: MusicalNote.MI, duration: 2 },
-                    { note: MusicalNote.FA, duration: 2 },
+                    { note: MusicalNote.DO, duration: 1.5 },
+                    { note: MusicalNote.RE, duration: 1 },
+                    { note: MusicalNote.MI, duration: 1.5 },
+                    { note: MusicalNote.FA, duration: 1 },
                     { note: MusicalNote.SOL, duration: 2 },
-                    { note: MusicalNote.LA, duration: 2 },
-                    { note: MusicalNote.SI, duration: 2 }
+                    { note: MusicalNote.LA, duration: 1.5 },
+                    { note: MusicalNote.SI, duration: 1 },
+                    { note: MusicalNote.DO, duration: 2 },
+                    { note: MusicalNote.SI, duration: 1 },
+                    { note: MusicalNote.LA, duration: 1.5 },
+                    { note: MusicalNote.SOL, duration: 1 },
+                    { note: MusicalNote.FA, duration: 1.5 },
+                    { note: MusicalNote.MI, duration: 1 },
+                    { note: MusicalNote.RE, duration: 1.5 },
+                    { note: MusicalNote.DO, duration: 2 }
                 ]
             )
         );

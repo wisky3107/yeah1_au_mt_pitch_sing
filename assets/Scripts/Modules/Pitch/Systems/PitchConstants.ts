@@ -19,9 +19,10 @@ export enum MusicalNote {
 export enum GameState {
     INIT = 0,
     CALIBRATING = 1,
-    PLAYING = 2,
-    PAUSED = 3,
-    GAME_OVER = 4
+    WAIT_FOR_FIRST_NOTE = 2,
+    PLAYING = 3,
+    PAUSED = 4,
+    GAME_OVER = 5
 }
 
 /**

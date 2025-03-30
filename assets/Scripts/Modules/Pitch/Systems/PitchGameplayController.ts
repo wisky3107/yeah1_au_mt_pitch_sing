@@ -1,10 +1,11 @@
-import { _decorator, Component, Node, director } from 'cc';
-import { PitchConstants, GameState, MusicalNote, PitchAccuracy, FeedbackType } from './PitchConstants';
+import { _decorator, Component, Node, Label, Sprite, Button, UITransform, Vec3, tween, Color, Animation, ParticleSystem2D, Prefab, instantiate, director, game } from 'cc';
+import { PitchConstants, MusicalNote, FeedbackType, GameState, PitchAccuracy } from './PitchConstants';
 import { PitchDetectionSystem } from './PitchDetectionSystem';
 import { PitchCharacterAnimator } from './PitchCharacterAnimator';
 import { PitchTimer } from './PitchTimer';
 import { PitchUIManager } from '../UI/PitchUIManager';
 import { PitchNoteSequence, PitchSequenceLibrary } from '../Data/PitchNoteSequence';
+import { PitchTile } from '../UI/PitchTile';
 const { ccclass, property } = _decorator;
 
 /**
@@ -25,17 +26,27 @@ interface PitchDetectionResult {
 export class PitchGameplayController extends Component {
     // Singleton instance
     private static _instance: PitchGameplayController = null;
-    
+
     // Core components
     @property(PitchDetectionSystem)
     private detectionSystem: PitchDetectionSystem = null;
-    
+
     @property(PitchCharacterAnimator)
     private characterAnimator: PitchCharacterAnimator = null;
-    
+
     @property(PitchTimer)
     private timer: PitchTimer = null;
-    
+
+    // UI Components
+    @property({ type: Node, group: { name: "Gameplay UI", id: "gameplay" } })
+    private musicalStaff: Node = null;
+
+    @property({ type: [Node], group: { name: "Gameplay UI", id: "gameplay" } })
+    private noteIndicators: Node[] = [];
+
+    @property({ type: Node, group: { name: "Gameplay UI", id: "gameplay" } })
+    private progressLine: Node = null;
+
     // Game state
     private gameState: GameState = GameState.INIT;
     private currentSequence: PitchNoteSequence = null;
@@ -43,48 +54,97 @@ export class PitchGameplayController extends Component {
     private totalAccuracy: number = 0;
     private noteMatchThreshold: number = 3; // Number of consecutive frames to match a note
     private noteMatchCounter: number = 0;
-    
+    private currentNoteIndex: number = 0;
+    private currentNoteStartTime: number = 0;
+    private isHoldingNote: boolean = false;
+    private currentNoteDuration: number = 0;
+    private readonly PERFECT_DURATION_THRESHOLD: number = 0.8; // 95% of required duration for perfect score
+
+    //#region Animation Properties
+    private readonly PROGRESS_LINE_MOVE_DURATION: number = 0.5;
+    //#endregion
+
+    //#region Butterfly Properties
+    @property({ type: Node, group: { name: "Gameplay UI", id: "gameplay" } })
+    private butterfly: Node = null;
+
+    @property({ type: ParticleSystem2D, group: { name: "Feedback", id: "feedback" } })
+    private butterflyParticles: ParticleSystem2D = null;
+
+    private readonly BUTTERFLY_MOVE_DURATION: number = 0.3;
+    private butterflyTween: any = null;
+    private transNotes: UITransform[] = [];
+    private noteYPositions: number[] = [];
+    //#endregion
+
+    //#region Scrolling Properties
+    @property({ type: Prefab, group: { name: "Scrolling", id: "scrolling" } })
+    private pitchTilePrefab: Prefab = null;
+
+    @property({ type: Node, group: { name: "Scrolling", id: "scrolling" } })
+    private scrollingContainer: Node = null;
+
+    @property({ type: Number, group: { name: "Scrolling", id: "scrolling" } })
+    private scrollSpeed: number = 100; // pixels per second
+
+    @property({ type: Number, group: { name: "Scrolling", id: "scrolling" } })
+    private tileStartX: number = 200; // Starting X position for new tiles
+
+    private activeTiles: PitchTile[] = [];
+    private tilePositions: { x: number, y: number }[] = [];
+    private containerPosition: number = 0;
+    private targetScrollingPositionX: number = 0;
+    private isScrolling: boolean = false;
+    private noteIndexToTileMap: Map<number, PitchTile> = new Map(); // Map to store note index to tile mapping
+    private readonly SCROLL_SMOOTHING_FACTOR: number = 0.1; // Controls how quickly the scrolling position updates
+    //#endregion
+
     /**
      * Get the singleton instance
      */
     public static get instance(): PitchGameplayController {
         return this._instance;
     }
-    
+
     onLoad() {
         // Set up singleton instance
         if (PitchGameplayController._instance !== null) {
             this.node.destroy();
             return;
         }
-        
+
         PitchGameplayController._instance = this;
-        
+
         // Initialize PitchSequenceLibrary
         PitchSequenceLibrary.initialize();
+
+        // Initialize note positions
+        this.transNotes = this.noteIndicators.map(indicator => indicator.getComponent(UITransform));
+        const noteHeight = this.transNotes[0].height;
+        this.noteYPositions = this.noteIndicators.map(trans => {
+            return trans.position.y + this.musicalStaff.position.y + noteHeight / 2;
+        });
     }
-    
+
     start() {
         // Set up event listeners
         this.setupEventListeners();
-        
         // Show main menu initially
-        // PitchUIManager.instance.showMainMenu();
         this.startGame('sequence_1');
     }
-    
+
     /**
      * Set up event listeners for game events
      */
     private setupEventListeners(): void {
         // Listen for pitch detection events
         PitchDetectionSystem.on(PitchConstants.EVENTS.PITCH_DETECTED, this.onPitchDetected, this);
-        
+
         // Listen for timer events
         PitchTimer.on(PitchConstants.EVENTS.TIME_WARNING, this.onTimeWarning, this);
         PitchTimer.on(PitchConstants.EVENTS.GAME_OVER, this.onTimeUp, this);
     }
-    
+
     /**
      * Start a new game with the specified sequence
      * @param sequenceId Sequence ID to play
@@ -96,16 +156,25 @@ export class PitchGameplayController extends Component {
             console.error(`Sequence with ID ${sequenceId} not found`);
             return;
         }
-        
+
+        // Reset game state
         this.currentSequence = sequence;
-        this.gameState = GameState.PLAYING;
         this.totalNotesMatched = 0;
         this.totalAccuracy = 0;
         this.noteMatchCounter = 0;
-        
+        this.currentNoteIndex = 0;
+        this.isScrolling = false;
+        this.containerPosition = 0;
+
         // Initialize UI
         PitchUIManager.instance.showGameplay(sequence);
-        
+
+        // Initialize note indicators
+        this.setupNoteIndicators();
+
+        // Initialize scrolling system
+        this.initializeScrolling();
+
         // Initialize detection system
         this.detectionSystem.initialize()
             .then(() => {
@@ -113,13 +182,10 @@ export class PitchGameplayController extends Component {
             })
             .then((success) => {
                 if (success) {
+                    this.gameState = GameState.WAIT_FOR_FIRST_NOTE;
                     // Start detection
                     this.detectionSystem.startDetection();
-                    
-                    // Start timer
-                    this.timer.startTimer();
-                    
-                    console.log('Game started');
+                    console.log('Game started, waiting for first note');
                 } else {
                     console.error('Failed to access microphone');
                     // TODO: Show error message to user
@@ -130,78 +196,87 @@ export class PitchGameplayController extends Component {
                 // TODO: Show error message to user
             });
     }
-    
+
     /**
      * Pause the game
      */
     public pauseGame(): void {
         if (this.gameState !== GameState.PLAYING) return;
-        
+
         this.gameState = GameState.PAUSED;
-        
+
         // Pause timer
         this.timer.pauseTimer();
-        
+
         // Pause detection
         this.detectionSystem.stopDetection();
-        
+
+        // Pause scrolling
+        this.isScrolling = false;
+
         console.log('Game paused');
     }
-    
+
     /**
      * Resume the game
      */
     public resumeGame(): void {
         if (this.gameState !== GameState.PAUSED) return;
-        
+
         this.gameState = GameState.PLAYING;
-        
+
         // Resume timer
         this.timer.resumeTimer();
-        
+
         // Resume detection
         this.detectionSystem.startDetection();
-        
+
+        // Resume scrolling
+        this.isScrolling = true;
+
         console.log('Game resumed');
     }
-    
+
     /**
      * End the game
      * @param success Whether the player completed the sequence successfully
      */
     public endGame(success: boolean): void {
         this.gameState = GameState.GAME_OVER;
-        
+
         // Stop timer
         this.timer.stopTimer();
-        
+
         // Stop detection
         this.detectionSystem.stopDetection();
-        
+
+        // Stop scrolling
+        this.stopScrolling();
+
         // Calculate accuracy
-        const accuracy = this.totalNotesMatched > 0 
-            ? (this.totalAccuracy / this.totalNotesMatched) * 100 
+        const accuracy = this.totalNotesMatched > 0
+            ? (this.totalAccuracy / this.totalNotesMatched) * 100
             : 0;
-        
+
         // Show results
         PitchUIManager.instance.showResults(
             success,
             this.timer.getRemainingTime(),
             accuracy
         );
-        
+
         console.log(`Game ended. Success: ${success}, Accuracy: ${accuracy.toFixed(2)}%`);
     }
-    
+
     /**
      * Start calibration process
      */
     public startCalibration(): void {
         this.gameState = GameState.CALIBRATING;
-        
+
         // Show calibration UI
         PitchUIManager.instance.showCalibration();
-        
+
         // Initialize detection system
         this.detectionSystem.initialize()
             .then(() => {
@@ -231,38 +306,84 @@ export class PitchGameplayController extends Component {
                 // TODO: Show error message to user
             });
     }
-    
+
     /**
      * Handle pitch detection event
      * @param result Pitch detection result
      */
     private onPitchDetected(result: PitchDetectionResult): void {
-        if (this.gameState !== GameState.PLAYING) return;
-        
+        if (this.gameState !== GameState.PLAYING && this.gameState !== GameState.WAIT_FOR_FIRST_NOTE) return;
+
         // Update UI with current note
         PitchUIManager.instance.updateCurrentNoteLabel(result.note);
-        
+
         // Move butterfly to indicate current pitch
-        PitchUIManager.instance.moveButterfly(result.note, result.volume, result.frequency);
-        
+        this.moveButterfly(result.note, result.volume, result.frequency);
+
         // Check if the detected note matches the target note
-        const targetNote = PitchUIManager.instance.getCurrentTargetNote();
-        
+        const targetNote = this.getCurrentTargetNote();
+
         if (targetNote !== null && result.note === targetNote) {
-            // Increment match counter
-            this.noteMatchCounter++;
-            
-            // Check if we've matched the note for enough consecutive frames
-            if (this.noteMatchCounter >= this.noteMatchThreshold) {
-                this.onNoteMatched(result.note, result.accuracy);
-                this.noteMatchCounter = 0;
+            // If we're waiting for the first note, start the game
+            if (this.gameState === GameState.WAIT_FOR_FIRST_NOTE) {
+                this.transitionToPlaying();
+                console.log('First note matched, starting timer');
+            }
+
+
+            // Start or continue holding the note
+            if (!this.isHoldingNote) {
+                this.isHoldingNote = true;
+                this.currentNoteStartTime = game.totalTime / 1000;
+                this.currentNoteDuration = 0;
+            }
+
+            // Update duration
+            const currentTime = game.totalTime / 1000;
+            this.currentNoteDuration = currentTime - this.currentNoteStartTime;
+
+            // Update target scrolling position based on current note duration
+            const requiredDuration = this.currentSequence.notes[this.currentNoteIndex].duration;
+            const progress = this.currentNoteDuration / requiredDuration;
+            // Get the current note's position from tilePositions
+            const currentNotePosX = this.tilePositions[this.currentNoteIndex]?.x || 0;
+            // Calculate how far we should scroll based on the note duration and progress
+            const scrollDistance = requiredDuration * this.scrollSpeed * progress;
+            // Set target position to move the note towards the left
+            this.targetScrollingPositionX = -currentNotePosX - scrollDistance;
+
+            // Check if we've held the note long enough
+            if (this.currentNoteDuration >= requiredDuration) {
+                this.isHoldingNote = false;
+                this.currentNoteDuration = 0;
+                this.onNoteMatched(result.note, this.calculateDurationAccuracy(requiredDuration));
+            } else {
+                // Update visual feedback for duration progress
+                this.updateDurationProgress(this.currentNoteDuration / requiredDuration);
             }
         } else {
-            // Reset match counter
-            this.noteMatchCounter = 0;
+            // Reset note holding if wrong note is played
+            this.targetScrollingPositionX = this.containerPosition; // Keep current position when wrong note
         }
     }
-    
+
+    private calculateDurationAccuracy(requiredDuration: number): PitchAccuracy {
+        const durationRatio = this.currentNoteDuration / requiredDuration;
+        if (durationRatio >= this.PERFECT_DURATION_THRESHOLD) {
+            return PitchAccuracy.PERFECT;
+        }
+
+        return PitchAccuracy.GOOD;
+    }
+
+    private updateDurationProgress(progress: number): void {
+        // Update visual feedback for duration progress using the map
+        const currentTile = this.noteIndexToTileMap.get(this.currentNoteIndex);
+        if (currentTile) {
+            currentTile.updateDurationProgress(progress);
+        }
+    }
+
     /**
      * Handle note matched event
      * @param note Matched note
@@ -271,7 +392,7 @@ export class PitchGameplayController extends Component {
     private onNoteMatched(note: MusicalNote, accuracy: PitchAccuracy): void {
         // Play character animation
         this.characterAnimator.playNoteAnimation(note, accuracy);
-        
+
         // Show feedback
         let feedbackType: FeedbackType;
         switch (accuracy) {
@@ -284,58 +405,88 @@ export class PitchGameplayController extends Component {
             default:
                 feedbackType = FeedbackType.MISS;
         }
-        
+
         PitchUIManager.instance.showFeedback(feedbackType);
-        
+
         // Update accuracy tracking
         this.totalNotesMatched++;
-        this.totalAccuracy += accuracy === PitchAccuracy.PERFECT ? 1.0 : 
-                             accuracy === PitchAccuracy.GOOD ? 0.7 : 0.3;
-        
+        this.totalAccuracy += accuracy === PitchAccuracy.PERFECT ? 1.0 :
+            accuracy === PitchAccuracy.GOOD ? 0.7 : 0.3;
+
         // Advance progress
-        PitchUIManager.instance.advanceProgressLine();
-        
+        this.advanceProgressLine();
+
         // Check if there are more notes
-        const hasMoreNotes = PitchUIManager.instance.advanceToNextNote();
-        
+        const hasMoreNotes = this.advanceToNextNote();
         if (!hasMoreNotes) {
             // Sequence complete
             this.endGame(true);
         }
     }
-    
+
+    /**
+     * Transition to playing state
+     */
+    private transitionToPlaying(): void {
+        this.gameState = GameState.PLAYING;
+        this.timer.startTimer();
+        // Don't start scrolling immediately, wait for first note to be held
+        this.isScrolling = true;
+        // Activate the current tile
+        if (this.activeTiles.length > 0) {
+            this.activeTiles[0].setActive(true);
+        }
+    }
+
+    private checkNoteDuration(note: MusicalNote): boolean {
+        if (!this.currentSequence || this.currentNoteIndex >= this.currentSequence.notes.length) {
+            return false;
+        }
+
+        const currentNote = this.currentSequence.notes[this.currentNoteIndex];
+        if (currentNote.note !== note) {
+            return false;
+        }
+
+        // Check if we've held the note for the required duration
+        return this.currentNoteDuration >= currentNote.duration;
+    }
+
     /**
      * Handle time warning event
      * @param remainingTime Remaining time in seconds
      */
     private onTimeWarning(remainingTime: number): void {
         if (this.gameState !== GameState.PLAYING) return;
-        
+
         // Show time warning
         PitchUIManager.instance.showTimeWarning(remainingTime);
     }
-    
+
     /**
      * Handle time up event
      */
     private onTimeUp(): void {
         if (this.gameState !== GameState.PLAYING) return;
-        
+
         // End game with failure
         this.endGame(false);
     }
-    
+
     /**
      * Update method called every frame
      * @param dt Delta time
      */
     update(dt: number): void {
         if (this.gameState !== GameState.PLAYING) return;
-        
+
         // Update timer display
         PitchUIManager.instance.updateTimer(this.timer.getRemainingTime());
+
+        // Update scrolling
+        this.updateScrolling(dt);
     }
-    
+
     /**
      * Return to the main menu
      */
@@ -344,39 +495,330 @@ export class PitchGameplayController extends Component {
         if (this.gameState === GameState.PLAYING || this.gameState === GameState.PAUSED) {
             this.timer.stopTimer();
             this.detectionSystem.stopDetection();
+            this.stopScrolling();
         }
-        
+
         // Reset game state
         this.gameState = GameState.INIT;
-        
+        this.currentSequence = null;
+        this.currentNoteIndex = 0;
+        this.totalNotesMatched = 0;
+        this.totalAccuracy = 0;
+        this.noteMatchCounter = 0;
+
         // Show main menu
         PitchUIManager.instance.showMainMenu();
     }
-    
+
     /**
      * Restart the current game
      */
     public restartGame(): void {
         if (!this.currentSequence) return;
-        
+
         // Stop current game
         if (this.gameState === GameState.PLAYING || this.gameState === GameState.PAUSED) {
             this.timer.stopTimer();
             this.detectionSystem.stopDetection();
+            this.stopScrolling();
         }
-        
+
         // Start a new game with the same sequence
         this.startGame(this.currentSequence.id);
     }
-    
+
     onDestroy() {
         // Clean up event listeners
         PitchDetectionSystem.off(PitchConstants.EVENTS.PITCH_DETECTED, this.onPitchDetected, this);
         PitchTimer.off(PitchConstants.EVENTS.TIME_WARNING, this.onTimeWarning, this);
         PitchTimer.off(PitchConstants.EVENTS.GAME_OVER, this.onTimeUp, this);
-        
+
         // Stop detection and timer
         this.detectionSystem.stopDetection();
         this.timer.stopTimer();
+
+        // Clear tiles
+        this.clearTiles();
     }
+
+    //#region Butterfly Management
+    private moveButterfly(note: MusicalNote | null, volume: number, frequency: number = 0): void {
+        if (!this.butterfly || !this.noteIndicators) return;
+
+        // Cancel any existing tween
+        if (this.butterflyTween) {
+            this.butterflyTween.stop();
+            this.butterflyTween = null;
+        }
+
+        // Calculate target position based on note or frequency
+        let targetY = -150; // Default position at the bottom
+
+        if (note !== null) {
+            // Use the note indicator's position for the target note
+            if (note >= 0 && note < this.noteIndicators.length) {
+                const indicator = this.noteIndicators[note];
+                if (indicator && indicator.active) {
+                    targetY = this.noteYPositions[note];
+                }
+            }
+
+            // Activate butterfly particles
+            if (this.butterflyParticles) {
+                this.butterflyParticles.enabled = true;
+                this.butterflyParticles.emissionRate = volume * 100;
+            }
+        } else {
+            // When no note is detected, use frequency to determine position
+            const lowestNote = 0; // DO
+            const highestNote = 6; // SI
+
+            if (this.noteIndicators[lowestNote] && this.noteIndicators[highestNote]) {
+                const lowestY = this.noteYPositions[lowestNote] - 50.0;
+                const highestY = this.noteYPositions[highestNote] + 50.0;
+
+                // Normalize frequency to a value between 0 and 1
+                const normalizedFreq = Math.max(0, Math.min(1, (frequency - 100) / 900));
+
+                // Interpolate between lowest and highest positions
+                targetY = lowestY + (highestY - lowestY) * normalizedFreq;
+            }
+
+            // Disable butterfly particles
+            if (this.butterflyParticles) {
+                this.butterflyParticles.enabled = false;
+            }
+        }
+
+        // Create tween to move butterfly
+        const currentPos = this.butterfly.position;
+        this.butterflyTween = tween(this.butterfly)
+            .to(this.BUTTERFLY_MOVE_DURATION, { position: new Vec3(currentPos.x, targetY, -20.0) }, {
+                easing: 'cubicOut'
+            })
+            .start();
+    }
+    //#endregion
+
+    //#region Scrolling Management
+    private initializeScrolling(): void {
+        if (!this.currentSequence || !this.scrollingContainer) return;
+
+        // Clear existing tiles
+        this.clearTiles();
+
+        // Reset container position
+        this.containerPosition = 0;
+        this.scrollingContainer.setPosition(new Vec3(0, 0, 0));
+
+        // Create initial tiles
+        const notes = this.currentSequence.notes;
+        for (let i = 0; i < notes.length; i++) {
+            this.createTile(notes[i], i);
+        }
+
+        this.isScrolling = false;
+        this.currentNoteStartTime = 0;
+    }
+
+    private createTile(noteData: { note: MusicalNote, duration: number }, index: number): void {
+        if (!this.pitchTilePrefab || !this.scrollingContainer) return;
+
+        const tileNode = instantiate(this.pitchTilePrefab);
+        this.scrollingContainer.addChild(tileNode);
+
+        const tile = tileNode.getComponent(PitchTile);
+        if (tile) {
+            // Initialize tile with basic properties
+            tile.initialize(
+                noteData.note,
+                noteData.duration,
+                this.scrollSpeed
+            );
+
+            // Calculate x position based on previous tile
+            let xPosition = this.tileStartX;
+            if (index > 0 && this.tilePositions.length > 0) {
+                const previousTile = this.activeTiles[index - 1];
+                const previousTilePos = this.tilePositions[index - 1];
+                // Position the new tile right after the previous tile's duration
+                xPosition = previousTilePos.x + (previousTile.getDuration() * this.scrollSpeed);
+            }
+
+            // Calculate y position based on the note
+            const yPosition = this.noteIndicators[noteData.note].position.y;
+            this.tilePositions.push({ x: xPosition, y: yPosition });
+
+            // Set initial position
+            tileNode.setPosition(new Vec3(xPosition, yPosition, 0));
+
+            this.activeTiles.push(tile);
+            this.noteIndexToTileMap.set(index, tile);
+        }
+    }
+
+    private clearTiles(): void {
+        for (const tile of this.activeTiles) {
+            if (tile && tile.node) {
+                tile.node.destroy();
+            }
+        }
+        this.activeTiles = [];
+        this.tilePositions = [];
+        this.noteIndexToTileMap.clear();
+    }
+
+    private updateScrolling(deltaTime: number): void {
+        if (!this.isScrolling || !this.scrollingContainer) return;
+        // Only scroll if we're holding the correct note
+        // Smoothly interpolate to target position
+        this.containerPosition += (this.targetScrollingPositionX - this.containerPosition) * this.SCROLL_SMOOTHING_FACTOR;
+        this.scrollingContainer.setPosition(new Vec3(this.containerPosition, 0, 0));
+    }
+
+    private stopScrolling(): void {
+        this.isScrolling = false;
+
+        // Deactivate all tiles
+        for (const tile of this.activeTiles) {
+            if (tile) {
+                tile.setActive(false);
+            }
+        }
+    }
+
+    private advanceToNextNote(): boolean {
+        if (!this.currentSequence) return false;
+
+        this.currentNoteIndex++;
+
+        // Check if there are more notes
+        if (this.currentNoteIndex < this.currentSequence.notes.length) {
+            // Update UI for the next note
+            PitchUIManager.instance.updateTargetNoteLabel();
+            this.highlightNoteIndicator(this.currentSequence.notes[this.currentNoteIndex].note);
+
+            // Activate the next tile if it exists in the map
+            const nextTile = this.noteIndexToTileMap.get(this.currentNoteIndex);
+            if (nextTile) {
+                nextTile.setActive(true);
+            }
+
+            return true;
+        } else {
+            // Sequence complete
+            this.stopScrolling();
+            return false;
+        }
+    }
+
+    private advanceProgressLine(): void {
+        if (!this.progressLine || !this.currentSequence) return;
+
+        // Calculate progress percentage
+        const totalNotes = this.currentSequence.notes.length;
+        const progress = (this.currentNoteIndex + 1) / totalNotes;
+
+        // Calculate target position
+        const startX = -200;
+        const endX = 200;
+        const targetX = startX + (endX - startX) * progress;
+
+        // Create tween to move progress line
+        const currentPos = this.progressLine.position;
+        tween(this.progressLine)
+            .to(this.PROGRESS_LINE_MOVE_DURATION, { position: new Vec3(targetX, currentPos.y, currentPos.z) }, {
+                easing: 'cubicOut'
+            })
+            .start();
+    }
+
+    /**
+     * Get the current target note
+     */
+    public getCurrentTargetNote(): MusicalNote | null {
+        if (!this.currentSequence || this.currentNoteIndex >= this.currentSequence.notes.length) {
+            return null;
+        }
+
+        return this.currentSequence.notes[this.currentNoteIndex].note;
+    }
+
+    public getCurrentSequence(): PitchNoteSequence | null {
+        return this.currentSequence;
+    }
+
+    /**
+     * Get the current game state
+     */
+    public getGameState(): GameState {
+        return this.gameState;
+    }
+
+    /**
+     * Get the current note index
+     */
+    public getCurrentNoteIndex(): number {
+        return this.currentNoteIndex;
+    }
+
+    /**
+     * Get the total number of notes in the current sequence
+     */
+    public getTotalNotes(): number {
+        return this.currentSequence ? this.currentSequence.notes.length : 0;
+    }
+    //#endregion
+
+    //#region Note Indicators Management
+    private setupNoteIndicators(): void {
+        if (!this.noteIndicators) return;
+
+        const sequence = this.getCurrentSequence();
+        if (!sequence) return;
+
+        // Hide all note indicators initially
+        for (const indicator of this.noteIndicators) {
+            indicator.active = false;
+        }
+
+        // Show indicators for notes in the sequence
+        const notes = sequence.notes;
+        for (let i = 0; i < notes.length && i < this.noteIndicators.length; i++) {
+            const noteValue = notes[i].note;
+            if (noteValue >= 0 && noteValue < this.noteIndicators.length) {
+                this.noteIndicators[noteValue].active = true;
+            }
+        }
+
+        // Highlight the first note
+        this.highlightNoteIndicator(notes[0].note);
+    }
+
+    public highlightNoteIndicator(note: MusicalNote): void {
+        if (!this.noteIndicators) return;
+
+        // Reset all indicators to normal state
+        for (let i = 0; i < this.noteIndicators.length; i++) {
+            const indicator = this.noteIndicators[i];
+            if (indicator && indicator.active) {
+                const sprite = indicator.getComponent(Sprite);
+                if (sprite) {
+                    sprite.color = new Color(255, 255, 255, 255);
+                }
+            }
+        }
+
+        // Highlight the target note
+        if (note >= 0 && note < this.noteIndicators.length) {
+            const indicator = this.noteIndicators[note];
+            if (indicator && indicator.active) {
+                const sprite = indicator.getComponent(Sprite);
+                if (sprite) {
+                    sprite.color = new Color(255, 255, 0, 255); // Yellow highlight
+                }
+            }
+        }
+    }
+    //#endregion
 }
