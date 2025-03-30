@@ -180,6 +180,53 @@ export class PitchGameplayController extends Component {
     }
 
     /**
+     * Extend the sequence to fill the game duration if needed
+     * @param sequence Original sequence
+     * @returns Extended sequence if needed, otherwise original sequence
+     */
+    private extendSequenceToFillDuration(sequence: PitchNoteSequence): PitchNoteSequence {
+        const targetDuration = PitchConstants.GAME_DURATION;
+        const currentDuration = sequence.getTotalDuration();
+
+        // If sequence is already long enough, return it as is
+        if (currentDuration >= targetDuration) {
+            return sequence;
+        }
+
+        // Calculate how many additional seconds we need
+        const remainingDuration = targetDuration - currentDuration;
+        
+        // Create extended notes array starting with original notes
+        const extendedNotes: { note: MusicalNote, duration: number }[] = [...sequence.notes];
+        
+        // Generate random notes to fill remaining duration
+        let currentTime = currentDuration;
+        while (currentTime < targetDuration) {
+            // Generate random note between Do (0) and Si (6)
+            const randomNote = Math.floor(Math.random() * 7) as MusicalNote;
+            
+            // Generate random duration between 1 and 2 seconds
+            const randomDuration = 1 + Math.random();
+            
+            // Add the random note
+            extendedNotes.push({
+                note: randomNote,
+                duration: randomDuration
+            });
+            
+            currentTime += randomDuration;
+        }
+
+        // Create new sequence with extended notes
+        return new PitchNoteSequence(
+            `${sequence.id}_extended`,
+            `${sequence.name} (Extended)`,
+            sequence.difficulty,
+            extendedNotes
+        );
+    }
+
+    /**
      * Start a new game with the specified sequence
      * @param sequenceId Sequence ID to play
      */
@@ -191,8 +238,10 @@ export class PitchGameplayController extends Component {
             return;
         }
 
+        // Extend sequence if needed to fill game duration
+        this.currentSequence = this.extendSequenceToFillDuration(sequence);
+
         // Reset game state
-        this.currentSequence = sequence;
         this.totalNotesMatched = 0;
         this.totalAccuracy = 0;
         this.currentNoteIndex = 0;
@@ -200,7 +249,7 @@ export class PitchGameplayController extends Component {
         this.containerPosition = 0;
 
         // Initialize UI
-        PitchUIManager.instance.showGameplay(sequence);
+        PitchUIManager.instance.showGameplay(this.currentSequence);
 
         // Initialize note indicators
         this.setupNoteIndicators();
