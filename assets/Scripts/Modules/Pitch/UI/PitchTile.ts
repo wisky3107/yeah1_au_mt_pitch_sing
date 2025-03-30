@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Sprite, UITransform, Color } from 'cc';
+import { _decorator, Component, Node, Sprite, UITransform, Color, Gradient } from 'cc';
 import { MusicalNote } from '../Systems/PitchConstants';
 const { ccclass, property } = _decorator;
 
@@ -13,11 +13,23 @@ export class PitchTile extends Component {
     @property(Sprite)
     private progressSprite: Sprite = null;
 
+    @property(UITransform)
+    private progressTransform: UITransform = null;
+
+
     private note: MusicalNote = null;
     private duration: number = 0;
     private scrollSpeed: number = 0;
     private currentProgress: number = 0;
     private isActive: boolean = false;
+
+    private readonly gradientColors: Color[] = [
+        new Color(255, 255, 255, 150), // White
+        new Color(255, 255, 0, 150),   // Yellow
+        new Color(0, 255, 0, 150)      // Green
+    ];
+
+    private readonly gradientStops: number[] = [0, 0.8, 1];
 
     public initialize(note: MusicalNote, duration: number, scrollSpeed: number): void {
         this.note = note;
@@ -33,9 +45,11 @@ export class PitchTile extends Component {
         }
 
         // Reset progress sprite
+        if (this.progressTransform) {
+            this.progressTransform.setContentSize(0, this.progressTransform.height);
+        }
         if (this.progressSprite) {
-            this.progressSprite.fillRange = 0;
-            this.progressSprite.color = new Color(255, 255, 255, 255);
+            this.progressSprite.color = this.gradientColors[0];
         }
     }
 
@@ -44,16 +58,48 @@ export class PitchTile extends Component {
 
         this.currentProgress = Math.min(1, this.currentProgress + (deltaTime / this.duration));
         
-        if (this.progressSprite) {
-            this.progressSprite.fillRange = this.currentProgress;
+        if (this.progressTransform && this.transform) {
+            const targetWidth = this.transform.width * this.currentProgress;
+            this.progressTransform.setContentSize(targetWidth, this.progressTransform.height);
+            
+            // Update color based on progress using gradient
+            if (this.progressSprite) {
+                this.progressSprite.color = this.getGradientColor(this.currentProgress);
+            }
         }
     }
 
     public setActive(active: boolean): void {
         this.isActive = active;
         if (this.progressSprite) {
-            this.progressSprite.color = active ? new Color(0, 255, 0, 255) : new Color(255, 255, 255, 255);
+            this.progressSprite.color = active ? this.gradientColors[2] : this.gradientColors[0];
         }
+    }
+
+    private getGradientColor(progress: number): Color {
+        // Find the two colors to interpolate between
+        let startIndex = 0;
+        let endIndex = 0;
+        let t = 0;
+
+        for (let i = 0; i < this.gradientStops.length - 1; i++) {
+            if (progress >= this.gradientStops[i] && progress <= this.gradientStops[i + 1]) {
+                startIndex = i;
+                endIndex = i + 1;
+                t = (progress - this.gradientStops[i]) / (this.gradientStops[i + 1] - this.gradientStops[i]);
+                break;
+            }
+        }
+
+        const startColor = this.gradientColors[startIndex];
+        const endColor = this.gradientColors[endIndex];
+
+        return new Color(
+            startColor.r + (endColor.r - startColor.r) * t,
+            startColor.g + (endColor.g - startColor.g) * t,
+            startColor.b + (endColor.b - startColor.b) * t,
+            255
+        );
     }
 
     public getProgress(): number {
@@ -73,16 +119,13 @@ export class PitchTile extends Component {
     }
 
     public updateDurationProgress(progress: number): void {
-        if (this.progressSprite) {
-            this.progressSprite.fillRange = progress;
+        if (this.progressTransform && this.transform) {
+            const targetWidth = this.transform.width * progress;
+            this.progressTransform.setContentSize(targetWidth, this.progressTransform.height);
             
-            // Update color based on progress
-            if (progress >= 0.95) {
-                this.progressSprite.color = new Color(0, 255, 0, 255); // Green for perfect
-            } else if (progress >= 0.8) {
-                this.progressSprite.color = new Color(255, 255, 0, 255); // Yellow for good
-            } else {
-                this.progressSprite.color = new Color(255, 255, 255, 255); // White for in progress
+            // Update color based on progress using gradient
+            if (this.progressSprite) {
+                this.progressSprite.color = this.getGradientColor(progress);
             }
         }
     }

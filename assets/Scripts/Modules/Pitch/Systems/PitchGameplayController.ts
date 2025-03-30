@@ -52,11 +52,8 @@ export class PitchGameplayController extends Component {
     private currentSequence: PitchNoteSequence = null;
     private totalNotesMatched: number = 0;
     private totalAccuracy: number = 0;
-    private noteMatchThreshold: number = 3; // Number of consecutive frames to match a note
-    private noteMatchCounter: number = 0;
     private currentNoteIndex: number = 0;
     private currentNoteStartTime: number = 0;
-    private isHoldingNote: boolean = false;
     private currentNoteDuration: number = 0;
     private readonly PERFECT_DURATION_THRESHOLD: number = 0.8; // 95% of required duration for perfect score
 
@@ -161,7 +158,6 @@ export class PitchGameplayController extends Component {
         this.currentSequence = sequence;
         this.totalNotesMatched = 0;
         this.totalAccuracy = 0;
-        this.noteMatchCounter = 0;
         this.currentNoteIndex = 0;
         this.isScrolling = false;
         this.containerPosition = 0;
@@ -330,17 +326,10 @@ export class PitchGameplayController extends Component {
                 console.log('First note matched, starting timer');
             }
 
-
-            // Start or continue holding the note
-            if (!this.isHoldingNote) {
-                this.isHoldingNote = true;
-                this.currentNoteStartTime = game.totalTime / 1000;
-                this.currentNoteDuration = 0;
-            }
-
+            const addedTime = game.totalTime / 1000 - this.currentNoteStartTime;
+            this.currentNoteStartTime = game.totalTime / 1000;
             // Update duration
-            const currentTime = game.totalTime / 1000;
-            this.currentNoteDuration = currentTime - this.currentNoteStartTime;
+            this.currentNoteDuration += addedTime;
 
             // Update target scrolling position based on current note duration
             const requiredDuration = this.currentSequence.notes[this.currentNoteIndex].duration;
@@ -354,7 +343,7 @@ export class PitchGameplayController extends Component {
 
             // Check if we've held the note long enough
             if (this.currentNoteDuration >= requiredDuration) {
-                this.isHoldingNote = false;
+                this.updateDurationProgress(1.0);
                 this.currentNoteDuration = 0;
                 this.onNoteMatched(result.note, this.calculateDurationAccuracy(requiredDuration));
             } else {
@@ -362,6 +351,7 @@ export class PitchGameplayController extends Component {
                 this.updateDurationProgress(this.currentNoteDuration / requiredDuration);
             }
         } else {
+            this.currentNoteStartTime = game.totalTime / 1000
             // Reset note holding if wrong note is played
             this.targetScrollingPositionX = this.containerPosition; // Keep current position when wrong note
         }
@@ -504,7 +494,6 @@ export class PitchGameplayController extends Component {
         this.currentNoteIndex = 0;
         this.totalNotesMatched = 0;
         this.totalAccuracy = 0;
-        this.noteMatchCounter = 0;
 
         // Show main menu
         PitchUIManager.instance.showMainMenu();

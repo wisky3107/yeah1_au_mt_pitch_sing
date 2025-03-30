@@ -153,8 +153,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 135,
-      "y": 0,
+      "x": 0,
+      "y": 45.344,
       "z": 0
     },
     "_lrot": {
@@ -206,8 +206,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 0,
-      "y": 45.344,
+      "x": 135,
+      "y": 0,
       "z": 0
     },
     "_lrot": {
@@ -378,8 +378,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -135,
-      "y": 45.344,
+      "x": 0,
+      "y": 0,
       "z": 0
     },
     "_lrot": {
@@ -419,7 +419,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 0,
+      "width": 16.3,
       "height": 90.68799999999999
     },
     "_anchorPoint": {
@@ -1057,8 +1057,8 @@
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
-      "x": 0.5,
-      "y": 0
+      "x": 0,
+      "y": 0.5
     },
     "_id": ""
   },
@@ -1197,6 +1197,8 @@
       "__id__": 0
     },
     "fileId": "afiZNGP4dOApSk67H5mUgl",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -1266,6 +1268,9 @@
     },
     "progressSprite": {
       "__id__": 15
+    },
+    "progressTransform": {
+      "__id__": 13
     },
     "_id": ""
   },
