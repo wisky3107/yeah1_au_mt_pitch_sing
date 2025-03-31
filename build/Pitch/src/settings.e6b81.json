@@ -79,8 +79,8 @@
         ],
         "bundleVers": {
             "internal": "6e32b",
-            "main": "f1d05",
-            "resources": "82dab",
+            "main": "ca9bc",
+            "resources": "854ee",
             "sample": "8b630"
         },
         "preloadAssets": [],
@@ -94,7 +94,6 @@
     },
     "plugins": {
         "jsList": [
-            "assets/Thirds/aubio.9c909.js",
             "assets/Thirds/crypto-js.min.3b439.js",
             "assets/Thirds/socket.io.min.2e416.js",
             "assets/Thirds/tone.a2905.js"
