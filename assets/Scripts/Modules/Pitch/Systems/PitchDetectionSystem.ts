@@ -1,5 +1,6 @@
 import { _decorator, Component, Node, EventTarget, AudioSource, game, sys } from 'cc';
 import { PitchConstants, MusicalNote, PitchAccuracy } from './PitchConstants';
+import { PitchBase } from '../../GameCommon/Pitch/PitchBase';
 const { ccclass, property } = _decorator;
 
 /**
@@ -17,39 +18,18 @@ interface PitchDetectionResult {
  * Handles microphone input and real-time pitch detection
  */
 @ccclass('PitchDetectionSystem')
-export class PitchDetectionSystem extends Component {
+export class PitchDetectionSystem extends PitchBase {
     //#region Singleton
     private static _instance: PitchDetectionSystem = null;
-    private static eventTarget: EventTarget = new EventTarget();
 
     public static get instance(): PitchDetectionSystem {
         return this._instance;
     }
     //#endregion
 
-    //#region Audio Properties
-    private audioContext: AudioContext = null;
-    private analyzer: AnalyserNode = null;
-    private microphone: MediaStreamAudioSourceNode = null;
-    private microphoneStream: MediaStream = null;
-    private analyzerBuffer: Float32Array = null;
-    private bufferSize: number = 2048;
-    //#endregion
-
     //#region Detection Properties
-    private isDetecting: boolean = false;
-    private detectionInterval: number = null;
-    private detectionIntervalMs: number = 50; // Detection interval in milliseconds
-    private smoothingFactor: number = 0.6;
-    private lastFrequency: number = 0;
-    private lastNote: MusicalNote = null;
     private noteStabilityCounter: Map<MusicalNote, number> = new Map();
     private noteStabilityThreshold: number = 2;
-    //#endregion
-
-    //#region Configuration Properties
-    @property({ range: [0, 1], slide: true, tooltip: "Minimum volume level to detect pitch", group: { name: "Detection Settings", id: "detection" } })
-    private volumeThreshold: number = 0.005;
     //#endregion
 
     //#region Calibration Properties
@@ -72,183 +52,10 @@ export class PitchDetectionSystem extends Component {
             this.noteStabilityCounter.set(i as MusicalNote, 0);
         }
     }
-
-    onDestroy() {
-        // Clean up resources
-        this.stopDetection();
-
-        if (this.microphoneStream) {
-            this.microphoneStream.getTracks().forEach(track => track.stop());
-            this.microphoneStream = null;
-        }
-
-        if (this.audioContext) {
-            this.audioContext.close();
-            this.audioContext = null;
-        }
-    }
-    //#endregion
-
-    //#region Initialization Methods
-    public async initialize(): Promise<boolean> {
-        try {
-            // Check if AudioContext is supported
-            if (!window.AudioContext && !window['webkitAudioContext']) {
-                console.error('AudioContext is not supported in this browser');
-                return false;
-            }
-
-            // Create audio context
-            const AudioContextClass = window.AudioContext || window['webkitAudioContext'];
-            this.audioContext = new AudioContextClass();
-
-            // Create analyzer
-            this.analyzer = this.audioContext.createAnalyser();
-            this.analyzer.fftSize = this.bufferSize;
-            this.analyzer.smoothingTimeConstant = 0.8;
-
-            // Create buffer
-            this.analyzerBuffer = new Float32Array(this.analyzer.frequencyBinCount);
-
-            console.log('Pitch detection system initialized');
-            return true;
-        } catch (error) {
-            console.error('Failed to initialize pitch detection system:', error);
-            return false;
-        }
-    }
-
-    public requestMicrophoneAccess(): Promise<boolean> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                // Find the correct getUserMedia function
-                let getUserMediaFn: (constraints: MediaStreamConstraints, successCallback: (stream: MediaStream) => void, errorCallback: (error: any) => void) => void;
-                let getUserMediaPromiseFn: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
-
-                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    // Standard Promise-based API
-                    getUserMediaPromiseFn = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-                } else {
-                    // Check for older versions (callback-based)
-                    getUserMediaFn = (
-                        (navigator as any).getUserMedia ||
-                        (navigator as any).webkitGetUserMedia ||
-                        (navigator as any).mozGetUserMedia ||
-                        (navigator as any).msGetUserMedia
-                    );
-                }
-
-                // Check if any getUserMedia is supported
-                if (!getUserMediaPromiseFn && !getUserMediaFn) {
-                    console.error('getUserMedia is not supported in this browser');
-                    resolve(false);
-                    return;
-                }
-
-                // Define constraints
-                const constraints: MediaStreamConstraints = {
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: false
-                    }
-                };
-
-                // Use the appropriate method
-                try {
-                    if (getUserMediaPromiseFn) {
-                        // Modern Promise-based API
-                        this.microphoneStream = await getUserMediaPromiseFn(constraints);
-                    } else {
-                        // Older callback-based API - Wrap in a Promise
-                        this.microphoneStream = await new Promise<MediaStream>((res, rej) => {
-                            getUserMediaFn(constraints, res, rej);
-                        });
-                    }
-                } catch (err) {
-                    console.error('Error accessing media devices.', err);
-                    resolve(false);
-                    return;
-                }
-
-                // Check if AudioContext is ready (sometimes needs user interaction to start)
-                if (this.audioContext && this.audioContext.state === 'suspended') {
-                    await this.audioContext.resume();
-                }
-
-                // Ensure AudioContext is available before creating source
-                if (!this.audioContext) {
-                    console.error('AudioContext not initialized before microphone access.');
-                    // Attempt to reinitialize or handle gracefully
-                    if (!(await this.initialize())) {
-                        resolve(false);
-                        return;
-                    }
-                    // If initialize creates the context, resume it if needed
-                    if (this.audioContext && this.audioContext.state === 'suspended') {
-                        await this.audioContext.resume();
-                    }
-                }
-
-                // Defensive check again after potential re-initialization
-                if (!this.audioContext) {
-                    console.error('AudioContext still not available after attempting initialization.');
-                    resolve(false);
-                    return;
-                }
-
-                // Create microphone source
-                this.microphone = this.audioContext.createMediaStreamSource(this.microphoneStream);
-
-                // Connect microphone to analyzer
-                this.microphone.connect(this.analyzer);
-
-                console.log('Microphone access granted');
-                resolve(true);
-            } catch (error) {
-                console.error('Failed to access microphone:', error);
-                resolve(false);
-            }
-        });
-    }
-    //#endregion
-
-    //#region Detection Control Methods
-    public startDetection(): void {
-        if (this.isDetecting) return;
-
-        // Resume audio context if it's suspended
-        if (this.audioContext && this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
-        }
-
-        this.isDetecting = true;
-
-        // Start detection loop
-        this.detectionInterval = setInterval(() => {
-            this.detectPitch();
-        }, this.detectionIntervalMs);
-
-        console.log('Pitch detection started');
-    }
-
-    public stopDetection(): void {
-        if (!this.isDetecting) return;
-
-        this.isDetecting = false;
-
-        // Stop detection loop
-        if (this.detectionInterval !== null) {
-            clearInterval(this.detectionInterval);
-            this.detectionInterval = null;
-        }
-
-        console.log('Pitch detection stopped');
-    }
     //#endregion
 
     //#region Pitch Detection Methods
-    private detectPitch(): void {
+    protected detectPitch(): void {
         if (!this.analyzer || !this.isDetecting) return;
 
         // Get frequency data
@@ -311,7 +118,7 @@ export class PitchDetectionSystem extends Component {
         }
     }
 
-    private detectPitchAutocorrelation(): number {
+    protected detectPitchAutocorrelation(): number {
         const buffer = this.analyzerBuffer;
         const bufferSize = buffer.length;
 
@@ -463,18 +270,6 @@ export class PitchDetectionSystem extends Component {
 
         PitchDetectionSystem.emit(PitchConstants.EVENTS.PITCH_DETECTED, result);
     }
-
-    public static on(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.on(eventName, callback, target);
-    }
-
-    public static off(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.off(eventName, callback, target);
-    }
-
-    private static emit(eventName: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
-        this.eventTarget.emit(eventName, arg1, arg2, arg3, arg4, arg5);
-    }
     //#endregion
 
     //#region Calibration Methods
@@ -495,49 +290,6 @@ export class PitchDetectionSystem extends Component {
         }, 2000);
 
         console.log('Calibration started');
-    }
-    //#endregion
-
-    //#region Volume Management
-    public getVolumeLevel(): number {
-        if (!this.analyzer) return 0;
-
-        this.analyzer.getFloatTimeDomainData(this.analyzerBuffer);
-
-        let sum = 0;
-        for (let i = 0; i < this.analyzerBuffer.length; i++) {
-            sum += this.analyzerBuffer[i] * this.analyzerBuffer[i];
-        }
-
-        return Math.sqrt(sum / this.analyzerBuffer.length);
-    }
-
-    /**
-     * Get the current analyzer data for visualization
-     * @returns Float32Array of analyzer data, or null if analyzer is not initialized
-     */
-    public getAnalyzerData(): Float32Array | null {
-        if (!this.analyzer || !this.analyzerBuffer) return null;
-
-        // Get frequency data for visualization
-        this.analyzer.getFloatFrequencyData(this.analyzerBuffer);
-
-        // Normalize the data to 0-1 range
-        const normalizedData = new Float32Array(this.analyzerBuffer.length);
-        for (let i = 0; i < this.analyzerBuffer.length; i++) {
-            // Convert from dB (-100 to 0) to 0-1 range
-            normalizedData[i] = (this.analyzerBuffer[i] + 100) / 100;
-        }
-
-        return normalizedData;
-    }
-
-    public setVolumeThreshold(threshold: number): void {
-        this.volumeThreshold = Math.max(0, Math.min(1, threshold));
-    }
-
-    public getVolumeThreshold(): number {
-        return this.volumeThreshold;
     }
     //#endregion
 }

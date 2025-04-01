@@ -183,7 +183,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "volumeThreshold": 0.01,
+    "volumeThreshold": 0.001,
     "_id": "8flO+BGd5NhocJKnmVaOI3"
   },
   {
