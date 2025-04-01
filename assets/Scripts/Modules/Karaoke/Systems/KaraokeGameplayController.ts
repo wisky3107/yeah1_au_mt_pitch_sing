@@ -7,6 +7,7 @@ import { KaraokeAudioManager } from './KaraokeAudioManager';
 import { KaraokeCharacterAnimator } from './KaraokeCharacterAnimator';
 import { KaraokeScoringSystem } from './KaraokeScoringSystem';
 import { KaraokeUIManager } from '../UI/KaraokeUIManager';
+import { PitchWaveform } from '../../GameCommon/Pitch/PitchWaveform';
 
 const { ccclass, property } = _decorator;
 
@@ -48,6 +49,8 @@ export class KaraokeGameplayController extends Component {
 
     @property({ tooltip: "Path to default song to load (can be empty)", group: { name: "Config", id: "config" } })
     private defaultSongPath: string = "";
+
+
     //#endregion
 
     //#region Private Variables
@@ -85,6 +88,7 @@ export class KaraokeGameplayController extends Component {
         }
 
         KaraokeGameplayController._instance = this;
+
 
         // Initialize subsystems
         this.initializeSubsystems();
@@ -281,6 +285,23 @@ export class KaraokeGameplayController extends Component {
             return;
         }
 
+        // Start countdown before actually starting the playback
+        if (this.uiManager && this.state === KaraokeState.READY) {
+            // Start countdown and start the game when it finishes
+            this.uiManager.startCountdown(() => {
+                this.actuallyStartPlayback();
+            });
+        } else {
+            // If we're resuming from pause or there's no UI manager, start immediately
+            this.actuallyStartPlayback();
+        }
+    }
+
+    /**
+     * Actually start playback after countdown is complete
+     * This is an internal method that should only be called by startPlayback
+     */
+    private actuallyStartPlayback(): void {
         // Start pitch detection
         this.pitchDetection.startDetection();
 
@@ -554,8 +575,7 @@ export class KaraokeGameplayController extends Component {
 
         // Update UI directly with pitch detection results
         if (this.uiManager) {
-            const isActive = result.detected && result.volume > 0.01; // Using default threshold
-            this.uiManager.updateMicVisualization(result);
+            this.uiManager.updateMicVisualization(result, this.pitchDetection);
         }
     }
 
