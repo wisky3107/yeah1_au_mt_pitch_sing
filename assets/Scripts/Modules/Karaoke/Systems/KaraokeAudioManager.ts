@@ -120,7 +120,7 @@ export class KaraokeAudioManager extends Component {
      * Start audio playback
      * @param fadeIn Whether to fade in the audio
      */
-    public startPlayback(fadeIn: boolean = true): void {
+    public startPlayback(fadeIn: boolean = false): void {
         if (this.isPlaying && !this.isPaused) return;
         
         if (!this.currentAudioClip) {
@@ -223,7 +223,7 @@ export class KaraokeAudioManager extends Component {
      * @returns Current time in seconds
      */
     public getCurrentTime(): number {
-        return this.currentTime;
+        return this.musicSource.currentTime;
     }
 
     /**
@@ -325,14 +325,17 @@ export class KaraokeAudioManager extends Component {
         
         let volume = 0;
         const step = this.musicVolume / (this.fadeInDuration * 10);
+        console.log(`Fade in starting with step: ${step}, target volume: ${this.musicVolume}, duration: ${this.fadeInDuration}`);
         
         this.fadeInterval = setInterval(() => {
             volume += step;
+            console.log(`Fade in: current volume=${volume.toFixed(2)}`);
             
             if (volume >= this.musicVolume) {
                 volume = this.musicVolume;
                 clearInterval(this.fadeInterval);
                 this.fadeInterval = null;
+                console.log(`Fade in completed`);
             }
             
             this.musicSource.volume = volume;

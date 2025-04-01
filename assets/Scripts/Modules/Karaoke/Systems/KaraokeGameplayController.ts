@@ -8,6 +8,7 @@ import { KaraokeCharacterAnimator } from './KaraokeCharacterAnimator';
 import { KaraokeScoringSystem } from './KaraokeScoringSystem';
 import { KaraokeUIManager } from '../UI/KaraokeUIManager';
 import { PitchWaveform } from '../../GameCommon/Pitch/PitchWaveform';
+import { PitchDetectionSystem } from '../../Pitch/Systems/PitchDetectionSystem';
 
 const { ccclass, property } = _decorator;
 
@@ -26,23 +27,23 @@ export class KaraokeGameplayController extends Component {
     //#endregion
 
     //#region Properties
-    @property({ type: Node, tooltip: "Node containing KaraokePitchDetectionSystem component", group: { name: "Systems", id: "systems" } })
-    private pitchDetectionNode: Node = null;
+    @property({ type: KaraokePitchDetectionSystem, tooltip: "Node containing KaraokePitchDetectionSystem component", group: { name: "Systems", id: "systems" } })
+    private pitchDetection: KaraokePitchDetectionSystem = null;
 
-    @property({ type: Node, tooltip: "Node containing KaraokeLyricsManager component", group: { name: "Systems", id: "systems" } })
-    private lyricsManagerNode: Node = null;
+    @property({ type: KaraokeLyricsManager, tooltip: "Node containing KaraokeLyricsManager component", group: { name: "Systems", id: "systems" } })
+    private lyricsManager: KaraokeLyricsManager = null;
 
-    @property({ type: Node, tooltip: "Node containing KaraokeAudioManager component", group: { name: "Systems", id: "systems" } })
-    private audioManagerNode: Node = null;
+    @property({ type: KaraokeAudioManager, tooltip: "Node containing KaraokeAudioManager component", group: { name: "Systems", id: "systems" } })
+    private audioManager: KaraokeAudioManager = null;
 
-    @property({ type: Node, tooltip: "Node containing KaraokeCharacterAnimator component", group: { name: "Systems", id: "systems" } })
-    private characterAnimatorNode: Node = null;
+    @property({ type: KaraokeCharacterAnimator, tooltip: "Node containing KaraokeCharacterAnimator component", group: { name: "Systems", id: "systems" } })
+    private characterAnimator: KaraokeCharacterAnimator = null;
 
-    @property({ type: Node, tooltip: "Node containing KaraokeScoringSystem component", group: { name: "Systems", id: "systems" } })
-    private scoringSystemNode: Node = null;
+    @property({ type: KaraokeScoringSystem, tooltip: "Node containing KaraokeScoringSystem component", group: { name: "Systems", id: "systems" } })
+    private scoringSystem: KaraokeScoringSystem = null;
 
-    @property({ type: Node, tooltip: "Node containing KaraokeUIManager component", group: { name: "Systems", id: "systems" } })
-    private uiManagerNode: Node = null;
+    @property({ type: KaraokeUIManager, tooltip: "Node containing KaraokeUIManager component", group: { name: "Systems", id: "systems" } })
+    private uiManager: KaraokeUIManager = null;
 
     @property({ tooltip: "Whether to autostart microphone access on initialization", group: { name: "Config", id: "config" } })
     private autoInitMicrophone: boolean = true;
@@ -55,12 +56,6 @@ export class KaraokeGameplayController extends Component {
 
     //#region Private Variables
     private state: KaraokeState = KaraokeState.INIT;
-    private pitchDetection: KaraokePitchDetectionSystem = null;
-    private lyricsManager: KaraokeLyricsManager = null;
-    private audioManager: KaraokeAudioManager = null;
-    private characterAnimator: KaraokeCharacterAnimator = null;
-    private scoringSystem: KaraokeScoringSystem = null;
-    private uiManager: KaraokeUIManager = null;
     private currentSong: Song = null;
     private microphoneInitialized: boolean = false;
     private isLyricActive: boolean = false;
@@ -436,31 +431,6 @@ export class KaraokeGameplayController extends Component {
 
     //#region Private Methods
     private initializeSubsystems(): void {
-        // Get references to all subsystems
-        if (this.pitchDetectionNode) {
-            this.pitchDetection = this.pitchDetectionNode.getComponent(KaraokePitchDetectionSystem);
-        }
-
-        if (this.lyricsManagerNode) {
-            this.lyricsManager = this.lyricsManagerNode.getComponent(KaraokeLyricsManager);
-        }
-
-        if (this.audioManagerNode) {
-            this.audioManager = this.audioManagerNode.getComponent(KaraokeAudioManager);
-        }
-
-        if (this.characterAnimatorNode) {
-            this.characterAnimator = this.characterAnimatorNode.getComponent(KaraokeCharacterAnimator);
-        }
-
-        if (this.scoringSystemNode) {
-            this.scoringSystem = this.scoringSystemNode.getComponent(KaraokeScoringSystem);
-        }
-
-        if (this.uiManagerNode) {
-            this.uiManager = this.uiManagerNode.getComponent(KaraokeUIManager);
-        }
-
         // Log any missing subsystems
         if (!this.pitchDetection) console.warn('Pitch detection system not found');
         if (!this.lyricsManager) console.warn('Lyrics manager not found');

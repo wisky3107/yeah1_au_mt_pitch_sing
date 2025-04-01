@@ -1,10 +1,11 @@
-import { _decorator, Component, Node, Button, Label, RichText, UITransform, Vec3, tween, instantiate, Sprite, Color } from 'cc';
+import { _decorator, Component, Node, Button, Label, UITransform, Vec3, tween, instantiate, Sprite, Color, Prefab } from 'cc';
 import { KaraokeConstants, KaraokeState } from '../Systems/KaraokeConstants';
 import { KaraokeGameplayController } from '../Systems/KaraokeGameplayController';
 import { KaraokeLyricsManager } from '../Systems/KaraokeLyricsManager';
 import { LyricSegment, PitchDetectionResult } from '../Data/KaraokeTypes';
 import { PitchWaveform } from '../../GameCommon/Pitch/PitchWaveform';
 import { KaraokePitchDetectionSystem } from '../Systems/KaraokePitchDetectionSystem';
+import { KaraokeUILyric } from './KaraokeUILyric';
 
 const { ccclass, property } = _decorator;
 
@@ -26,8 +27,8 @@ export class KaraokeUIManager extends Component {
     @property({ type: Node, tooltip: "Container node for lyric labels" })
     private lyricsContainer: Node = null;
 
-    @property({ type: RichText, tooltip: "Template for lyric labels" })
-    private lyricLabelTemplate: RichText = null;
+    @property({ type: Prefab, tooltip: "Prefab for lyric items" })
+    private lyricPrefab: Prefab = null;
 
     @property({ tooltip: "Maximum characters per line" })
     private maxCharsPerLine: number = 90;
@@ -37,6 +38,12 @@ export class KaraokeUIManager extends Component {
 
     @property({ tooltip: "Scroll speed multiplier" })
     private scrollSpeedMultiplier: number = 1.0;
+
+    @property({ tooltip: "Number of preloaded lyric items for pooling" })
+    private poolSize: number = 20;
+
+    @property({ tooltip: "Viewport height for recycling lyrics" })
+    private viewportHeight: number = 600;
 
     // Mic Visualizer Properties
     @property({ type: Node, tooltip: "Microphone icon node" })
@@ -79,10 +86,18 @@ export class KaraokeUIManager extends Component {
     private isTimerActive: boolean = false;
 
     // Lyrics variables
-    private lyricLabels: Node[] = [];
+    private lyricPool: KaraokeUILyric[] = [];
+    private activeLyrics: KaraokeUILyric[] = [];
     private currentLyricIndex: number = -1;
     private targetScrollPosition: number = 0;
     private isScrolling: boolean = false;
+    private lastScrollPosition: number = 0;
+    
+    // Added variables for improved lyric creation
+    private allLyrics: LyricSegment[] = [];
+    private lastCreatedLyricIndex: number = -1;
+    private initialLyricCount: number = 5;
+    private yOffsetForNewLyrics: number = 0;
 
     // Mic visualizer variables
     private isMicActive: boolean = false;
@@ -104,14 +119,11 @@ export class KaraokeUIManager extends Component {
         // Initialize timer display
         this.updateTimerDisplay(0);
 
-        // Hide lyric template if it exists
-        if (this.lyricLabelTemplate) {
-            this.lyricLabelTemplate.node.active = false;
-        }
+        // Initialize lyric object pool
+        this.initLyricPool();
 
         // Set initial mic state to inactive
         this.setMicActiveState(false);
-
 
         // Initialize waveform visualization using the PitchWaveform component
         if (this.waveformVisualizer) {
@@ -127,10 +139,61 @@ export class KaraokeUIManager extends Component {
     update(dt: number) {
         // Update timer
         this.updateTimer(dt);
-
         // Update lyrics scrolling
         this.updateLyricsScrolling(dt);
     }
+
+    /**
+     * Initialize the lyric object pool
+     */
+    private initLyricPool() {
+        if (!this.lyricPrefab || !this.lyricsContainer) return;
+
+        // Create pool container node
+        const poolNode = new Node('LyricPool');
+        poolNode.active = false;
+        this.node.addChild(poolNode);
+
+        // Create pool of lyric objects
+        for (let i = 0; i < this.poolSize; i++) {
+            const lyricNode = instantiate(this.lyricPrefab);
+            const lyricComponent = lyricNode.getComponent('KaraokeUILyric') as KaraokeUILyric;
+
+            lyricNode.active = false;
+            poolNode.addChild(lyricNode);
+
+            if (lyricComponent) {
+                this.lyricPool.push(lyricComponent);
+            }
+        }
+    }
+
+    /**
+     * Get a lyric object from the pool
+     */
+    private getLyricFromPool(): KaraokeUILyric {
+        // Try to find an available lyric in the pool
+        for (const lyric of this.lyricPool) {
+            if (!lyric.isInUse()) {
+                lyric.node.active = true;
+                return lyric;
+            }
+        }
+
+        // If no available lyrics, create a new one
+        const lyricNode = instantiate(this.lyricPrefab);
+        lyricNode.active = true;
+
+        const lyricComponent = lyricNode.getComponent('KaraokeUILyric') as KaraokeUILyric;
+        if (lyricComponent) {
+            this.lyricPool.push(lyricComponent);
+            return lyricComponent;
+        }
+
+        return null;
+    }
+
+  
 
     /**
      * Setup UI elements positions and initial states
@@ -346,6 +409,9 @@ export class KaraokeUIManager extends Component {
         // Calculate new position with smooth scrolling
         const newY = this.lerpValue(currentPos.y, this.targetScrollPosition, dt * 5 * this.scrollSpeedMultiplier);
 
+        // Record last position for comparison
+        this.lastScrollPosition = currentPos.y;
+
         // Update position
         this.lyricsContainer.setPosition(new Vec3(currentPos.x, newY, currentPos.z));
 
@@ -381,7 +447,7 @@ export class KaraokeUIManager extends Component {
      * Called by the game controller when a song is loaded
      */
     public createLyricLabels(lyrics: LyricSegment[]) {
-        if (!this.lyricsContainer || !this.lyricLabelTemplate) return;
+        if (!this.lyricsContainer || !this.lyricPrefab) return;
 
         // Clear existing lyrics
         this.clearLyricLabels();
@@ -390,29 +456,89 @@ export class KaraokeUIManager extends Component {
         this.lyricsContainer.setPosition(new Vec3(0, 0, 0));
         this.targetScrollPosition = 0;
         this.isScrolling = false;
+        this.lastScrollPosition = 0;
 
-        // Create new lyric labels
+        // Store all lyrics for later use
+        this.allLyrics = lyrics;
+        this.lastCreatedLyricIndex = -1;
+        this.yOffsetForNewLyrics = 0;
+
+        // Create only the first few lyric labels
+        this.createInitialLyrics();
+    }
+
+    /**
+     * Create the initial set of lyrics
+     */
+    private createInitialLyrics() {
+        // Create only the first few lyrics
+        let count = 0;
         let yOffset = 0;
-
-        lyrics.forEach((lyric, index) => {
+        
+        while (count < this.initialLyricCount && this.lastCreatedLyricIndex + 1 < this.allLyrics.length) {
+            const nextIndex = this.lastCreatedLyricIndex + 1;
+            const lyric = this.allLyrics[nextIndex];
+            
             // Process text to ensure max 2 lines per segment
             const processedText = this.processLyricText(lyric.text);
-
-            // Create label
-            const lyricNode = this.createLyricLabel(processedText, index);
-            if (lyricNode) {
+            
+            // Create label from pool
+            const lyricComponent = this.createLyricLabel(processedText, nextIndex);
+            if (lyricComponent) {
                 // Position label
-                const lyricHeight = lyricNode.getComponent(UITransform)?.height || 50;
-                lyricNode.setPosition(new Vec3(0, yOffset, 0));
-
+                const lyricHeight = lyricComponent.getHeight();
+                lyricComponent.node.setPosition(new Vec3(0, yOffset, 0));
+                
                 // Add to container
-                this.lyricsContainer.addChild(lyricNode);
-                this.lyricLabels.push(lyricNode);
-
+                this.lyricsContainer.addChild(lyricComponent.node);
+                this.activeLyrics.push(lyricComponent);
+                
                 // Update offset for next label
                 yOffset -= (lyricHeight + 20); // Add spacing between lyrics
+                
+                // Update tracking variables
+                this.lastCreatedLyricIndex = nextIndex;
+                count++;
             }
-        });
+        }
+        
+        // Store the current yOffset for future lyrics
+        this.yOffsetForNewLyrics = yOffset;
+    }
+    
+    /**
+     * Create the next lyric and add it to the bottom
+     */
+    private createNextLyric(): boolean {
+        if (this.lastCreatedLyricIndex + 1 >= this.allLyrics.length) {
+            return false; // No more lyrics to create
+        }
+        
+        const nextIndex = this.lastCreatedLyricIndex + 1;
+        const lyric = this.allLyrics[nextIndex];
+        
+        // Process text to ensure max 2 lines per segment
+        const processedText = this.processLyricText(lyric.text);
+        
+        // Create label from pool
+        const lyricComponent = this.createLyricLabel(processedText, nextIndex);
+        if (!lyricComponent) return false;
+        
+        // Position label at the bottom
+        const lyricHeight = lyricComponent.getHeight();
+        lyricComponent.node.setPosition(new Vec3(0, this.yOffsetForNewLyrics, 0));
+        
+        // Add to container
+        this.lyricsContainer.addChild(lyricComponent.node);
+        this.activeLyrics.push(lyricComponent);
+        
+        // Update offset for next label
+        this.yOffsetForNewLyrics -= (lyricHeight + 20); // Add spacing between lyrics
+        
+        // Update tracking variable
+        this.lastCreatedLyricIndex = nextIndex;
+        
+        return true;
     }
 
     /**
@@ -452,37 +578,42 @@ export class KaraokeUIManager extends Component {
     }
 
     /**
-     * Create a single lyric label
+     * Create a single lyric label from the pool
      */
-    private createLyricLabel(text: string, index: number): Node {
-        if (!this.lyricLabelTemplate) return null;
+    private createLyricLabel(text: string, index: number): KaraokeUILyric {
+        // Get lyric from pool
+        const lyricComponent = this.getLyricFromPool();
+        if (!lyricComponent) return null;
 
-        // Clone template
-        const lyricNode = instantiate(this.lyricLabelTemplate.node);
-        lyricNode.active = true;
+        // Initialize with text and index
+        lyricComponent.init(text, index);
 
-        // Set text
-        const richText = lyricNode.getComponent(RichText);
-        if (richText) {
-            richText.string = text;
+        // Set highlight state based on index
+        if (index === this.currentLyricIndex) {
+            lyricComponent.setHighlightState('current');
+        } else if (index < this.currentLyricIndex) {
+            lyricComponent.setHighlightState('past');
+        } else {
+            lyricComponent.setHighlightState('future');
         }
 
-        // Set name
-        lyricNode.name = `Lyric_${index}`;
-
-        return lyricNode;
+        return lyricComponent;
     }
 
     /**
      * Clear all lyric labels
      */
     private clearLyricLabels() {
-        // Remove all child nodes
-        this.lyricLabels.forEach(node => {
-            node.removeFromParent();
+        // Recycle all active lyrics
+        this.activeLyrics.forEach(lyric => {
+            if (lyric && lyric.isInUse()) {
+                lyric.recycle();
+                lyric.node.active = false;
+                lyric.node.removeFromParent();
+            }
         });
 
-        this.lyricLabels = [];
+        this.activeLyrics = [];
         this.currentLyricIndex = -1;
     }
 
@@ -490,34 +621,73 @@ export class KaraokeUIManager extends Component {
      * Highlight the current lyric and scroll to it
      */
     private highlightCurrentLyric(index: number) {
-        if (index < 0 || index >= this.lyricLabels.length) return;
-
-        // Update styles for all lyrics
-        this.lyricLabels.forEach((node, i) => {
-            const richText = node.getComponent(RichText);
-            if (richText) {
-                if (i === index) {
-                    // Highlight current lyric
-                    richText.string = `<color=#ffffff><b>${richText.string}</b></color>`;
-                } else if (i < index) {
-                    // Dim past lyrics
-                    richText.string = `<color=#888888>${richText.string}</color>`;
-                } else {
-                    // Normal style for future lyrics
-                    richText.string = `<color=#cccccc>${richText.string}</color>`;
+        if (index < 0) return;
+        
+        // Ensure the requested lyric exists in the active list
+        const targetLyricExists = this.activeLyrics.some(lyric => lyric.getIndex() === index);
+        
+        // If the target lyric doesn't exist and we haven't created all lyrics yet,
+        // keep creating lyrics until we find it or reach the end
+        if (!targetLyricExists && this.lastCreatedLyricIndex < this.allLyrics.length - 1) {
+            while (this.createNextLyric()) {
+                if (this.activeLyrics.some(lyric => lyric.getIndex() === index)) {
+                    break;
                 }
+            }
+        }
+
+        // Update highlight states for all lyrics
+        this.activeLyrics.forEach(lyric => {
+            if (!lyric || !lyric.isInUse()) return;
+
+            const lyricIndex = lyric.getIndex();
+
+            if (lyricIndex === index) {
+                lyric.setHighlightState('current');
+            } else if (lyricIndex < index) {
+                // Set as past lyric
+                lyric.setHighlightState('past');
+                this.scheduleLyricRecycling(lyric);
+            } else {
+                lyric.setHighlightState('future');
             }
         });
 
         // Scroll to current lyric
-        if (this.lyricsContainer && index >= 0 && index < this.lyricLabels.length) {
-            const targetNode = this.lyricLabels[index];
-            if (targetNode) {
+        if (this.lyricsContainer) {
+            const targetLyric = this.activeLyrics.find(lyric => lyric.getIndex() === index);
+            if (targetLyric) {
                 // Calculate target position
-                this.targetScrollPosition = -targetNode.position.y;
+                this.targetScrollPosition = -targetLyric.node.position.y;
                 this.isScrolling = true;
             }
         }
+    }
+
+    /**
+     * Schedule a lyric for recycling with fade-out effect
+     */
+    private scheduleLyricRecycling(lyric: KaraokeUILyric): void {
+        if (!lyric || !lyric.isInUse()) return;
+
+        // Apply fade out effect and recycle when complete
+        lyric.fadeOut(() => {
+            // Check if the lyric is still in the active list
+            const index = this.activeLyrics.indexOf(lyric);
+            if (index !== -1) {
+                // Remove from active list
+                this.activeLyrics.splice(index, 1);
+
+                // Recycle the lyric
+                lyric.recycle();
+                lyric.node.active = false;
+                lyric.node.removeFromParent();
+
+                
+                // Create a new lyric to replace the recycled one
+                this.createNextLyric();
+            }
+        });
     }
 
     /**
@@ -634,5 +804,11 @@ export class KaraokeUIManager extends Component {
     onDestroy() {
         // Stop all animations
         this.stopAllAnimations();
+
+        // Clear all lyric labels
+        this.clearLyricLabels();
+
+        // Clear the lyric pool
+        this.lyricPool = [];
     }
 } 

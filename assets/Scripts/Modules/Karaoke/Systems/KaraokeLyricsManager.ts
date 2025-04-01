@@ -312,7 +312,7 @@ export class KaraokeLyricsManager extends Component {
         KaraokeLyricsManager.emit(KaraokeConstants.EVENTS.LYRICS_UPDATED, {
             currentLyric,
             nextLyric,
-            currentIndex: this.currentLyricIndex,
+            currentLyricIndex: this.currentLyricIndex,
             totalLyrics: this.lyrics.length
         });
     }
