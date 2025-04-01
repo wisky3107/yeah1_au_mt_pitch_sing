@@ -75,26 +75,6 @@ export class AuditionGameplayController extends Component {
     //test data should load from csv
     // Available songs in the game
     private availableSongs: SongData[] = [
-        // {
-        //     id: 'song0211',
-        //     title: '삐딱하게 (Crooked)',
-        //     artist: 'G-Dragon',
-        //     difficulty: 3,
-        //     bpm: 130,
-        //     audioPath: 'song0211',
-        //     previewStart: 30000,
-        //     previewEnd: 45000
-        // },
-        // {
-        //     id: 'song0502',
-        //     title: 'Growl',
-        //     artist: 'EXO',
-        //     difficulty: 2,
-        //     bpm: 90,
-        //     audioPath: 'song0502',
-        //     previewStart: 25000,
-        //     previewEnd: 40000
-        // }, 
         {
             id: 'DauCoLoiLam_ATVNCG_Full',
             title: 'Đâu Có Lỗi Lầm',
