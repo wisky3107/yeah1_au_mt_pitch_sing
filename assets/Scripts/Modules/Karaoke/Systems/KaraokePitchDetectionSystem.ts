@@ -13,7 +13,7 @@ const { ccclass, property } = _decorator;
 export class KaraokePitchDetectionSystem extends PitchBase {
     //#region Singleton
     private static _instance: KaraokePitchDetectionSystem = null;
-    
+
     public static get instance(): KaraokePitchDetectionSystem {
         return this._instance;
     }
@@ -28,10 +28,9 @@ export class KaraokePitchDetectionSystem extends PitchBase {
         }
 
         KaraokePitchDetectionSystem._instance = this;
-        
+
         // Override base class settings with karaoke-specific ones
         this.detectionIntervalMs = KaraokeConstants.PITCH_DETECTION_INTERVAL_MS;
-        this.volumeThreshold = KaraokeConstants.VOLUME_THRESHOLD;
     }
 
     onDestroy() {
@@ -53,27 +52,28 @@ export class KaraokePitchDetectionSystem extends PitchBase {
             return;
         }
 
-        // Detect pitch using autocorrelation algorithm
-        const frequency = this.detectPitchAutocorrelation();
+        //by pass the frequency logic
+        // // Detect pitch using autocorrelation algorithm
+        // const frequency = this.detectPitchAutocorrelation();
 
-        // Skip if invalid frequency
-        if (frequency <= 0) {
-            this.emitPitchDetected(0, false, PitchAccuracy.MISS, volume);
-            return;
-        }
+        // // Skip if invalid frequency
+        // if (frequency <= 0) {
+        //     this.emitPitchDetected(0, false, PitchAccuracy.MISS, volume);
+        //     return;
+        // }
 
-        // Apply smoothing to frequency
-        const smoothedFrequency = this.lastFrequency > 0
-            ? this.lastFrequency * this.smoothingFactor + frequency * (1 - this.smoothingFactor)
-            : frequency;
+        // // Apply smoothing to frequency
+        // const smoothedFrequency = this.lastFrequency > 0
+        //     ? this.lastFrequency * this.smoothingFactor + frequency * (1 - this.smoothingFactor)
+        //     : frequency;
 
-        this.lastFrequency = smoothedFrequency;
+        // this.lastFrequency = smoothedFrequency;
 
-        // Determine accuracy
-        const accuracy = this.calculateAccuracy(smoothedFrequency);
+        // // Determine accuracy
+        // const accuracy = this.calculateAccuracy(smoothedFrequency);
 
-        // Emit pitch detected event
-        this.emitPitchDetected(smoothedFrequency, true, accuracy, volume);
+        // // Emit pitch detected event
+        this.emitPitchDetected(0, true, 1, volume);
     }
 
     private calculateAccuracy(frequency: number): PitchAccuracy {
@@ -90,28 +90,12 @@ export class KaraokePitchDetectionSystem extends PitchBase {
             volume
         };
 
+        console.log("emitPitchDetected", frequency, detected, accuracy, volume);
         KaraokePitchDetectionSystem.emit(KaraokeConstants.EVENTS.PITCH_DETECTED, result);
     }
     //#endregion
 
     //#region Utility Methods
-    public getVolumeLevel(): number {
-        if (!this.analyzer) return 0;
-
-        // Get the frequency data
-        const freqData = new Uint8Array(this.analyzer.frequencyBinCount);
-        this.analyzer.getByteFrequencyData(freqData);
-
-        // Calculate the average amplitude
-        let sum = 0;
-        for (let i = 0; i < freqData.length; i++) {
-            sum += freqData[i];
-        }
-
-        // Return normalized volume level (0-1)
-        return sum / (freqData.length * 255);
-    }
-
     /**
     * Get the current analyzer data for visualization
     * @returns Float32Array of analyzer data, or null if analyzer is not initialized

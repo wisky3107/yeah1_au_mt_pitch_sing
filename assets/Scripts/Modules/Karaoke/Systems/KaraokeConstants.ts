@@ -44,7 +44,6 @@ export class KaraokeConstants {
     
     // Pitch detection settings
     public static readonly PITCH_DETECTION_INTERVAL_MS: number = 50;
-    public static readonly VOLUME_THRESHOLD: number = 0.005;
     
     // Pitch accuracy thresholds
     public static readonly ACCURACY_THRESHOLDS = {

@@ -76,6 +76,8 @@ export class KaraokeUIManager extends Component {
     @property({ type: PitchWaveform, tooltip: "Node containing PitchWaveform component" })
     private waveformVisualizer: PitchWaveform = null;
 
+    @property({ type: Label, tooltip: "Label component to display the score" })
+    private lbScore: Label = null;
     // Private variables
     private gameController: KaraokeGameplayController = null;
     private lyricsManager: KaraokeLyricsManager = null;
@@ -253,9 +255,53 @@ export class KaraokeUIManager extends Component {
     /**
      * Show finished state
      */
-    public showFinishedState() {
-        // Update UI for finished state
-        // This would show score results or similar
+    public showFinishedState(score: number) {
+        // Make sure we have a score label
+        if (!this.lbScore) {
+            console.warn("Score label not assigned in KaraokeUIManager");
+            return;
+        }
+        
+        // Make score label visible
+        this.lbScore.node.active = true;
+        
+        // Get final score from scoring system
+        const finalScore = score || 0;
+        
+        // Start from 0 and animate to the final score
+        let currentDisplayScore = 0;
+        this.lbScore.string = "0";
+        
+        // Calculate animation duration based on score (higher score = slightly longer animation)
+        const duration = Math.min(2.0, 0.5 + (finalScore / 100) * 1.5);
+        
+        // Create a tween for score counting animation
+        tween(this.lbScore.node)
+            .call(() => {
+                // Scale up effect at start
+                tween(this.lbScore.node)
+                    .to(0.2, { scale: new Vec3(1.2, 1.2, 1.2) })
+                    .to(0.2, { scale: new Vec3(1.0, 1.0, 1.0) })
+                    .start();
+            })
+            .to(duration, {}, {
+                onUpdate: (target, ratio) => {
+                    // Update the displayed score based on the animation progress
+                    currentDisplayScore = Math.floor(finalScore * ratio);
+                    this.lbScore.string = currentDisplayScore.toString();
+                }
+            })
+            .call(() => {
+                // Ensure the final score is displayed exactly
+                this.lbScore.string = finalScore.toString();
+                
+                // Add a little bounce effect when finished
+                tween(this.lbScore.node)
+                    .to(0.1, { scale: new Vec3(1.3, 1.3, 1.3) })
+                    .to(0.2, { scale: new Vec3(1.0, 1.0, 1.0) })
+                    .start();
+            })
+            .start();
     }
 
     /**
@@ -794,6 +840,23 @@ export class KaraokeUIManager extends Component {
         this.waveBars.forEach(bar => {
             if (bar) {
                 bar.setScale(new Vec3(1, 0.5, 1));
+            }
+        });
+    }
+
+    /**
+     * Hide current lyric highlight
+     * Used when no lyric is active or during transitions
+     */
+    public hideLyricHighlight(): void {
+        // Remove highlight from current lyric
+        this.activeLyrics.forEach(lyric => {
+            if (!lyric || !lyric.isInUse()) return;
+
+            const lyricIndex = lyric.getIndex();
+
+            if (lyricIndex === this.currentLyricIndex) {
+                lyric.setHighlightState('future');
             }
         });
     }

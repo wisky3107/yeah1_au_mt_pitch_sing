@@ -228,6 +228,22 @@ export class KaraokeGameplayController extends Component {
                 const updatedSong = await this.lyricsManager.loadLyrics(songToLoad);
                 this.currentSong = updatedSong;
 
+                // Calculate total interaction time (sum of all lyrics durations)
+                let totalInteractionDuration = 0;
+                if (updatedSong.lyrics && updatedSong.lyrics.length > 0) {
+                    for (const lyric of updatedSong.lyrics) {
+                        // Add the duration of each lyric segment (endTime - startTime)
+                        totalInteractionDuration += (lyric.endTime - lyric.startTime);
+                    }
+                }
+                
+                // Update the scoring system with the total lyrics duration
+                if (this.scoringSystem) {
+                    this.scoringSystem.setTotalLyricsDuration(totalInteractionDuration);
+                }
+                
+                console.log(`Total lyrics interaction duration: ${totalInteractionDuration.toFixed(2)} seconds`);
+
                 // Load the audio
                 await this.audioManager.loadAudio(updatedSong.audioPath);
 
@@ -519,7 +535,7 @@ export class KaraokeGameplayController extends Component {
                     break;
 
                 case KaraokeState.FINISHED:
-                    this.uiManager.showFinishedState();
+                    this.uiManager.showFinishedState(this.scoringSystem.getScore().score);
                     this.uiManager.stopTimer();
                     break;
             }
@@ -562,7 +578,12 @@ export class KaraokeGameplayController extends Component {
 
         // Update UI directly with current lyric
         if (this.uiManager) {
-            this.uiManager.updateLyrics(currentLyricIndex);
+            if (this.isLyricActive) {
+                this.uiManager.updateLyrics(currentLyricIndex);
+            } else {
+                // If no lyric is active, hide the current highlight
+                this.uiManager.hideLyricHighlight();
+            }
         }
     }
 

@@ -57,19 +57,19 @@ export class KaraokeLyricsManager extends Component {
                 reject(new Error('Song or lyricPath is missing'));
                 return;
             }
-            
+
             const resourcePath = `karaoke/lyrics/${song.lyricPath}`;
-            
+
             resourceUtil.loadRes(resourcePath, JsonAsset, (err, jsonAsset: JsonAsset) => {
                 if (err) {
                     console.error(`Failed to load lyrics from path: ${resourcePath}`, err);
                     reject(err);
                     return;
                 }
-                
+
                 try {
                     const jsonData = jsonAsset.json;
-                    
+
                     // Convert the JSON data to LyricSegment objects
                     const lyricSegments: LyricSegment[] = jsonData.segments.map(segment => {
                         return {
@@ -79,20 +79,20 @@ export class KaraokeLyricsManager extends Component {
                             completed: false
                         };
                     });
-                    
+
                     // Update the lyrics array
                     this.lyrics = lyricSegments || [];
                     this.resetLyrics();
-                    
+
                     // Update the song object with the lyrics data
                     const updatedSong = {
                         ...song,
                         lyrics: lyricSegments,
                         duration: jsonData.duration || song.duration
                     };
-                    
+
                     console.log(`Loaded ${this.lyrics.length} lyric segments`);
-                    
+
                     resolve(updatedSong);
                 } catch (error) {
                     console.error('Error parsing lyrics JSON:', error);
@@ -109,7 +109,7 @@ export class KaraokeLyricsManager extends Component {
     public setLyrics(lyrics: LyricSegment[]): void {
         this.lyrics = lyrics || [];
         this.resetLyrics();
-        
+
         console.log(`Set ${this.lyrics.length} lyric segments`);
     }
 
@@ -118,16 +118,16 @@ export class KaraokeLyricsManager extends Component {
      */
     public startPlayback(): void {
         if (this.isPlaying) return;
-        
+
         this.isPlaying = true;
         this.currentTime = 0;
         this.currentLyricIndex = -1;
-        
+
         // Start update interval for lyric timing
         this.lyricUpdateInterval = setInterval(() => {
             this.updateLyrics();
         }, 100);
-        
+
         console.log('Lyrics playback started');
     }
 
@@ -136,11 +136,11 @@ export class KaraokeLyricsManager extends Component {
      */
     public stopPlayback(): void {
         if (!this.isPlaying) return;
-        
+
         this.isPlaying = false;
         this.stopLyricUpdates();
         this.resetLyrics();
-        
+
         console.log('Lyrics playback stopped');
     }
 
@@ -149,10 +149,10 @@ export class KaraokeLyricsManager extends Component {
      */
     public pausePlayback(): void {
         if (!this.isPlaying) return;
-        
+
         this.isPlaying = false;
         this.stopLyricUpdates();
-        
+
         console.log('Lyrics playback paused');
     }
 
@@ -161,14 +161,9 @@ export class KaraokeLyricsManager extends Component {
      */
     public resumePlayback(): void {
         if (this.isPlaying) return;
-        
+
         this.isPlaying = true;
-        
-        // Start update interval for lyric timing
-        this.lyricUpdateInterval = setInterval(() => {
-            this.updateLyrics();
-        }, 100);
-        
+
         console.log('Lyrics playback resumed');
     }
 
@@ -178,7 +173,7 @@ export class KaraokeLyricsManager extends Component {
      */
     public updateTime(time: number): void {
         this.currentTime = time;
-        
+
         // If not using the update interval, manually update lyrics
         if (!this.lyricUpdateInterval) {
             this.updateLyrics();
@@ -193,7 +188,7 @@ export class KaraokeLyricsManager extends Component {
         if (this.currentLyricIndex < 0 || this.currentLyricIndex >= this.lyrics.length) {
             return null;
         }
-        
+
         return this.lyrics[this.currentLyricIndex];
     }
 
@@ -203,11 +198,11 @@ export class KaraokeLyricsManager extends Component {
      */
     public getNextLyric(): LyricSegment | null {
         const nextIndex = this.currentLyricIndex + 1;
-        
+
         if (nextIndex >= this.lyrics.length) {
             return null;
         }
-        
+
         return this.lyrics[nextIndex];
     }
 
@@ -217,11 +212,11 @@ export class KaraokeLyricsManager extends Component {
      */
     public isLyricActive(): boolean {
         const currentLyric = this.getCurrentLyric();
-        
+
         if (!currentLyric) {
             return false;
         }
-        
+
         return this.currentTime >= currentLyric.startTime && this.currentTime <= currentLyric.endTime;
     }
     //#endregion
@@ -229,24 +224,24 @@ export class KaraokeLyricsManager extends Component {
     //#region Private Methods
     private updateLyrics(): void {
         if (!this.isPlaying || this.lyrics.length === 0) return;
-        
+
         // Find the current lyric based on time
         const newIndex = this.findLyricIndexAtTime(this.currentTime);
-        
+
         // If the lyric has changed, emit an event
         if (newIndex !== this.currentLyricIndex) {
             const prevIndex = this.currentLyricIndex;
             this.currentLyricIndex = newIndex;
-            
+
             // Mark previous lyric as completed if moving forward
             if (prevIndex >= 0 && prevIndex < this.lyrics.length && newIndex > prevIndex) {
                 this.lyrics[prevIndex].completed = true;
             }
-            
+
             // Emit lyric updated event
             this.emitLyricUpdated();
         }
-        
+
         // Increment current time (only if not being externally updated)
         if (this.lyricUpdateInterval) {
             this.currentTime += 0.1; // 100ms
@@ -258,33 +253,33 @@ export class KaraokeLyricsManager extends Component {
         if (this.lyrics.length === 0) {
             return -1;
         }
-        
+
         // If before first lyric
         if (time < this.lyrics[0].startTime) {
             return -1;
         }
-        
+
         // Find the lyric that contains the current time
         for (let i = 0; i < this.lyrics.length; i++) {
             const lyric = this.lyrics[i];
-            
+
             if (time >= lyric.startTime && time <= lyric.endTime) {
                 return i;
             }
         }
-        
+
         // If after last lyric, return last index
         if (time > this.lyrics[this.lyrics.length - 1].endTime) {
             return this.lyrics.length - 1;
         }
-        
+
         // Between lyrics, return the previous one
         for (let i = 0; i < this.lyrics.length - 1; i++) {
             if (time > this.lyrics[i].endTime && time < this.lyrics[i + 1].startTime) {
                 return i;
             }
         }
-        
+
         return -1;
     }
 
@@ -298,7 +293,7 @@ export class KaraokeLyricsManager extends Component {
     private resetLyrics(): void {
         this.currentLyricIndex = -1;
         this.currentTime = 0;
-        
+
         // Reset completed flags
         this.lyrics.forEach(lyric => {
             lyric.completed = false;
@@ -308,7 +303,7 @@ export class KaraokeLyricsManager extends Component {
     private emitLyricUpdated(): void {
         const currentLyric = this.getCurrentLyric();
         const nextLyric = this.getNextLyric();
-        
+
         KaraokeLyricsManager.emit(KaraokeConstants.EVENTS.LYRICS_UPDATED, {
             currentLyric,
             nextLyric,

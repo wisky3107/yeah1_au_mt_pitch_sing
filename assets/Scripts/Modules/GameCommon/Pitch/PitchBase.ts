@@ -206,66 +206,77 @@ export class PitchBase extends Component {
      * @returns The detected frequency in Hz, or 0 if no pitch detected
      */
     protected detectPitchAutocorrelation(): number {
-        if (!this.analyzer) return 0;
-        
-        // Get audio data
-        this.analyzer.getFloatTimeDomainData(this.analyzerBuffer);
+        const buffer = this.analyzerBuffer;
+        const bufferSize = buffer.length;
 
-        const bufferSize = this.analyzerBuffer.length;
-        const sampleRate = this.audioContext.sampleRate;
-
-        // Find the root-mean-square of the signal
-        let sumOfSquares = 0;
+        // Find the root-mean-square amplitude
+        let rms = 0;
         for (let i = 0; i < bufferSize; i++) {
-            const val = this.analyzerBuffer[i];
-            sumOfSquares += val * val;
+            rms += buffer[i] * buffer[i];
         }
-
-        const rootMeanSquare = Math.sqrt(sumOfSquares / bufferSize);
+        rms = Math.sqrt(rms / bufferSize);
 
         // Return 0 if the signal is too quiet
-        if (rootMeanSquare < this.volumeThreshold) {
+        if (rms < this.volumeThreshold) {
+            console.log('Autocorrelation RMS below threshold');
             return 0;
         }
 
-        // Autocorrelation
-        let bestOffset = -1;
-        let bestCorrelation = 0;
-        let correlation = 0;
-
-        // Minimum and maximum frequencies to detect (in Hz)
-        const minFreq = 85;  // approximately lowest vocal note E2
-        const maxFreq = 1050; // approximately highest vocal note C6
-
-        // Convert to periods
-        const minPeriod = Math.floor(sampleRate / maxFreq);
-        const maxPeriod = Math.floor(sampleRate / minFreq);
-
-        // Perform autocorrelation within the acceptable range
-        for (let offset = minPeriod; offset <= maxPeriod; offset++) {
-            correlation = 0;
-
-            for (let i = 0; i < bufferSize - offset; i++) {
-                correlation += this.analyzerBuffer[i] * this.analyzerBuffer[i + offset];
-            }
-
-            // Normalize
-            correlation /= bufferSize - offset;
-
-            // Track the highest correlation and corresponding offset
-            if (correlation > bestCorrelation) {
-                bestCorrelation = correlation;
-                bestOffset = offset;
+        // Find the autocorrelation
+        let correlation = new Float32Array(bufferSize);
+        for (let i = 0; i < bufferSize; i++) {
+            correlation[i] = 0;
+            for (let j = 0; j < bufferSize - i; j++) {
+                correlation[i] += buffer[j] * buffer[j + i];
             }
         }
 
-        // If we found a good correlation
-        if (bestCorrelation > 0.01) {
-            // Convert period to frequency
-            return sampleRate / bestOffset;
+        // Find the peak of the correlation
+        let firstMinimum = -1;
+        for (let i = 1; i < bufferSize / 2; i++) {
+            if (correlation[i] < correlation[i - 1] && correlation[i] < correlation[i + 1]) {
+                firstMinimum = i;
+                break;
+            }
         }
 
-        return 0; // No valid pitch detected
+        if (firstMinimum <= 1) {
+            firstMinimum = 1;
+        }
+
+        // Find the absolute peak after the first minimum
+        let peakIndex = firstMinimum;
+        for (let i = firstMinimum + 1; i < bufferSize / 2; i++) {
+            if (correlation[i] > correlation[peakIndex]) {
+                peakIndex = i;
+            }
+        }
+
+        if (correlation[peakIndex] <= 0 || peakIndex === 0) {
+            return 0;
+        }
+
+        // Refine the peak by interpolating using quadratic interpolation
+        let refinedPeak = peakIndex;
+        if (peakIndex > 0 && peakIndex < bufferSize - 1) {
+            let peakValue = correlation[peakIndex];
+            let leftValue = correlation[peakIndex - 1];
+            let rightValue = correlation[peakIndex + 1];
+            let interpolation = 0.5 * (leftValue - rightValue) / (leftValue - 2 * peakValue + rightValue);
+            if (isFinite(interpolation)) {
+                refinedPeak += interpolation;
+            }
+        }
+
+        // Calculate the frequency
+        let frequency = 0;
+        if (refinedPeak > 0) {
+            frequency = this.audioContext.sampleRate / refinedPeak;
+        } else {
+            console.log('Autocorrelation: Refined peak is zero or negative.');
+        }
+
+        return frequency;
     }
     //#endregion
 

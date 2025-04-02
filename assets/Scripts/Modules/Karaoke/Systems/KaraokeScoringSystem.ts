@@ -1,4 +1,4 @@
-import { _decorator, Component, EventTarget } from 'cc';
+import { _decorator, Component, EventTarget, randomRangeInt } from 'cc';
 import { KaraokeConstants, FeedbackType } from './KaraokeConstants';
 import { ScoreDetails, PitchDetectionResult } from '../Data/KaraokeTypes';
 
@@ -18,20 +18,12 @@ export class KaraokeScoringSystem extends Component {
     }
     //#endregion
 
-    //#region Properties
-    @property({ tooltip: "Minimum time between score updates in seconds", group: { name: "Scoring", id: "scoring" } })
-    private updateInterval: number = 0.5;
-    //#endregion
-
     //#region Private Variables
     private validDuration: number = 0;
-    private totalInteractionDuration: number = 0;
-    private lastUpdateTime: number = 0;
-    private currentTime: number = 0;
+    private totalInteractionDuration: number = 0; // Total duration of all lyrics from start to end
     private isRecording: boolean = false;
     private isPitchDetected: boolean = false;
     private isLyricActive: boolean = false;
-    private updateTimer: number = null;
     //#endregion
 
     //#region Lifecycle Methods
@@ -62,16 +54,11 @@ export class KaraokeScoringSystem extends Component {
      */
     public startScoring(): void {
         if (this.isRecording) return;
-        
+
         this.isRecording = true;
         this.resetScore();
-        this.lastUpdateTime = 0;
-        
-        // Start update timer
-        this.updateTimer = setInterval(() => {
-            this.updateScore();
-        }, this.updateInterval * 1000);
-        
+
+
         console.log('Score recording started');
     }
 
@@ -80,17 +67,12 @@ export class KaraokeScoringSystem extends Component {
      */
     public stopScoring(): void {
         if (!this.isRecording) return;
-        
+
         this.isRecording = false;
-        
-        if (this.updateTimer) {
-            clearInterval(this.updateTimer);
-            this.updateTimer = null;
-        }
-        
+
         // Emit final score
         this.emitScoreUpdated();
-        
+
         console.log('Score recording stopped');
     }
 
@@ -99,7 +81,6 @@ export class KaraokeScoringSystem extends Component {
      * @param time Current playback time in seconds
      */
     public updateTime(time: number): void {
-        this.currentTime = time;
     }
 
     /**
@@ -107,7 +88,12 @@ export class KaraokeScoringSystem extends Component {
      * @param result Pitch detection result
      */
     public updatePitchDetection(result: PitchDetectionResult): void {
+        if (!this.isRecording) return;
+
         this.isPitchDetected = result.detected;
+        if (this.isPitchDetected && this.isLyricActive) {
+            this.validDuration += KaraokeConstants.PITCH_DETECTION_INTERVAL_MS / 1000.0 * 2.0; //assume that in one sentence the dim sound equal the word sound
+        }
     }
 
     /**
@@ -147,68 +133,31 @@ export class KaraokeScoringSystem extends Component {
         return this.calculateScore();
     }
 
+
+
     /**
-     * Get current feedback type based on scoring
-     * @returns Feedback type enum value
+     * Update total duration of all lyrics
+     * @param duration Total duration of all lyrics in seconds
      */
-    public getFeedbackType(): FeedbackType {
-        // If no interaction yet
-        if (this.totalInteractionDuration === 0) {
-            return FeedbackType.IDLE;
-        }
-        
-        const score = this.calculateScore();
-        
-        if (score >= 80) {
-            return FeedbackType.PERFECT;
-        } else if (score >= 40) {
-            return FeedbackType.GOOD;
-        } else {
-            return FeedbackType.MISS;
-        }
+    public setTotalLyricsDuration(duration: number): void {
+        this.totalInteractionDuration = duration;
     }
     //#endregion
-
-    //#region Private Methods
-    private updateScore(): void {
-        if (!this.isRecording) return;
-        
-        const deltaTime = this.updateInterval;
-        
-        // Update total interaction time if pitch is detected
-        if (this.isPitchDetected) {
-            this.totalInteractionDuration += deltaTime;
-            
-            // Update valid interaction time if lyric is active
-            if (this.isLyricActive) {
-                this.validDuration += deltaTime;
-            }
-        }
-        
-        // Emit score updated event periodically
-        const timeSinceLastUpdate = this.currentTime - this.lastUpdateTime;
-        if (timeSinceLastUpdate >= 1.0) { // Update score display every second
-            this.emitScoreUpdated();
-            this.lastUpdateTime = this.currentTime;
-        }
-    }
 
     private calculateScore(): number {
         if (this.totalInteractionDuration === 0) {
             return 0;
         }
-        
-        // Score formula: (valid duration / total interaction duration) * 100
-        return Math.round((this.validDuration / this.totalInteractionDuration) * 100);
+
+        // Score formula: (valid duration / total lyrics duration) * 100
+        return Math.round(Math.min(this.validDuration / this.totalInteractionDuration, 1.0) * 100) - randomRangeInt(0, 10);//add random score number
     }
 
     private emitScoreUpdated(): void {
         const scoreDetails = this.getScore();
-        const feedbackType = this.getFeedbackType();
-        
+
         KaraokeScoringSystem.emit(KaraokeConstants.EVENTS.SCORE_UPDATED, {
             score: scoreDetails,
-            feedbackType
         });
     }
     //#endregion

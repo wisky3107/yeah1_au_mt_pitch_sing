@@ -38,7 +38,6 @@ export class KaraokeAudioManager extends Component {
     private isPaused: boolean = false;
     private currentTime: number = 0;
     private duration: number = 0;
-    private updateInterval: number = null;
     private fadeInterval: number = null;
     //#endregion
 
@@ -51,20 +50,40 @@ export class KaraokeAudioManager extends Component {
         }
 
         KaraokeAudioManager._instance = this;
-        
+
         // Create audio source if not provided
         if (!this.musicSource) {
             this.musicSource = this.addComponent(AudioSource);
         }
-        
+
         // Set initial volume
         this.musicSource.volume = this.musicVolume;
+    }
+
+    update(dt: number) {
+        if (!this.isPlaying || this.isPaused) return;
+
+        // Update current time from audio source
+        this.currentTime = this.musicSource.currentTime;
+
+        // Check if song has ended by detecting when time stops progressing or resets to 0
+        // When audio finishes, currentTime might reset to 0 or stop progressing
+        if (this.isPlaying && !this.isPaused) {
+            // If currentTime suddenly drops to near 0 after progressing significantly
+            if (this.duration > 0 &&
+                this.currentTime > this.duration - 0.5) {
+                this.handlePlaybackEnd();
+            }
+            else if (this.musicSource.playing == false) {
+                this.handlePlaybackEnd();
+            }
+        }
     }
 
     onDestroy() {
         // Clean up resources
         this.stopPlayback();
-        this.clearIntervals();
+        this.clearFadeInterval();
     }
     //#endregion
 
@@ -86,10 +105,10 @@ export class KaraokeAudioManager extends Component {
                     resolve(false);
                     return;
                 }
-                
+
                 this.currentAudioClip = clip;
                 this.musicSource.clip = clip;
-                
+
                 // Since AudioClip doesn't expose duration directly in some Cocos versions,
                 // we'll use a timeout to give the audio source time to load metadata
                 setTimeout(() => {
@@ -103,13 +122,13 @@ export class KaraokeAudioManager extends Component {
                         // Assume a standard length for a song (3 minutes)
                         this.duration = 180;
                     }
-                    
+
                     console.log(`Loaded audio: ${path}, duration: ${this.duration}s`);
-                    KaraokeAudioManager.emit(KaraokeConstants.EVENTS.SONG_LOADED, { 
-                        path, 
-                        duration: this.duration 
+                    KaraokeAudioManager.emit(KaraokeConstants.EVENTS.SONG_LOADED, {
+                        path,
+                        duration: this.duration
                     });
-                    
+
                     resolve(true);
                 }, 500);
             });
@@ -122,12 +141,12 @@ export class KaraokeAudioManager extends Component {
      */
     public startPlayback(fadeIn: boolean = false): void {
         if (this.isPlaying && !this.isPaused) return;
-        
+
         if (!this.currentAudioClip) {
             console.warn('No audio loaded');
             return;
         }
-        
+
         // If paused, resume playback
         if (this.isPaused) {
             this.musicSource.play();
@@ -136,7 +155,7 @@ export class KaraokeAudioManager extends Component {
             // Start from beginning
             this.currentTime = 0;
             this.musicSource.currentTime = 0;
-            
+
             // Apply fade in if requested
             if (fadeIn) {
                 this.musicSource.volume = 0;
@@ -144,15 +163,12 @@ export class KaraokeAudioManager extends Component {
             } else {
                 this.musicSource.volume = this.musicVolume;
             }
-            
+
             this.musicSource.play();
         }
-        
+
         this.isPlaying = true;
-        
-        // Start update interval for tracking playback time
-        this.startUpdateInterval();
-        
+
         console.log('Audio playback started');
         KaraokeAudioManager.emit(KaraokeConstants.EVENTS.SONG_STARTED);
     }
@@ -163,7 +179,7 @@ export class KaraokeAudioManager extends Component {
      */
     public stopPlayback(fadeOut: boolean = true): void {
         if (!this.isPlaying) return;
-        
+
         // Apply fade out if requested
         if (fadeOut) {
             this.fadeOut(() => {
@@ -181,11 +197,10 @@ export class KaraokeAudioManager extends Component {
      */
     public pausePlayback(): void {
         if (!this.isPlaying || this.isPaused) return;
-        
+
         this.musicSource.pause();
         this.isPaused = true;
-        this.clearIntervals();
-        
+
         console.log('Audio playback paused');
     }
 
@@ -194,11 +209,10 @@ export class KaraokeAudioManager extends Component {
      */
     public resumePlayback(): void {
         if (!this.isPaused) return;
-        
+
         this.musicSource.play();
         this.isPaused = false;
-        this.startUpdateInterval();
-        
+
         console.log('Audio playback resumed');
     }
 
@@ -208,13 +222,13 @@ export class KaraokeAudioManager extends Component {
      */
     public seekTo(time: number): void {
         if (!this.currentAudioClip) return;
-        
+
         // Clamp time to valid range
         time = Math.max(0, Math.min(time, this.duration));
-        
+
         this.currentTime = time;
         this.musicSource.currentTime = time;
-        
+
         console.log(`Seeked to ${time}s`);
     }
 
@@ -269,29 +283,7 @@ export class KaraokeAudioManager extends Component {
     //#endregion
 
     //#region Private Methods
-    private startUpdateInterval(): void {
-        // Clear any existing interval
-        this.clearIntervals();
-        
-        // Start new interval for tracking playback time
-        this.updateInterval = setInterval(() => {
-            // Update current time from audio source
-            this.currentTime = this.musicSource.currentTime;
-            
-            // Check if playback has ended
-            if (this.currentTime >= this.duration) {
-                this.handlePlaybackEnd();
-            }
-        }, 100);
-    }
-
-    private clearIntervals(): void {
-        // Clear update interval
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval);
-            this.updateInterval = null;
-        }
-        
+    private clearFadeInterval(): void {
         // Clear fade interval
         if (this.fadeInterval) {
             clearInterval(this.fadeInterval);
@@ -300,21 +292,23 @@ export class KaraokeAudioManager extends Component {
     }
 
     private handlePlaybackEnd(): void {
+        // Only process end event once
+        if (!this.isPlaying) return;
+
         console.log('Audio playback ended');
-        
-        this.clearIntervals();
+
         this.isPlaying = false;
         this.isPaused = false;
-        
+
         KaraokeAudioManager.emit(KaraokeConstants.EVENTS.SONG_ENDED);
     }
 
     private finishStopPlayback(): void {
-        this.clearIntervals();
+        this.clearFadeInterval();
         this.isPlaying = false;
         this.isPaused = false;
         this.currentTime = 0;
-        
+
         console.log('Audio playback stopped');
     }
 
@@ -322,22 +316,22 @@ export class KaraokeAudioManager extends Component {
         if (this.fadeInterval) {
             clearInterval(this.fadeInterval);
         }
-        
+
         let volume = 0;
         const step = this.musicVolume / (this.fadeInDuration * 10);
         console.log(`Fade in starting with step: ${step}, target volume: ${this.musicVolume}, duration: ${this.fadeInDuration}`);
-        
+
         this.fadeInterval = setInterval(() => {
             volume += step;
             console.log(`Fade in: current volume=${volume.toFixed(2)}`);
-            
+
             if (volume >= this.musicVolume) {
                 volume = this.musicVolume;
                 clearInterval(this.fadeInterval);
                 this.fadeInterval = null;
                 console.log(`Fade in completed`);
             }
-            
+
             this.musicSource.volume = volume;
         }, 100);
     }
@@ -346,23 +340,23 @@ export class KaraokeAudioManager extends Component {
         if (this.fadeInterval) {
             clearInterval(this.fadeInterval);
         }
-        
+
         let volume = this.musicSource.volume;
         const step = volume / (this.fadeOutDuration * 10);
-        
+
         this.fadeInterval = setInterval(() => {
             volume -= step;
-            
+
             if (volume <= 0) {
                 volume = 0;
                 clearInterval(this.fadeInterval);
                 this.fadeInterval = null;
-                
+
                 if (callback) {
                     callback();
                 }
             }
-            
+
             this.musicSource.volume = volume;
         }, 100);
     }

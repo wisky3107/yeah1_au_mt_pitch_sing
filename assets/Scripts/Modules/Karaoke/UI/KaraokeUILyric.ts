@@ -119,6 +119,20 @@ export class KaraokeUILyric extends Component {
      * Get the height of this lyric component
      */
     public getHeight(): number {
+        return this.getAccurateHeight();
+        // const transform = this.getComponent(UITransform);
+        // return transform ? transform.height : 50;
+    }
+
+    /**
+     * Get accurate height after forcing layout update
+     */
+    public getAccurateHeight(): number {
+        // Force update layout
+        if (this.label) {
+            this.label.updateRenderData(true);
+        }
+        
         const transform = this.getComponent(UITransform);
         return transform ? transform.height : 50;
     }
@@ -152,5 +166,17 @@ export class KaraokeUILyric extends Component {
         this._isInUse = false;
         this._index = -1;
         // Don't need to reset string as it will be overwritten when reused
+    }
+
+    /**
+     * Get height in the next frame with callback
+     * @param callback Function to call with the accurate height
+     */
+    public getHeightNextFrame(callback: (height: number) => void): void {
+        this.scheduleOnce(() => {
+            const transform = this.getComponent(UITransform);
+            const height = transform ? transform.height : 50;
+            callback(height);
+        }, 0);
     }
 } 
