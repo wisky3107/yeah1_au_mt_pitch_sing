@@ -90,7 +90,6 @@ export class KaraokePitchDetectionSystem extends PitchBase {
             volume
         };
 
-        console.log("emitPitchDetected", frequency, detected, accuracy, volume);
         KaraokePitchDetectionSystem.emit(KaraokeConstants.EVENTS.PITCH_DETECTED, result);
     }
     //#endregion

@@ -37,11 +37,6 @@ export class KaraokeScoringSystem extends Component {
         KaraokeScoringSystem._instance = this;
     }
 
-    start() {
-        // Initialize score
-        this.resetScore();
-    }
-
     onDestroy() {
         // Clean up resources
         this.stopScoring();
@@ -92,7 +87,8 @@ export class KaraokeScoringSystem extends Component {
 
         this.isPitchDetected = result.detected;
         if (this.isPitchDetected && this.isLyricActive) {
-            this.validDuration += KaraokeConstants.PITCH_DETECTION_INTERVAL_MS / 1000.0 * 2.0; //assume that in one sentence the dim sound equal the word sound
+            this.validDuration += KaraokeConstants.PITCH_DETECTION_INTERVAL_MS / 1000.0 * 1.3; //assume that in one sentence the dim sound has 30% of the word sound
+            console.log("valid duration: " + this.validDuration);
         }
     }
 
@@ -109,7 +105,6 @@ export class KaraokeScoringSystem extends Component {
      */
     public resetScore(): void {
         this.validDuration = 0;
-        this.totalInteractionDuration = 0;
         this.emitScoreUpdated();
     }
 
@@ -133,8 +128,6 @@ export class KaraokeScoringSystem extends Component {
         return this.calculateScore();
     }
 
-
-
     /**
      * Update total duration of all lyrics
      * @param duration Total duration of all lyrics in seconds
@@ -145,10 +138,6 @@ export class KaraokeScoringSystem extends Component {
     //#endregion
 
     private calculateScore(): number {
-        if (this.totalInteractionDuration === 0) {
-            return 0;
-        }
-
         // Score formula: (valid duration / total lyrics duration) * 100
         return Math.round(Math.min(this.validDuration / this.totalInteractionDuration, 1.0) * 100) - randomRangeInt(0, 10);//add random score number
     }

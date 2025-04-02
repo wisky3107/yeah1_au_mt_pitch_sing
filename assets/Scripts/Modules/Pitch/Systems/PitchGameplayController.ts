@@ -556,7 +556,6 @@ export class PitchGameplayController extends Component {
                 currentPos.y,
                 currentPos.z
             ));
-            console.log('Butterfly camera position:', this.butterflyCamera.position);
         }
 
         // Update butterfly Y position smoothly
