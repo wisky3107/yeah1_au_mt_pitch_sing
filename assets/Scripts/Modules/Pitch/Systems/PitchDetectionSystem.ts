@@ -19,14 +19,6 @@ interface PitchDetectionResult {
  */
 @ccclass('PitchDetectionSystem')
 export class PitchDetectionSystem extends PitchBase {
-    //#region Singleton
-    private static _instance: PitchDetectionSystem = null;
-
-    public static get instance(): PitchDetectionSystem {
-        return this._instance;
-    }
-    //#endregion
-
     //#region Detection Properties
     private noteStabilityCounter: Map<MusicalNote, number> = new Map();
     private noteStabilityThreshold: number = 2;
@@ -39,14 +31,6 @@ export class PitchDetectionSystem extends PitchBase {
 
     //#region Lifecycle Methods
     onLoad() {
-        // Set up singleton instance
-        if (PitchDetectionSystem._instance !== null) {
-            this.node.destroy();
-            return;
-        }
-
-        PitchDetectionSystem._instance = this;
-
         // Initialize note stability counter
         for (let i = 0; i < 7; i++) {
             this.noteStabilityCounter.set(i as MusicalNote, 0);
@@ -186,7 +170,6 @@ export class PitchDetectionSystem extends PitchBase {
         if (refinedPeak > 0) {
             frequency = this.audioContext.sampleRate / refinedPeak;
         } else {
-            console.log('Autocorrelation: Refined peak is zero or negative.');
         }
 
         return frequency;
@@ -233,7 +216,6 @@ export class PitchDetectionSystem extends PitchBase {
             }
         }
 
-        console.log('No matching note found for frequency:', frequency.toFixed(2), 'Hz');
         return { note: null, accuracy: PitchAccuracy.MISS };
     }
     //#endregion
@@ -268,7 +250,7 @@ export class PitchDetectionSystem extends PitchBase {
             volume
         };
 
-        PitchDetectionSystem.emit(PitchConstants.EVENTS.PITCH_DETECTED, result);
+        this.emit(PitchConstants.EVENTS.PITCH_DETECTED, result);
     }
     //#endregion
 

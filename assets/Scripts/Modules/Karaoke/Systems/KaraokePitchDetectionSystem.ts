@@ -11,32 +11,14 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('KaraokePitchDetectionSystem')
 export class KaraokePitchDetectionSystem extends PitchBase {
-    //#region Singleton
-    private static _instance: KaraokePitchDetectionSystem = null;
-
-    public static get instance(): KaraokePitchDetectionSystem {
-        return this._instance;
-    }
-    //#endregion
-
     //#region Lifecycle Methods
     onLoad() {
-        // Set up singleton instance
-        if (KaraokePitchDetectionSystem._instance !== null) {
-            this.node.destroy();
-            return;
-        }
-
-        KaraokePitchDetectionSystem._instance = this;
 
         // Override base class settings with karaoke-specific ones
         this.detectionIntervalMs = KaraokeConstants.PITCH_DETECTION_INTERVAL_MS;
     }
 
-    onDestroy() {
-        // Call parent onDestroy to clean up resources
-        super.onDestroy();
-    }
+
     //#endregion
 
     //#region Detection Methods
@@ -90,7 +72,7 @@ export class KaraokePitchDetectionSystem extends PitchBase {
             volume
         };
 
-        KaraokePitchDetectionSystem.emit(KaraokeConstants.EVENTS.PITCH_DETECTED, result);
+        this.emit(KaraokeConstants.EVENTS.PITCH_DETECTED, result);
     }
     //#endregion
 

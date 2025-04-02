@@ -63,6 +63,9 @@ export class AuditionBeatSystem extends Component {
     @property({ type: Label, group: { name: "Visual Elements", id: "visual" } })
     private levelLabel: Label = null;
 
+    @property({ type: AuditionAudioManager, group: { name: "Visual Elements", id: "visual" } })
+    private audioManager: AuditionAudioManager = null;
+
     //#endregion
 
     //#region Properties - Beat Settings
@@ -190,14 +193,12 @@ export class AuditionBeatSystem extends Component {
     }
 
     private getCurrentTime(): number {
-        return AuditionAudioManager.instance.getCurrentTime();
+        return this.audioManager.getCurrentTime();
     }
 
     update(dt: number): void {
         if (!this.isPlaying || !this.movingBeatNote) return;
-
-        const audioManager = AuditionAudioManager.instance;
-        if (!audioManager) return;
+        if (!this.audioManager) return;
 
         const currentTime = this.getCurrentTime();
         const beatTime = (60000 / this.bpm);
@@ -254,12 +255,8 @@ export class AuditionBeatSystem extends Component {
         this.noteSequence = [];
 
         // Initialize lastBeatTime with current audio time
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            this.lastBeatTime = audioManager.getCurrentTime();
-        } else {
-            this.lastBeatTime = Date.now();
-        }
+        if (!this.audioManager) return;
+        this.lastBeatTime = this.audioManager.getCurrentTime();
 
         this.currentLoop = 0;
 
@@ -462,8 +459,7 @@ export class AuditionBeatSystem extends Component {
         if (!this.isPlaying || this.isInPenalty) return;
         if (this.noteSequence.length == 0) return; //can not press space if not note sequence
 
-        const audioManager = AuditionAudioManager.instance;
-        if (!audioManager) return;
+        if (!this.audioManager) return;
 
         const currentTime = this.getCurrentTime();
         const beatInterval = (60000 / this.bpm) * this.beatsPerLoop;

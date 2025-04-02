@@ -153,11 +153,11 @@ export class PitchGameplayController extends Component {
      */
     private setupEventListeners(): void {
         // Listen for pitch detection events
-        PitchDetectionSystem.on(PitchConstants.EVENTS.PITCH_DETECTED, this.onPitchDetected, this);
+        this.detectionSystem.on(PitchConstants.EVENTS.PITCH_DETECTED, this.onPitchDetected, this);
 
         // Listen for timer events
-        PitchTimer.on(PitchConstants.EVENTS.TIME_WARNING, this.onTimeWarning, this);
-        PitchTimer.on(PitchConstants.EVENTS.GAME_OVER, this.onTimeUp, this);
+        this.timer.on(PitchConstants.EVENTS.TIME_WARNING, this.onTimeWarning, this);
+        this.timer.on(PitchConstants.EVENTS.GAME_OVER, this.onTimeUp, this);
     }
 
     /**
@@ -607,16 +607,16 @@ export class PitchGameplayController extends Component {
 
     onDestroy() {
         // Clean up event listeners
-        PitchDetectionSystem.off(PitchConstants.EVENTS.PITCH_DETECTED, this.onPitchDetected, this);
-        PitchTimer.off(PitchConstants.EVENTS.TIME_WARNING, this.onTimeWarning, this);
-        PitchTimer.off(PitchConstants.EVENTS.GAME_OVER, this.onTimeUp, this);
+        this.detectionSystem.off(PitchConstants.EVENTS.PITCH_DETECTED, this.onPitchDetected, this);
+        this.timer.off(PitchConstants.EVENTS.TIME_WARNING, this.onTimeWarning, this);
+        this.timer.off(PitchConstants.EVENTS.GAME_OVER, this.onTimeUp, this);
 
         // Stop detection and timer
-        this.detectionSystem.stopDetection();
-        this.timer.stopTimer();
+        // this.detectionSystem.stopDetection();
+        // this.timer.stopTimer();
 
-        // Clear tiles
-        this.clearTiles();
+        // // Clear tiles
+        // this.clearTiles();
     }
 
     //#region Butterfly Management

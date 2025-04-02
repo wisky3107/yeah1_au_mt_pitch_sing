@@ -52,6 +52,9 @@ export class AuditionScoringSystem extends Component {
     
     @property
     private patternSkipPenalty: number = 100; // Penalty for skipping a pattern
+    
+    @property(AuditionAudioManager)
+    private audioManager: AuditionAudioManager = null;
 
     // Scoring statistics
     private patternsCompleted: number = 0;
@@ -133,19 +136,19 @@ export class AuditionScoringSystem extends Component {
                 this.updateCombo(true);
                 // Play different perfect sound based on combo count (1-5)
                 const perfectSound = this.currentCombo === 1 ? 'perfect' : `perfect${Math.min(this.currentCombo, 5)}`;
-                AuditionAudioManager.instance.playSound(perfectSound);
+                this.audioManager.playSound(perfectSound);
                 break;
             case AuditionAccuracyRating.GOOD:
                 this.accuracyStats.good++;
                 baseScore = this.goodScore;
                 this.updateCombo(false);
-                AuditionAudioManager.instance.playSound('good');
+                this.audioManager.playSound('good');
                 break;
             case AuditionAccuracyRating.MISS:
                 this.accuracyStats.miss++;
                 baseScore = this.missScore;
                 this.updateCombo(false);
-                AuditionAudioManager.instance.playSound('miss');
+                this.audioManager.playSound('miss');
                 break;
         }
         

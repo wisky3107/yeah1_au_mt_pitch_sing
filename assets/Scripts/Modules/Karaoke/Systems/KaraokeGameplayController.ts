@@ -76,12 +76,6 @@ export class KaraokeGameplayController extends Component {
 
     //#region Lifecycle Methods
     async onLoad() {
-        // Set up singleton instance
-        if (KaraokeGameplayController._instance !== null) {
-            this.node.destroy();
-            return;
-        }
-
         KaraokeGameplayController._instance = this;
 
 
@@ -118,6 +112,7 @@ export class KaraokeGameplayController extends Component {
     }
 
     onDestroy() {
+        KaraokeGameplayController._instance = null;
         // Clean up event listeners and resources
         this.removeEventListeners();
     }
@@ -458,21 +453,21 @@ export class KaraokeGameplayController extends Component {
 
     private setupEventListeners(): void {
         // Listen for pitch detection events
-        KaraokePitchDetectionSystem.on(
+        this.pitchDetection.on(
             KaraokeConstants.EVENTS.PITCH_DETECTED,
             this.onPitchDetected,
             this
         );
 
         // Listen for lyrics events
-        KaraokeLyricsManager.on(
+        this.lyricsManager.on(
             KaraokeConstants.EVENTS.LYRICS_UPDATED,
             this.onLyricsUpdated,
             this
         );
 
         // Listen for audio events
-        KaraokeAudioManager.on(
+        this.audioManager.on(
             KaraokeConstants.EVENTS.SONG_ENDED,
             this.onSongEnded,
             this
@@ -481,19 +476,19 @@ export class KaraokeGameplayController extends Component {
 
     private removeEventListeners(): void {
         // Remove all event listeners
-        KaraokePitchDetectionSystem.off(
+        this.pitchDetection.off(
             KaraokeConstants.EVENTS.PITCH_DETECTED,
             this.onPitchDetected,
             this
         );
 
-        KaraokeLyricsManager.off(
+        this.lyricsManager.off(
             KaraokeConstants.EVENTS.LYRICS_UPDATED,
             this.onLyricsUpdated,
             this
         );
 
-        KaraokeAudioManager.off(
+        this.audioManager.off(
             KaraokeConstants.EVENTS.SONG_ENDED,
             this.onSongEnded,
             this

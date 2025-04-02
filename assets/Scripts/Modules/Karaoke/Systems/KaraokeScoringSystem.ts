@@ -39,7 +39,7 @@ export class KaraokeScoringSystem extends Component {
 
     onDestroy() {
         // Clean up resources
-        this.stopScoring();
+        // this.stopScoring();
     }
     //#endregion
 

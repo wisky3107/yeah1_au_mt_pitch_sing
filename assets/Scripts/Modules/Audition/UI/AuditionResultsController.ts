@@ -69,8 +69,6 @@ export class AuditionResultsController extends Component {
         // Play background music
         this.playBackgroundMusic();
         
-        // Play results sound
-        AuditionAudioManager.instance.playSound(this.resultsSound);
         
         // Animate results with a slight delay
         this.scheduleOnce(() => {
@@ -105,16 +103,7 @@ export class AuditionResultsController extends Component {
      * Play background music for the results screen
      */
     private playBackgroundMusic(): void {
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.loadSong(this.backgroundMusicPath)
-                .then(() => {
-                    audioManager.playSong();
-                })
-                .catch(error => {
-                    console.error('Failed to load results music:', error);
-                });
-        }
+        
     }
     
     /**
@@ -199,7 +188,6 @@ export class AuditionResultsController extends Component {
      */
     private onRetryButtonClicked(): void {
         // Play click sound
-        AuditionAudioManager.instance.playSound(this.buttonClickSound);
         
     }
     
@@ -208,7 +196,6 @@ export class AuditionResultsController extends Component {
      */
     private onNextButtonClicked(): void {
         // Play click sound
-        AuditionAudioManager.instance.playSound(this.buttonClickSound);
     }
     
     /**
@@ -216,14 +203,13 @@ export class AuditionResultsController extends Component {
      */
     private onMainMenuButtonClicked(): void {
         // Play click sound
-        AuditionAudioManager.instance.playSound(this.buttonClickSound);
     }
     
     onDestroy() {
         // Stop any playing music
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.stopSong();
-        }
+        // const audioManager = AuditionAudioManager.instance;
+        // if (audioManager) {
+        //     audioManager.stopSong();
+        // }
     }
 } 

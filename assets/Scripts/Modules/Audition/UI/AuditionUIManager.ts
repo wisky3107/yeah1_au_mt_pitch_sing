@@ -38,6 +38,10 @@ export class AuditionUIManager extends Component {
     }
     //#endregion
 
+    @property({type: AuditionAudioManager, group: {name: "Audio Manager", id: "audioManager"}})
+    private audioManager: AuditionAudioManager = null;
+
+
     //#region UI Screen Properties
     @property({type: Node, group: {name: "UI Screens", id: "screens"}})
     private mainMenuScreen: Node = null;
@@ -92,6 +96,9 @@ export class AuditionUIManager extends Component {
 
     @property({type: Label, group: {name: "Song Info", id: "songInfo"}})
     private bpmLabel: Label = null;
+
+       
+
     //#endregion
 
     //#region Feedback Properties
@@ -215,9 +222,9 @@ export class AuditionUIManager extends Component {
     public playReadyGoAnimation(): void {
         this.readyGoAnimation.node.active = true;
         this.readyGoAnimation.play();
-        AuditionAudioManager.instance.playSound("s_ready");
+        this.audioManager.playSound("s_ready");
         this.scheduleOnce(() => {
-            AuditionAudioManager.instance.playSound("s_go");
+            this.audioManager.playSound("s_go");
         }, 1.0);
     }
     //#endregion

@@ -157,7 +157,6 @@ export class KaraokeUIManager extends Component {
     //#region Private Variables
     // Controllers and managers
     private gameController: KaraokeGameplayController = null;
-    private lyricsManager: KaraokeLyricsManager = null;
 
     // Timer variables
     private totalDuration: number = 0;
@@ -190,12 +189,7 @@ export class KaraokeUIManager extends Component {
      * Initialize screen manager
      */
     start() {
-        // Get reference to game controller
         this.gameController = KaraokeGameplayController.instance;
-
-        // Get reference to lyrics manager
-        this.lyricsManager = KaraokeLyricsManager.instance;
-
         // Set up UI elements based on wireframe layout
         this.setupUIElements();
 

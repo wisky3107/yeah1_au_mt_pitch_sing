@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Button, Label, ScrollView, Prefab, instantiate, Layout } from 'cc';
+import { _decorator, Component, Node, Button, Label, ScrollView, Prefab, instantiate, Layout, AudioSource } from 'cc';
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
 import { AuditionUIManager } from './AuditionUIManager';
 import { AuditionGameplayController } from '../Systems/AuditionGameplayController';
@@ -60,6 +60,9 @@ export class AuditionSongSelectionController extends Component {
     
     @property
     private buttonSound: string = 'click';
+
+    @property(AuditionAudioManager)
+    private audioManager: AuditionAudioManager = null;
     
     private selectedSongId: string = null;
     private previewTimer: number = null;
@@ -103,16 +106,7 @@ export class AuditionSongSelectionController extends Component {
      * Play background music for the selection screen
      */
     private playBackgroundMusic(): void {
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.loadSong(this.backgroundMusicPath)
-                .then(() => {
-                    audioManager.playSong();
-                })
-                .catch(error => {
-                    console.error('Failed to load selection music:', error);
-                });
-        }
+        
     }
     
     /**
@@ -194,7 +188,6 @@ export class AuditionSongSelectionController extends Component {
      * @param songId The selected song ID
      */
     private onSongSelected(songId: string): void {
-        AuditionAudioManager.instance.playSound(this.buttonSound);
         
         this.selectedSongId = songId;
         
@@ -241,18 +234,18 @@ export class AuditionSongSelectionController extends Component {
      * @param song The song data
      */
     private playPreview(song: any): void {
-        const audioManager = AuditionAudioManager.instance;
-        if (!audioManager) return;
+        
+        if (!this.audioManager) return;
         
         // Stop any current preview
         this.stopPreview();
         
         // Load and play the song preview
-        audioManager.loadSong(song.audioPath)
+        this.audioManager.loadSong(song.audioPath)
             .then(() => {
-                audioManager.setMusicVolume(this.previewVolume);
+                this.audioManager.setMusicVolume(this.previewVolume);
                 // Play from preview start time
-                audioManager.playSong(song.previewStart);
+                this.audioManager.playSong(song.previewStart);
                 
                 // Set a timer to stop the preview at the end time
                 const previewDuration = song.previewEnd - song.previewStart;
@@ -277,9 +270,8 @@ export class AuditionSongSelectionController extends Component {
         }
         
         // Stop audio
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.stopSong();
+        if (this.audioManager) {
+            this.audioManager.stopSong();
         }
     }
     
@@ -320,7 +312,6 @@ export class AuditionSongSelectionController extends Component {
      * Handle back button click
      */
     private onBackButtonClicked(): void {
-        AuditionAudioManager.instance.playSound(this.buttonSound);
     }
     
     /**
@@ -328,18 +319,16 @@ export class AuditionSongSelectionController extends Component {
      */
     private onPlayButtonClicked(): void {
         if (!this.selectedSongId) return;
-        
-        AuditionAudioManager.instance.playSound(this.buttonSound);
     }
     
     onDestroy() {
         // Stop preview
-        this.stopPreview();
+        // this.stopPreview();
         
-        // Stop background music
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.stopSong();
-        }
+        // // Stop background music
+        // const audioManager = AuditionAudioManager.instance;
+        // if (audioManager) {
+        //     audioManager.stopSong();
+        // }
     }
 } 

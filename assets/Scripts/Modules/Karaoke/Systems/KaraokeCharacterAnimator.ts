@@ -9,14 +9,6 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('KaraokeCharacterAnimator')
 export class KaraokeCharacterAnimator extends Component {
-    //#region Singleton
-    private static _instance: KaraokeCharacterAnimator = null;
-
-    public static get instance(): KaraokeCharacterAnimator {
-        return this._instance;
-    }
-    //#endregion
-
     //#region Properties
     @property({ type: Node, tooltip: "Character model node", group: { name: "Character", id: "character" } })
     private characterNode: Node = null;
@@ -42,14 +34,6 @@ export class KaraokeCharacterAnimator extends Component {
 
     //#region Lifecycle Methods
     onLoad() {
-        // Set up singleton instance
-        if (KaraokeCharacterAnimator._instance !== null) {
-            this.node.destroy();
-            return;
-        }
-
-        KaraokeCharacterAnimator._instance = this;
-
         // Initialize animations
         this.initializeAnimations();
     }

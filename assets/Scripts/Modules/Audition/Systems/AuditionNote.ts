@@ -60,7 +60,7 @@ export class AuditionNote extends Component {
 
         // Use visual component to show hit effect
         if (this.noteVisual) {
-            this.noteVisual.showHitEffect(accuracyRating);
+            this.noteVisual.showHitEffect();
         }
     }
 

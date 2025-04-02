@@ -154,58 +154,29 @@ export class AuditionMainMenuController extends Component {
      * Play background music for the menu
      */
     private playBackgroundMusic(): void {
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.loadSong(this.backgroundMusicPath)
-                .then(() => {
-                    audioManager.playSong();
-                })
-                .catch(error => {
-                    console.error('Failed to load menu music:', error);
-                });
-        }
+       
     }
     
-    /**
-     * Handle play button click
-     */
     private onPlayButtonClicked(): void {
-        AuditionAudioManager.instance.playSound(this.buttonSound);
     }
     
-    /**
-     * Handle customize button click
-     */
     private onCustomizeButtonClicked(): void {
-        AuditionAudioManager.instance.playSound(this.buttonSound);
-        // Navigate to customization scene (if implemented)
         console.log('Customize button clicked - Feature coming soon');
     }
     
-    /**
-     * Handle options button click
-     */
     private onOptionsButtonClicked(): void {
-        AuditionAudioManager.instance.playSound(this.buttonSound);
-        // Navigate to options scene (if implemented)
         console.log('Options button clicked - Feature coming soon');
     }
-    
-    /**
-     * Handle exit button click
-     */
+
     private onExitButtonClicked(): void {
-        AuditionAudioManager.instance.playSound(this.buttonSound);
         console.log('Exit button clicked');
-        // Implementation depends on target platform
-        // For web, might just return to a landing page
     }
     
     onDestroy() {
         // Stop background music
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.stopSong();
-        }
+        // const audioManager = AuditionAudioManager.instance;
+        // if (audioManager) {
+        //     audioManager.stopSong();
+        // }
     }
 } 

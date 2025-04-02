@@ -116,13 +116,4 @@ export class AuditionBeatmap extends Component {
     public getTotalNoteCount(): number {
         return this.currentBeatmap?.notes?.length || 0;
     }
-    
-    /**
-     * Convert a BeatNote to the corresponding AuditionNoteType
-     * @param note The beat note to convert
-     * @returns The corresponding AuditionNoteType
-     */
-    public static getNoteTypeFromBeatNote(note: BeatNote): AuditionNoteType {
-        return AuditionNoteType.SPACE; // All notes are SPACE type
-    }
 } 

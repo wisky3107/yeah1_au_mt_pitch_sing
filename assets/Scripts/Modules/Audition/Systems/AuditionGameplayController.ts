@@ -65,6 +65,9 @@ export class AuditionGameplayController extends Component {
     @property(ProgressBar)
     private songProgressBar: ProgressBar = null;
 
+    @property(AuditionAudioManager)
+    private audioManager: AuditionAudioManager = null;
+
     // State tracking
     private gameState: GameState = GameState.INIT;
     private songStartTime: number = 0;
@@ -205,9 +208,7 @@ export class AuditionGameplayController extends Component {
      * Initialize gameplay with current song
      */
     private initGameplay(): void {
-        const audioManager = AuditionAudioManager.instance;
-
-        if (!audioManager || !this.beatSystem) {
+        if (!this.audioManager || !this.beatSystem) {
             console.error('Required components not found');
             return;
         }
@@ -220,14 +221,14 @@ export class AuditionGameplayController extends Component {
 
         // Load both song audio and dance data concurrently
         Promise.all([
-            audioManager.loadSong(this.currentSong.audioPath),
+            this.audioManager.loadSong(this.currentSong.audioPath),
             this.characterAnimation.loadDanceData(this.currentSong.id)
         ])
             .then(([songLoaded, danceDataLoaded]) => {
                 console.log('Song and dance data loaded successfully');
                 // Get song duration from audio manager
 
-                this.songDuration = audioManager.getDuration();
+                this.songDuration = this.audioManager.getDuration();
                 this.characterAnimation.setMusicSpeed(this.currentSong.bpm);
 
                 this.startGameplay();
@@ -250,7 +251,7 @@ export class AuditionGameplayController extends Component {
 
         this.songStartTime = Date.now();
         // Start audio
-        AuditionAudioManager.instance.playSong();
+        this.audioManager.playSong();
         // Start beatmap
         this.beatSystem.startBeatSystem(this.currentSong.bpm, this.songDuration);
         // Set game state to playing
@@ -299,9 +300,8 @@ export class AuditionGameplayController extends Component {
         this.updateProgressBar();
 
         // Check for song completion
-        const audioManager = AuditionAudioManager.instance;
         // Use the getCurrentTime to check if the song has stopped
-        if (audioManager && audioManager.getCurrentTime() >= this.songDuration && this.songStartTime > 0) {
+        if (this.audioManager && this.audioManager.getCurrentTime() >= this.songDuration && this.songStartTime > 0) {
             // Song has ended naturally
             this.endGameplay();
         }
@@ -313,10 +313,9 @@ export class AuditionGameplayController extends Component {
     private updateProgressBar(): void {
         if (!this.songProgressBar || this.songDuration <= 0) return;
 
-        const audioManager = AuditionAudioManager.instance;
-        if (!audioManager) return;
+        if (!this.audioManager) return;
 
-        const currentTime = audioManager.getCurrentTime();
+        const currentTime = this.audioManager.getCurrentTime();
         const progress = Math.min(1.0, currentTime / this.songDuration) * 0.9;
 
         // Update UI progress bar
@@ -388,10 +387,8 @@ export class AuditionGameplayController extends Component {
         this.gameState = GameState.GAME_OVER;
 
         // Stop audio and beatmap
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.stopSong();
-        }
+        if (!this.audioManager) return;
+        this.audioManager.stopSong();
 
         this.beatSystem.stopBeatSystem();
 
@@ -435,10 +432,8 @@ export class AuditionGameplayController extends Component {
         }
 
         // Stop current gameplay
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.stopSong();
-        }
+        if (!this.audioManager) return;
+        this.audioManager.stopSong();
 
         this.beatSystem.stopBeatSystem();
 
@@ -454,10 +449,8 @@ export class AuditionGameplayController extends Component {
      */
     private onQuitButtonClicked(): void {
         // Stop gameplay
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.stopSong();
-        }
+        if (!this.audioManager) return;
+        this.audioManager.stopSong();
 
         this.beatSystem.stopBeatSystem();
 
@@ -474,10 +467,9 @@ export class AuditionGameplayController extends Component {
         this.gameState = GameState.PAUSED;
 
         // Pause audio
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.pauseSong();
-        }
+        if (!this.audioManager) return;
+        this.audioManager.pauseSong();
+
 
         // Show pause menu
         if (this.pauseMenu) {
@@ -494,10 +486,8 @@ export class AuditionGameplayController extends Component {
         this.gameState = GameState.PLAYING;
 
         // Resume audio
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.resumeSong();
-        }
+        if (!this.audioManager) return;
+        this.audioManager.resumeSong();
 
         // Hide pause menu
         if (this.pauseMenu) {
@@ -505,15 +495,15 @@ export class AuditionGameplayController extends Component {
         }
     }
 
-    onDestroy() {
-        // Clean up
-        const audioManager = AuditionAudioManager.instance;
-        if (audioManager) {
-            audioManager.stopSong();
-        }
+    // onDestroy() {
+    //     // Clean up
+    //     const audioManager = AuditionAudioManager.instance;
+    //     if (audioManager) {
+    //         audioManager.stopSong();
+    //     }
 
-        if (this.beatSystem) {
-            this.beatSystem.stopBeatSystem();
-        }
-    }
+    //     if (this.beatSystem) {
+    //         this.beatSystem.stopBeatSystem();
+    //     }
+    // }
 } 

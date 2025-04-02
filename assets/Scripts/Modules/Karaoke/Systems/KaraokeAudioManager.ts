@@ -9,14 +9,7 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('KaraokeAudioManager')
 export class KaraokeAudioManager extends Component {
-    //#region Singleton
-    private static _instance: KaraokeAudioManager = null;
-    private static eventTarget: EventTarget = new EventTarget();
-
-    public static get instance(): KaraokeAudioManager {
-        return this._instance;
-    }
-    //#endregion
+    private eventTarget: EventTarget = new EventTarget();
 
     //#region Properties
     @property({ type: AudioSource, tooltip: "Audio source for music playback", group: { name: "Audio", id: "audio" } })
@@ -43,14 +36,6 @@ export class KaraokeAudioManager extends Component {
 
     //#region Lifecycle Methods
     onLoad() {
-        // Set up singleton instance
-        if (KaraokeAudioManager._instance !== null) {
-            this.node.destroy();
-            return;
-        }
-
-        KaraokeAudioManager._instance = this;
-
         // Create audio source if not provided
         if (!this.musicSource) {
             this.musicSource = this.addComponent(AudioSource);
@@ -124,7 +109,7 @@ export class KaraokeAudioManager extends Component {
                     }
 
                     console.log(`Loaded audio: ${path}, duration: ${this.duration}s`);
-                    KaraokeAudioManager.emit(KaraokeConstants.EVENTS.SONG_LOADED, {
+                    this.emit(KaraokeConstants.EVENTS.SONG_LOADED, {
                         path,
                         duration: this.duration
                     });
@@ -170,7 +155,7 @@ export class KaraokeAudioManager extends Component {
         this.isPlaying = true;
 
         console.log('Audio playback started');
-        KaraokeAudioManager.emit(KaraokeConstants.EVENTS.SONG_STARTED);
+        this.emit(KaraokeConstants.EVENTS.SONG_STARTED);
     }
 
     /**
@@ -300,7 +285,7 @@ export class KaraokeAudioManager extends Component {
         this.isPlaying = false;
         this.isPaused = false;
 
-        KaraokeAudioManager.emit(KaraokeConstants.EVENTS.SONG_ENDED);
+        this.emit(KaraokeConstants.EVENTS.SONG_ENDED);
     }
 
     private finishStopPlayback(): void {
@@ -363,16 +348,16 @@ export class KaraokeAudioManager extends Component {
     //#endregion
 
     //#region Event Methods
-    public static on(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.on(eventName, callback, target);
+    public on(eventName: string, callback: (...args: any[]) => void, target?: any): void {
+        this.eventTarget?.on(eventName, callback, target);
     }
 
-    public static off(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.off(eventName, callback, target);
+    public off(eventName: string, callback: (...args: any[]) => void, target?: any): void {
+        this.eventTarget?.off(eventName, callback, target);
     }
 
-    private static emit(eventName: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
-        this.eventTarget.emit(eventName, arg1, arg2, arg3, arg4, arg5);
+    private emit(eventName: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
+        this.eventTarget?.emit(eventName, arg1, arg2, arg3, arg4, arg5);
     }
     //#endregion
 } 

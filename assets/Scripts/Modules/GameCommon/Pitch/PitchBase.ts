@@ -8,18 +8,18 @@ const { ccclass, property } = _decorator;
 @ccclass('PitchBase')
 export class PitchBase extends Component {
     //#region Event Management
-    protected static eventTarget: EventTarget = new EventTarget();
+    protected eventTarget: EventTarget = new EventTarget();
 
-    public static on(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.on(eventName, callback, target);
+    public on(eventName: string, callback: (...args: any[]) => void, target?: any): void {
+        this.eventTarget?.on(eventName, callback, target);
     }
 
-    public static off(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.off(eventName, callback, target);
+    public off(eventName: string, callback: (...args: any[]) => void, target?: any): void {
+        this.eventTarget?.off(eventName, callback, target);
     }
 
-    public static emit(eventName: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
-        this.eventTarget.emit(eventName, arg1, arg2, arg3, arg4, arg5);
+    public emit(eventName: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
+        this.eventTarget?.emit(eventName, arg1, arg2, arg3, arg4, arg5);
     }
     //#endregion
 
