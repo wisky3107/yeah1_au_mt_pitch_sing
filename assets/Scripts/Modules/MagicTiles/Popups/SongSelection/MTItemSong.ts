@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, Label, Button, Sprite } from 'cc';
-import { BeatmapMetadata } from '../../MTDefines';
+import { BeatmapMetadata } from '../../Data/MTDefines';
 import { PopupMTSongSelection } from './PopupMTSongSelection';
 const { ccclass, property } = _decorator;
 

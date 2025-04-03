@@ -1,7 +1,7 @@
 import { _decorator, Component, Node, Prefab, Label, Vec3, Color, tween, instantiate, UIOpacity, Camera, Animation, animation, easing, Tween, ParticleSystem2D } from 'cc';
-import { HitRating } from './Tile';
-import { MagicTilesAudioManager } from './AudioManager';
-import { PoolManager } from '../../Common/poolManager';
+import { HitRating } from '../UI/Tile';
+import { MagicTilesAudioManager } from './MagicTilesAudioManager';
+import { PoolManager } from '../../../Common/poolManager';
 
 const { ccclass, property } = _decorator;
 

@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, Label } from 'cc';
 import { TapValidator } from './TapValidator';
-import { HitRating } from './Tile';
+import { HitRating } from '../UI/Tile';
 import { MTUIManager } from './MTUIManager';
 
 const { ccclass, property } = _decorator;

@@ -1,5 +1,5 @@
 import { _decorator, Component, Node } from 'cc';
-import { HitRating } from './Tile';
+import { HitRating } from '../UI/Tile';
 import { BeatmapManager } from './BeatmapManager';
 import { director } from 'cc';
 

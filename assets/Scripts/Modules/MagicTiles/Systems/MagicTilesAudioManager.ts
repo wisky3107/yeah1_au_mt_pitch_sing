@@ -1,8 +1,8 @@
 import { _decorator, Node, AudioClip, AudioSource, game, director, error, Tween, tween, easing } from "cc";
-import { AudioManager as CommonAudioManager } from '../../Common/audioManager';
-import { resourceUtil } from '../../Common/resourceUtil';
-import { loadMidi } from '../../Common/MidiReader';
-import { BeatmapAudioData, MidiTrackInfo } from "./MTDefines";
+import { AudioManager as CommonAudioManager } from '../../../Common/audioManager';
+import { resourceUtil } from '../../../Common/resourceUtil';
+import { loadMidi } from '../../../Common/MidiReader';
+import { BeatmapAudioData, MidiTrackInfo } from "../Data/MTDefines";
 
 const { ccclass, property } = _decorator;
 

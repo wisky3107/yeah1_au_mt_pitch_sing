@@ -1,10 +1,10 @@
 import { _decorator, Component, sys, assetManager, AudioClip, Asset, Node, game, director, Label } from "cc";
-import { MagicTilesAudioManager } from "./AudioManager";
+import { MagicTilesAudioManager } from "./MagicTilesAudioManager";
 import { MTGameplayManager, GameState } from "./MTGameplayManager";
 import { BeatmapManager } from "./BeatmapManager";
-import { Beatmap, BeatmapMetadata, BeatmapAudioData, TrackNoteInfo, NoteType } from "./MTDefines";
-import { loadMidi, loadMidiFromURL } from "../../Common/MidiReader";
-import { resourceUtil } from "../../Common/resourceUtil";
+import { Beatmap, BeatmapMetadata, BeatmapAudioData, TrackNoteInfo, NoteType } from "../Data/MTDefines";
+import { loadMidi, loadMidiFromURL } from "../../../Common/MidiReader";
+import { resourceUtil } from "../../../Common/resourceUtil";
 
 const { ccclass, property } = _decorator;
 

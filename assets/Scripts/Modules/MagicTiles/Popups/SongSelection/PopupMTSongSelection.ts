@@ -1,10 +1,10 @@
 import { _decorator, Component, Node, instantiate, JsonAsset, director } from 'cc';
 import { PopupBase } from 'db://assets/Scripts/Common/UI/PopupBase';
 import { resourceUtil } from '../../../../Common/resourceUtil';
-import { BeatmapManager } from '../../BeatmapManager';
+import { BeatmapManager } from '../../Systems/BeatmapManager';
 import { MTItemSong } from './MTItemSong';
-import { Beatmap, BeatmapMetadata } from '../../MTDefines';
-import { MTGameplayManager, GameState } from '../../MTGameplayManager';
+import { Beatmap, BeatmapMetadata } from '../../Data/MTDefines';
+import { MTGameplayManager, GameState } from '../../Systems/MTGameplayManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('PopupMTSongSelection')

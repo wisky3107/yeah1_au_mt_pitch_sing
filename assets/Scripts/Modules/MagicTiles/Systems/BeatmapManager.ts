@@ -1,7 +1,7 @@
 import { _decorator, sys, JsonAsset, NodeEventType, math } from "cc";
-import { MagicTilesAudioManager } from "./AudioManager";
-import { resourceUtil } from "../../Common/resourceUtil";
-import { Beatmap, BeatmapAudioData, BeatmapMetadata, NoteType, TrackNoteInfo } from "./MTDefines";
+import { MagicTilesAudioManager } from "./MagicTilesAudioManager";
+import { resourceUtil } from "../../../Common/resourceUtil";
+import { Beatmap, BeatmapAudioData, BeatmapMetadata, NoteType, TrackNoteInfo } from "../Data/MTDefines";
 
 const { ccclass, property } = _decorator;
 

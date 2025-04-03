@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, EventTouch, UITransform, Vec3, input, Input, EventMouse, UIOpacity, Sprite, Color, Camera, EventKeyboard, KeyCode } from 'cc';
 import { TileManager } from './TileManager';
-import { HitRating } from './Tile';
+import { HitRating } from '../UI/Tile';
 import { TapValidator } from './TapValidator';
 
 const { ccclass, property } = _decorator;

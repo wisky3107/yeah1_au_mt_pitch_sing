@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, Label, Button, Sprite, UITransform, tween, Vec3, Color, ProgressBar, ScrollView, Widget, view, sys, UIOpacity, EventHandler, instantiate } from 'cc';
-import { MagicTilesAudioManager } from './AudioManager';
+import { MagicTilesAudioManager } from './MagicTilesAudioManager';
 
 const { ccclass, property } = _decorator;
 

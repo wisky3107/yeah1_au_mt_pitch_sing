@@ -1,10 +1,10 @@
 import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, director } from 'cc';
 import { BeatmapManager } from './BeatmapManager';
-import { Tile, TileStatus, HitRating } from './Tile';
-import { MagicTilesAudioManager } from './AudioManager';
-import { TrackNoteInfo } from './MTDefines';
+import { Tile, TileStatus, HitRating } from '../UI/Tile';
+import { MagicTilesAudioManager } from './MagicTilesAudioManager';
+import { TrackNoteInfo } from '../Data/MTDefines';
 import { MTUIManager } from './MTUIManager';
-import { AudioManager } from '../../Common/audioManager';
+import { AudioManager } from '../../../Common/audioManager';
 
 const { ccclass, property } = _decorator;
 

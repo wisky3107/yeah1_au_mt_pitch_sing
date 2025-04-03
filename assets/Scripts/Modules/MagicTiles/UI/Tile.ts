@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, Sprite, Color, tween, Vec3, UIOpacity, UITransform, Size, director, game } from 'cc';
-import { NoteType, TrackNoteInfo } from './MTDefines';
+import { NoteType, TrackNoteInfo } from '../Data/MTDefines';
 
 const { ccclass, property } = _decorator;
 

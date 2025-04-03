@@ -1,13 +1,13 @@
 import { _decorator, Component, Node, director, Toggle } from 'cc';
-import { MagicTilesAudioManager } from './AudioManager';
+import { MagicTilesAudioManager } from './MagicTilesAudioManager';
 import { BeatmapManager } from './BeatmapManager';
 import { TileManager } from './TileManager';
 import { InputManager } from './InputManager';
 import { FeedbackManager } from './FeedbackManager';
 import { TapValidator } from './TapValidator';
 import { ScoreManager } from './ScoreManager';
-import { HitRating } from './Tile';
-import { BeatmapAudioData } from './MTDefines';
+import { HitRating } from '../UI/Tile';
+import { BeatmapAudioData } from '../Data/MTDefines';
 
 const { ccclass, property } = _decorator;
 
