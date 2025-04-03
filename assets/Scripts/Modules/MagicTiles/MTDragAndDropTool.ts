@@ -1,6 +1,6 @@
 import { _decorator, Component, sys, assetManager, AudioClip, Asset, Node, game, director, Label } from "cc";
 import { MagicTilesAudioManager } from "./AudioManager";
-import { GameplayManager, GameState } from "./GameplayManager";
+import { MTGameplayManager, GameState } from "./MTGameplayManager";
 import { BeatmapManager } from "./BeatmapManager";
 import { Beatmap, BeatmapMetadata, BeatmapAudioData, TrackNoteInfo, NoteType } from "./MTDefines";
 import { loadMidi, loadMidiFromURL } from "../../Common/MidiReader";
@@ -304,8 +304,8 @@ export class MTDragAndDropTool extends Component {
     /**
      * Helper method to find the GameplayManager component
      */
-    private findGameplayManager(): GameplayManager {
-        return director.getScene().getComponentInChildren(GameplayManager);
+    private findGameplayManager(): MTGameplayManager {
+        return director.getScene().getComponentInChildren(MTGameplayManager);
     }
 
     /**

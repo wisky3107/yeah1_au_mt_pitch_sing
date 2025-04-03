@@ -26,8 +26,8 @@ export enum GameState {
  * GameplayManager for Magic Tiles 3
  * Coordinates gameplay systems and manages game flow
  */
-@ccclass('GameplayManager')
-export class GameplayManager extends Component {
+@ccclass('MTGameplayManager')
+export class MTGameplayManager extends Component {
     // Current game state
     private gameState: GameState = GameState.NONE;
 

@@ -4,7 +4,7 @@ import { resourceUtil } from '../../../../Common/resourceUtil';
 import { BeatmapManager } from '../../BeatmapManager';
 import { MTItemSong } from './MTItemSong';
 import { Beatmap, BeatmapMetadata } from '../../MTDefines';
-import { GameplayManager, GameState } from '../../GameplayManager';
+import { MTGameplayManager, GameState } from '../../MTGameplayManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('PopupMTSongSelection')
@@ -16,11 +16,11 @@ export class PopupMTSongSelection extends PopupBase {
     private itemSongPrefab: Node = null;
     
     private beatmaps: Map<string, BeatmapMetadata> = new Map();
-    private gameplayManager: GameplayManager = null;
+    private gameplayManager: MTGameplayManager = null;
     
     protected start(): void {
         // Find the GameplayManager
-        this.gameplayManager = director.getScene().getComponentInChildren(GameplayManager);
+        this.gameplayManager = director.getScene().getComponentInChildren(MTGameplayManager);
         
         // Load all beatmap files from resources
         this.loadAllBeatmaps();

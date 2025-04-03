@@ -7799,7 +7799,7 @@
     "_id": "1cgINpTzJGfJjdVzygL4MT"
   },
   {
-    "__type__": "54bffb59LVEi6v9WbidyqIN",
+    "__type__": "b4fc9FZUXxGj6ZQ8DWe5h2y",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -7832,7 +7832,7 @@
     "missHPPenalty": 10,
     "badHitHPPenalty": 5,
     "perfectHPRecovery": 2,
-    "_id": "42z8iFazJFRIo0ZQm57+Xx"
+    "_id": "e9ZmCaim1On5H5xjr+yOcA"
   },
   {
     "__type__": "cc.Node",

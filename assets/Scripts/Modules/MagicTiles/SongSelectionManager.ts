@@ -1,7 +1,7 @@
 import { _decorator, Component, Node, ScrollView, instantiate, Prefab, Label, Sprite, Button, UITransform, tween, Vec3, AudioSource, Tween, ProgressBar, Toggle, ToggleContainer, Layout, EventHandler } from 'cc';
 import { BeatmapManager } from './BeatmapManager';
 import { MagicTilesAudioManager } from './AudioManager';
-import { GameplayManager } from './GameplayManager';
+import { MTGameplayManager } from './MTGameplayManager';
 import { MTUIManager } from './MTUIManager';
 import { BeatmapMetadata } from './MTDefines';
 
@@ -90,7 +90,7 @@ export class SongSelectionManager extends Component {
     // Manager references
     private beatmapManager: BeatmapManager = null!;
     private audioManager: MagicTilesAudioManager = null!;
-    private gameplayManager: GameplayManager = null!;
+    private gameplayManager: MTGameplayManager = null!;
 
     // State variables
     private loadedBeatmaps: BeatmapMetadata[] = [];
@@ -571,7 +571,7 @@ export class SongSelectionManager extends Component {
         if (!this.gameplayManager) {
             const gameplayManagerNode = this.node.parent?.getChildByName("GameplayManager");
             if (gameplayManagerNode) {
-                this.gameplayManager = gameplayManagerNode.getComponent(GameplayManager)!;
+                this.gameplayManager = gameplayManagerNode.getComponent(MTGameplayManager)!;
             }
         }
 
