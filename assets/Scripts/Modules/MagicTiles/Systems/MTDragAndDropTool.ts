@@ -1,5 +1,5 @@
 import { _decorator, Component, sys, assetManager, AudioClip, Asset, Node, game, director, Label } from "cc";
-import { MagicTilesAudioManager } from "./MagicTilesAudioManager";
+import { MTAudioManager } from "./MTAudioManager";
 import { MTGameplayManager, GameState } from "./MTGameplayManager";
 import { BeatmapManager } from "./BeatmapManager";
 import { Beatmap, BeatmapMetadata, BeatmapAudioData, TrackNoteInfo, NoteType } from "../Data/MTDefines";
@@ -244,7 +244,7 @@ export class MTDragAndDropTool extends Component {
             const beatmapManager = BeatmapManager.instance;
             
             // Set the current beatmap for the audio manager
-            const audioManager = MagicTilesAudioManager.instance;
+            const audioManager = MTAudioManager.instance;
             
             // Debug the audio clip to check its properties
             console.log("AudioClip details:", {

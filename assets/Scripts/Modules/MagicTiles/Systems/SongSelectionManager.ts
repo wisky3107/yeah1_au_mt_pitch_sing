@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, ScrollView, instantiate, Prefab, Label, Sprite, Button, UITransform, tween, Vec3, AudioSource, Tween, ProgressBar, Toggle, ToggleContainer, Layout, EventHandler } from 'cc';
 import { BeatmapManager } from './BeatmapManager';
-import { MagicTilesAudioManager } from './MagicTilesAudioManager';
+import { MTAudioManager } from './MTAudioManager';
 import { MTGameplayManager } from './MTGameplayManager';
 import { MTUIManager } from './MTUIManager';
 import { BeatmapMetadata } from '../Data/MTDefines';
@@ -89,7 +89,7 @@ export class SongSelectionManager extends Component {
 
     // Manager references
     private beatmapManager: BeatmapManager = null!;
-    private audioManager: MagicTilesAudioManager = null!;
+    private audioManager: MTAudioManager = null!;
     private gameplayManager: MTGameplayManager = null!;
 
     // State variables
@@ -109,7 +109,7 @@ export class SongSelectionManager extends Component {
     onLoad() {
         // Get references to managers
         this.beatmapManager = BeatmapManager.instance;
-        this.audioManager = MagicTilesAudioManager.instance;
+        this.audioManager = MTAudioManager.instance;
 
         // Initialize UI
         this.initializeUI();

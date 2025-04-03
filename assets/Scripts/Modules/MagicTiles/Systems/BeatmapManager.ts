@@ -1,5 +1,5 @@
 import { _decorator, sys, JsonAsset, NodeEventType, math } from "cc";
-import { MagicTilesAudioManager } from "./MagicTilesAudioManager";
+import { MTAudioManager } from "./MTAudioManager";
 import { resourceUtil } from "../../../Common/resourceUtil";
 import { Beatmap, BeatmapAudioData, BeatmapMetadata, NoteType, TrackNoteInfo } from "../Data/MTDefines";
 
@@ -22,7 +22,7 @@ export class BeatmapManager {
     }
 
     // Reference to the audio manager
-    private audioManager: MagicTilesAudioManager = MagicTilesAudioManager.instance;
+    private audioManager: MTAudioManager = MTAudioManager.instance;
 
     // Store loaded beatmaps in memory 
     private beatmaps: Map<string, Beatmap> = new Map();

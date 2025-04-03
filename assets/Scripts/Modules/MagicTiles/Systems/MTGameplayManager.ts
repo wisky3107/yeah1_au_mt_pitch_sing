@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, director, Toggle } from 'cc';
-import { MagicTilesAudioManager } from './MagicTilesAudioManager';
+import { MTAudioManager } from './MTAudioManager';
 import { BeatmapManager } from './BeatmapManager';
 import { TileManager } from './TileManager';
 import { InputManager } from './InputManager';
@@ -80,13 +80,13 @@ export class MTGameplayManager extends Component {
     private onGameStateChangedCallback: ((newState: GameState) => void) | null = null;
     private onSurvivalHPChangedCallback: ((hp: number) => void) | null = null;
 
-    audioManager: MagicTilesAudioManager = null!;
+    audioManager: MTAudioManager = null!;
     beatmapManager: BeatmapManager = null!;
 
     onLoad() {
         // Initialize references if not set in the inspector
         if (!this.audioManager) {
-            this.audioManager = MagicTilesAudioManager.instance;
+            this.audioManager = MTAudioManager.instance;
         }
 
         if (!this.beatmapManager) {
@@ -513,5 +513,19 @@ export class MTGameplayManager extends Component {
             // Start the actual gameplay
             this.startPlaying();
         }
+    }
+
+    /**
+     * Cleanup when component or scene is destroyed
+     * Prevents memory leaks and lingering audio when changing scenes
+     */
+    onDestroy() {
+        // Unschedule all callbacks
+        this.unscheduleAllCallbacks();
+        // Deinitialize the audio manager
+        if (this.audioManager) {
+            this.audioManager.deinit();
+        }
+        
     }
 } 

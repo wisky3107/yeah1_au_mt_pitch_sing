@@ -25,17 +25,6 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('AuditionGameplayController')
 export class AuditionGameplayController extends Component {
-
-    // Singleton instance
-    private static _instance: AuditionGameplayController = null;
-
-    /**
-     * Get the singleton instance
-     */
-    public static get instance(): AuditionGameplayController {
-        return this._instance;
-    }
-
     // Core gameplay components
     @property(AuditionBeatSystem)
     private beatSystem: AuditionBeatSystem = null;
@@ -132,18 +121,6 @@ export class AuditionGameplayController extends Component {
      */
     public isSongUnlocked(songId: string): boolean {
         return true;
-    }
-
-
-
-    onLoad() {
-        // Set up singleton instance
-        if (AuditionGameplayController._instance !== null) {
-            this.node.destroy();
-            return;
-        }
-
-        AuditionGameplayController._instance = this;
     }
 
     start() {

@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, Label, Button, Sprite, UITransform, tween, Vec3, Color, ProgressBar, ScrollView, Widget, view, sys, UIOpacity, EventHandler, instantiate } from 'cc';
-import { MagicTilesAudioManager } from './MagicTilesAudioManager';
+import { MTAudioManager } from './MTAudioManager';
 
 const { ccclass, property } = _decorator;
 
@@ -130,7 +130,7 @@ export class MTUIManager extends Component {
     private currentUIState: UIState = UIState.NONE;
     private previousUIState: UIState = UIState.NONE;
     private isTransitioning: boolean = false;
-    private audioManager: MagicTilesAudioManager = null!;
+    private audioManager: MTAudioManager = null!;
 
     // Screen size variables for responsive layout
     private screenWidth: number = 0;
@@ -144,7 +144,7 @@ export class MTUIManager extends Component {
         MTUIManager._instance = this;
 
         // Get audio manager
-        this.audioManager = MagicTilesAudioManager.instance;
+        this.audioManager = MTAudioManager.instance;
 
         // Initialize UI state
         this.initializeUI();

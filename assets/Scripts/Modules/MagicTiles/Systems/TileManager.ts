@@ -1,7 +1,7 @@
 import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec3, director } from 'cc';
 import { BeatmapManager } from './BeatmapManager';
 import { Tile, TileStatus, HitRating } from '../UI/Tile';
-import { MagicTilesAudioManager } from './MagicTilesAudioManager';
+import { MTAudioManager } from './MTAudioManager';
 import { TrackNoteInfo } from '../Data/MTDefines';
 import { MTUIManager } from './MTUIManager';
 import { AudioManager } from '../../../Common/audioManager';
@@ -57,7 +57,7 @@ export class TileManager extends Component {
 
     // Reference to managers
     private beatmapManager: BeatmapManager | null = null;
-    private audioManager: MagicTilesAudioManager | null = null;
+    private audioManager: MTAudioManager | null = null;
 
     // Tile object pool
     private tilePool: Tile[] = [];
@@ -123,7 +123,7 @@ export class TileManager extends Component {
      * @param beatmapManager The beatmap manager instance
      * @param audioManager The audio manager instance
      */
-    initialize(beatmapManager: BeatmapManager, audioManager: MagicTilesAudioManager) {
+    initialize(beatmapManager: BeatmapManager, audioManager: MTAudioManager) {
         this.beatmapManager = beatmapManager;
         this.audioManager = audioManager;
         this.initTilePool();
@@ -136,7 +136,7 @@ export class TileManager extends Component {
             this.beatmapManager = BeatmapManager.instance;
         }
         if (!this.audioManager) {
-            this.audioManager = MagicTilesAudioManager.instance;
+            this.audioManager = MTAudioManager.instance;
         }
 
         // Initialize the object pool
@@ -321,7 +321,7 @@ export class TileManager extends Component {
 
             // Only check actual audio time periodically
             if (this.timeSinceLastAudioCheck >= this.audioTimeCheckInterval) {
-                this.cachedAudioTime = MagicTilesAudioManager.instance.getAudioTime();
+                this.cachedAudioTime = MTAudioManager.instance.getAudioTime();
                 this.timeSinceLastAudioCheck = 0;
             } else {
                 // Estimate time between checks

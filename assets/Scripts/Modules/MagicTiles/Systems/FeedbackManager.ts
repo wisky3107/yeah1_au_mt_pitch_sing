@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, Prefab, Label, Vec3, Color, tween, instantiate, UIOpacity, Camera, Animation, animation, easing, Tween, ParticleSystem2D } from 'cc';
 import { HitRating } from '../UI/Tile';
-import { MagicTilesAudioManager } from './MagicTilesAudioManager';
+import { MTAudioManager } from './MTAudioManager';
 import { PoolManager } from '../../../Common/poolManager';
 
 const { ccclass, property } = _decorator;
@@ -65,7 +65,7 @@ export class FeedbackManager extends Component {
     cameraShakeNode: Node = null!;
 
     // Reference to the audio manager
-    private audioManager: MagicTilesAudioManager = null!;
+    private audioManager: MTAudioManager = null!;
 
     // Mapping of sound effects for ratings
     @property
@@ -119,7 +119,7 @@ export class FeedbackManager extends Component {
     private _poolRoot: Node = null!;
 
     onLoad() {
-        this.audioManager = MagicTilesAudioManager.instance;
+        this.audioManager = MTAudioManager.instance;
 
         // Initialize the combo label
         if (this.comboLabel) {

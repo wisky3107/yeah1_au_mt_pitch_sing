@@ -146,8 +146,4 @@ export class PitchWaveform extends Component {
             }
         }
     }
-
-    onDestroy() {
-        this.clearWaveformVisualization();
-    }
 }

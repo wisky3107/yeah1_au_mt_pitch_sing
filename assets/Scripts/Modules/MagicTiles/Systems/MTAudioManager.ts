@@ -11,14 +11,14 @@ const { ccclass, property } = _decorator;
  * AudioManager for Magic Tiles 3
  * Extends the common AudioManager with additional functionality for music synchronization with gameplay
  */
-@ccclass("MagicTilesAudioManager")
-export class MagicTilesAudioManager {
-    private static _instance: MagicTilesAudioManager | null = null;
+@ccclass("MTAudioManager")
+export class MTAudioManager {
+    private static _instance: MTAudioManager | null = null;
 
     // Singleton pattern
-    public static get instance(): MagicTilesAudioManager {
+    public static get instance(): MTAudioManager {
         if (!this._instance) {
-            this._instance = new MagicTilesAudioManager();
+            this._instance = new MTAudioManager();
         }
         return this._instance;
     }
@@ -394,5 +394,32 @@ export class MagicTilesAudioManager {
             this._isBuffering = false;
             return null;
         }
+    }
+
+    /**
+     * Cleanup and deinitialize the audio manager
+     * Call this when changing scenes to prevent memory leaks
+     */
+    public deinit(): void {
+        // Stop any playing audio
+        if (this._beatmapAudioSource) {
+            this._beatmapAudioSource.stop();
+        }
+
+        // Clear current beatmap data
+        this._currentBeatmap = null;
+        
+        // Clear beat callbacks
+        this._beatCallbacks = [];
+        
+        // Reset buffering and timer states
+        this._isBuffering = false;
+        this._playbackTimer = 0;
+        this.audioTimeEstimation = 0;
+        this.lastSystemTime = 0;
+        this._timeCheckCounter = 0;
+
+        // If we need to release the singleton instance
+        MTAudioManager._instance = null;
     }
 } 

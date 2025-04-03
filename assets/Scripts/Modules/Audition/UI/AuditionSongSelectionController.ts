@@ -2,6 +2,7 @@ import { _decorator, Component, Node, Button, Label, ScrollView, Prefab, instant
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
 import { AuditionUIManager } from './AuditionUIManager';
 import { AuditionGameplayController } from '../Systems/AuditionGameplayController';
+import { SongData } from '../Data/SongData';
 const { ccclass, property } = _decorator;
 
 /**
@@ -24,68 +25,68 @@ interface SongItemData {
 export class AuditionSongSelectionController extends Component {
     @property(Button)
     private backButton: Button = null;
-    
+
     @property(ScrollView)
     private songListScrollView: ScrollView = null;
-    
+
     @property(Node)
     private songListContent: Node = null;
-    
+
     @property(Prefab)
     private songItemPrefab: Prefab = null;
-    
+
     @property(Label)
     private songTitleLabel: Label = null;
-    
+
     @property(Label)
     private artistLabel: Label = null;
-    
+
     @property(Label)
     private difficultyLabel: Label = null;
-    
+
     @property(Label)
     private bpmLabel: Label = null;
-    
+
     @property(Label)
     private highScoreLabel: Label = null;
-    
+
     @property(Button)
     private playButton: Button = null;
-    
+
     @property
     private backgroundMusicPath: string = 'audition/audio/selection_music';
-    
+
     @property
     private previewVolume: number = 0.5;
-    
+
     @property
     private buttonSound: string = 'click';
 
     @property(AuditionAudioManager)
     private audioManager: AuditionAudioManager = null;
-    
+
     private selectedSongId: string = null;
     private previewTimer: number = null;
-    
+
     onLoad() {
         // Setup UI
         AuditionUIManager.instance.showSongSelection();
-        
+
         // Setup button events
         this.setupButtonEvents();
-        
+
         // Load background music
         this.playBackgroundMusic();
     }
-    
+
     start() {
         // Populate song list
         this.populateSongList();
-        
+
         // Reset selection
         this.clearSongSelection();
     }
-    
+
     /**
      * Setup button event listeners
      */
@@ -94,21 +95,21 @@ export class AuditionSongSelectionController extends Component {
         if (this.backButton) {
             this.backButton.node.on(Button.EventType.CLICK, this.onBackButtonClicked, this);
         }
-        
+
         // Play button
         if (this.playButton) {
             this.playButton.node.on(Button.EventType.CLICK, this.onPlayButtonClicked, this);
             this.playButton.interactable = false; // Disabled until a song is selected
         }
     }
-    
+
     /**
      * Play background music for the selection screen
      */
     private playBackgroundMusic(): void {
-        
+
     }
-    
+
     /**
      * Populate the song list from available songs
      */
@@ -117,25 +118,21 @@ export class AuditionSongSelectionController extends Component {
         if (this.songListContent) {
             this.songListContent.removeAllChildren();
         }
-        
-        // Get songs from game manager
-        const gameManager = AuditionGameplayController.instance;
-        if (!gameManager) return;
-        
-        const availableSongs = gameManager.getAvailableSongs();
-        const unlockedSongs = gameManager.getUnlockedSongs();
-        
+
+        const availableSongs = [];
+        const unlockedSongs = [];
+
         // Create a song item for each song
         availableSongs.forEach(song => {
             if (this.songItemPrefab) {
                 const songItem = instantiate(this.songItemPrefab);
-                
+
                 // Set song item data
                 const songNameLabel = songItem.getChildByName('SongName')?.getComponent(Label);
                 if (songNameLabel) {
                     songNameLabel.string = song.title;
                 }
-                
+
                 // Set difficulty stars
                 const difficultyNode = songItem.getChildByName('Difficulty');
                 if (difficultyNode) {
@@ -144,109 +141,85 @@ export class AuditionSongSelectionController extends Component {
                         difficultyStars[i].active = i < song.difficulty;
                     }
                 }
-                
-                // Set locked status
-                const lockedIcon = songItem.getChildByName('LockedIcon');
-                if (lockedIcon) {
-                    lockedIcon.active = !gameManager.isSongUnlocked(song.id);
-                }
-                
-                // Set high score
-                const highScoreLabel = songItem.getChildByName('HighScore')?.getComponent(Label);
-                if (highScoreLabel) {
-                    const highScore = gameManager.getHighScore(song.id);
-                    highScoreLabel.string = highScore > 0 ? `High Score: ${highScore}` : '';
-                }
-                
-                // Add click event
-                const button = songItem.getComponent(Button);
-                if (button) {
-                    const isUnlocked = gameManager.isSongUnlocked(song.id);
-                    button.interactable = isUnlocked;
-                    
-                    if (isUnlocked) {
-                        button.node.on(Button.EventType.CLICK, () => {
-                            this.onSongSelected(song.id);
-                        });
-                    }
-                }
-                
-                // Add to list
                 this.songListContent.addChild(songItem);
             }
         });
-        
+
         // Update layout
         const layout = this.songListContent.getComponent(Layout);
         if (layout) {
             layout.updateLayout();
         }
     }
-    
+
     /**
      * Handle song selection
      * @param songId The selected song ID
      */
     private onSongSelected(songId: string): void {
-        
+
         this.selectedSongId = songId;
-        
-        // Update UI with song details
-        const gameManager = AuditionGameplayController.instance;
-        if (!gameManager) return;
-        
-        const selectedSong = gameManager.getAvailableSongs().find(song => song.id === songId);
+        const selectedSong: SongData = {
+            id: songId,
+            title: 'Song Title',
+            artist: 'Artist Name',
+            difficulty: 1,
+            bpm: 120,
+            audioPath: 'audition/audio/song.mp3',
+            previewStart: 0,
+            previewEnd: 100,
+        };
         if (!selectedSong) return;
-        
+
         // Update song details
         if (this.songTitleLabel) {
             this.songTitleLabel.string = selectedSong.title;
         }
-        
+
         if (this.artistLabel) {
             this.artistLabel.string = selectedSong.artist;
         }
-        
+
         if (this.difficultyLabel) {
             this.difficultyLabel.string = `Difficulty: ${selectedSong.difficulty}`;
         }
-        
+
         if (this.bpmLabel) {
             this.bpmLabel.string = `BPM: ${selectedSong.bpm}`;
         }
-        
+
         if (this.highScoreLabel) {
-            const highScore = gameManager.getHighScore(songId);
+            const highScore = 0;
             this.highScoreLabel.string = highScore > 0 ? `High Score: ${highScore}` : 'No records yet';
         }
-        
+
         // Enable play button
         if (this.playButton) {
             this.playButton.interactable = true;
         }
-        
+
         // Play song preview
         this.playPreview(selectedSong);
     }
-    
+
     /**
      * Play a preview of the selected song
      * @param song The song data
      */
     private playPreview(song: any): void {
-        
+
         if (!this.audioManager) return;
-        
+
         // Stop any current preview
         this.stopPreview();
-        
+
         // Load and play the song preview
         this.audioManager.loadSong(song.audioPath)
             .then(() => {
                 this.audioManager.setMusicVolume(this.previewVolume);
                 // Play from preview start time
                 this.audioManager.playSong(song.previewStart);
-                
+
                 // Set a timer to stop the preview at the end time
                 const previewDuration = song.previewEnd - song.previewStart;
                 this.previewTimer = setTimeout(() => {
@@ -258,7 +231,7 @@ export class AuditionSongSelectionController extends Component {
                 console.error('Failed to play song preview:', error);
             });
     }
-    
+
     /**
      * Stop the current preview
      */
@@ -268,63 +241,63 @@ export class AuditionSongSelectionController extends Component {
             clearTimeout(this.previewTimer);
             this.previewTimer = null;
         }
-        
+
         // Stop audio
         if (this.audioManager) {
             this.audioManager.stopSong();
         }
     }
-    
+
     /**
      * Clear song selection
      */
     private clearSongSelection(): void {
         this.selectedSongId = null;
-        
+
         // Reset UI
         if (this.songTitleLabel) {
             this.songTitleLabel.string = 'Select a Song';
         }
-        
+
         if (this.artistLabel) {
             this.artistLabel.string = '';
         }
-        
+
         if (this.difficultyLabel) {
             this.difficultyLabel.string = '';
         }
-        
+
         if (this.bpmLabel) {
             this.bpmLabel.string = '';
         }
-        
+
         if (this.highScoreLabel) {
             this.highScoreLabel.string = '';
         }
-        
+
         // Disable play button
         if (this.playButton) {
             this.playButton.interactable = false;
         }
     }
-    
+
     /**
      * Handle back button click
      */
     private onBackButtonClicked(): void {
     }
-    
+
     /**
      * Handle play button click
      */
     private onPlayButtonClicked(): void {
         if (!this.selectedSongId) return;
     }
-    
+
     onDestroy() {
         // Stop preview
         // this.stopPreview();
-        
+
         // // Stop background music
         // const audioManager = AuditionAudioManager.instance;
         // if (audioManager) {
