@@ -96,26 +96,24 @@ export class KaraokeAudioManager extends Component {
 
                 // Since AudioClip doesn't expose duration directly in some Cocos versions,
                 // we'll use a timeout to give the audio source time to load metadata
-                setTimeout(() => {
-                    // Try to get duration from audio source if available
-                    // In Cocos Creator, the duration property might be available after clip is assigned
-                    if (this.musicSource.duration !== undefined) {
-                        this.duration = this.musicSource.duration;
-                    } else {
-                        // If duration is not available, use a reasonable default
-                        console.warn(`Could not determine duration for ${path}, using estimate`);
-                        // Assume a standard length for a song (3 minutes)
-                        this.duration = 180;
-                    }
+                // Try to get duration from audio source if available
+                // In Cocos Creator, the duration property might be available after clip is assigned
+                if (this.musicSource.duration !== undefined) {
+                    this.duration = this.musicSource.duration;
+                } else {
+                    // If duration is not available, use a reasonable default
+                    console.warn(`Could not determine duration for ${path}, using estimate`);
+                    // Assume a standard length for a song (3 minutes)
+                    this.duration = 180;
+                }
 
-                    console.log(`Loaded audio: ${path}, duration: ${this.duration}s`);
-                    this.emit(KaraokeConstants.EVENTS.SONG_LOADED, {
-                        path,
-                        duration: this.duration
-                    });
+                console.log(`Loaded audio: ${path}, duration: ${this.duration}s`);
+                this.emit(KaraokeConstants.EVENTS.SONG_LOADED, {
+                    path,
+                    duration: this.duration
+                });
 
-                    resolve(true);
-                }, 500);
+                resolve(true);
             });
         });
     }

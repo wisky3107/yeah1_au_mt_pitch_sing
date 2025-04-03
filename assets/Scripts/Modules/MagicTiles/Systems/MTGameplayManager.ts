@@ -526,6 +526,10 @@ export class MTGameplayManager extends Component {
         if (this.audioManager) {
             this.audioManager.deinit();
         }
-        
+
+        // Deinitialize the beatmap manager
+        if (this.beatmapManager) {
+            this.beatmapManager.deinit();
+        }
     }
 } 

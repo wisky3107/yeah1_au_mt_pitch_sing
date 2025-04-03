@@ -423,4 +423,14 @@ export class BeatmapManager {
         
         return beatmap;
     }
+
+    public deinit(): void {
+        // Clear all beatmaps from memory
+        this.beatmaps.clear();
+        // Reset active beatmap
+        this.activeBeatmap = null;
+        console.log("BeatmapManager deinitializing...");
+        // If we need to release the singleton instance
+        BeatmapManager._instance = null;
+    }
 } 

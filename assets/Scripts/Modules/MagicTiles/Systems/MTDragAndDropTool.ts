@@ -14,8 +14,6 @@ const { ccclass, property } = _decorator;
  */
 @ccclass("MTDragAndDropTool")
 export class MTDragAndDropTool extends Component {
-    // Singleton instance
-    private static _instance: MTDragAndDropTool = null;
 
     @property(Node)
     notificationNode: Node = null;
@@ -37,14 +35,9 @@ export class MTDragAndDropTool extends Component {
     // Overlay element for drag visual feedback
     private _dropOverlay: HTMLDivElement = null;
 
-    // Singleton pattern
-    public static get instance(): MTDragAndDropTool {
-        return this._instance;
-    }
 
     protected onLoad(): void {
         // Set the singleton instance
-        MTDragAndDropTool._instance = this;
         this.createDragOverlay();
         this.initialize();
     }
@@ -53,11 +46,6 @@ export class MTDragAndDropTool extends Component {
         // Clean up the overlay if it exists
         if (this._dropOverlay && this._dropOverlay.parentNode) {
             this._dropOverlay.parentNode.removeChild(this._dropOverlay);
-        }
-        
-        // Release the singleton instance if it's this component
-        if (MTDragAndDropTool._instance === this) {
-            MTDragAndDropTool._instance = null;
         }
     }
 
