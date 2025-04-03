@@ -70,8 +70,6 @@ export class AuditionSongSelectionController extends Component {
 
     onLoad() {
         // Setup UI
-        AuditionUIManager.instance.showSongSelection();
-
         // Setup button events
         this.setupButtonEvents();
 

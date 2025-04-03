@@ -30,13 +30,6 @@ export enum FeedbackType {
  */
 @ccclass('AuditionUIManager')
 export class AuditionUIManager extends Component {
-    //#region Singleton
-    private static _instance: AuditionUIManager = null;
-
-    public static get instance(): AuditionUIManager {
-        return this._instance;
-    }
-    //#endregion
 
     @property({type: AuditionAudioManager, group: {name: "Audio Manager", id: "audioManager"}})
     private audioManager: AuditionAudioManager = null;
@@ -120,15 +113,6 @@ export class AuditionUIManager extends Component {
     private feedbackTween: Tween<Node> = null;
     private comboTween: Tween<Node> = null;
     //#endregion
-
-    //#region Lifecycle Methods
-    onLoad() {
-        if (AuditionUIManager._instance === null) {
-            AuditionUIManager._instance = this;
-        } else {
-            this.node.destroy();
-        }
-    }
 
     //#endregion
 

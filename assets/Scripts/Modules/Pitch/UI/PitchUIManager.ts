@@ -10,14 +10,6 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('PitchUIManager')
 export class PitchUIManager extends Component {
-    //#region Singleton
-    private static _instance: PitchUIManager = null;
-
-    public static get instance(): PitchUIManager {
-        return this._instance;
-    }
-    //#endregion
-
     //#region UI Screens
     @property({ type: Node, group: { name: "UI Screens", id: "screens" } })
     private mainMenuScreen: Node = null;
@@ -78,17 +70,6 @@ export class PitchUIManager extends Component {
 
     //#region Current State
     private currentGameState: GameState = GameState.INIT;
-    //#endregion
-
-    //#region Lifecycle Methods
-    onLoad() {
-        // Set up singleton instance
-        if (PitchUIManager._instance !== null) {
-            this.node.destroy();
-            return;
-        }
-        PitchUIManager._instance = this;
-    }
     //#endregion
 
     //#region Screen Management
@@ -155,8 +136,6 @@ export class PitchUIManager extends Component {
             this.progressLine.setPosition(new Vec3(-200, 0, 0));
         }
 
-        // Update target note label
-        this.updateTargetNoteLabel();
 
         // Reset current note label
         if (this.currentNoteLabel) {
@@ -170,10 +149,8 @@ export class PitchUIManager extends Component {
     }
 
     //#region Label Updates
-    public updateTargetNoteLabel(): void {
+    public updateTargetNoteLabel(targetNote: MusicalNote | null): void {
         if (!this.targetNoteLabel) return;
-
-        const targetNote = PitchGameplayController.instance.getCurrentTargetNote();
         if (targetNote !== null) {
             const noteName = PitchConstants.NOTE_NAMES[targetNote];
             this.targetNoteLabel.string = `Target: ${noteName}`;

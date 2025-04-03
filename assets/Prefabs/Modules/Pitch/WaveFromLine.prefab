@@ -107,10 +107,10 @@
       "r": 225,
       "g": 225,
       "b": 225,
-      "a": 255
+      "a": 181
     },
     "_spriteFrame": {
-      "__uuid__": "ede6a3c1-8760-4b5d-8d19-d7be704504b5@f9941",
+      "__uuid__": "e996e3a3-a3ba-4f53-b18b-5815fd83b98e@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,

@@ -65,6 +65,9 @@ export class AuditionBeatSystem extends Component {
 
     @property({ type: AuditionAudioManager, group: { name: "Visual Elements", id: "visual" } })
     private audioManager: AuditionAudioManager = null;
+    
+    @property({ type: AuditionInputHandler, group: { name: "Input", id: "input" } })
+    private inputHandler: AuditionInputHandler = null;
 
     //#endregion
 
@@ -261,13 +264,12 @@ export class AuditionBeatSystem extends Component {
         this.currentLoop = 0;
 
         // Register input callbacks
-        const inputHandler = AuditionInputHandler.instance;
-        if (inputHandler) {
-            inputHandler.registerInputCallback(AuditionInputType.SPACE,
+        if (this.inputHandler) {
+            this.inputHandler.registerInputCallback(AuditionInputType.SPACE,
                 (time: number) => this.evaluateInput(time));
-            inputHandler.registerInputCallback(AuditionInputType.LEFT,
+            this.inputHandler.registerInputCallback(AuditionInputType.LEFT,
                 (time: number) => this.handleNoteInput(AuditionNoteType.LEFT, time));
-            inputHandler.registerInputCallback(AuditionInputType.RIGHT,
+            this.inputHandler.registerInputCallback(AuditionInputType.RIGHT,
                 (time: number) => this.handleNoteInput(AuditionNoteType.RIGHT, time));
         }
 
@@ -501,22 +503,20 @@ export class AuditionBeatSystem extends Component {
         // Auto-play logic
         if (this.noteSequence.length > 0 && this.currentNotes < this.noteSequence.length) {
             // Auto-press the correct note
-            const inputHandler = AuditionInputHandler.instance;
-            if (inputHandler) {
+            if (this.inputHandler) {
                 const noteType = this.noteSequence[this.currentNotes];
                 if (noteType === AuditionNoteType.LEFT) {
-                    inputHandler.simulateInput(AuditionInputType.LEFT, currentTime);
+                    this.inputHandler.simulateInput(AuditionInputType.LEFT, currentTime);
                 } else if (noteType === AuditionNoteType.RIGHT) {
-                    inputHandler.simulateInput(AuditionInputType.RIGHT, currentTime);
+                    this.inputHandler.simulateInput(AuditionInputType.RIGHT, currentTime);
                 }
             }
         }
 
         // Auto-press space at the right time
         if (distanceFromTarget <= this.timingWindows.get(AuditionAccuracyRating.PERFECT) / beatInterval) {
-            const inputHandler = AuditionInputHandler.instance;
-            if (inputHandler) {
-                inputHandler.simulateInput(AuditionInputType.SPACE, currentTime);
+            if (this.inputHandler) {
+                this.inputHandler.simulateInput(AuditionInputType.SPACE, currentTime);
             }
         }
     }
@@ -602,13 +602,12 @@ export class AuditionBeatSystem extends Component {
         this.isAutoPlay = false;
 
         // Unregister input callback
-        const inputHandler = AuditionInputHandler.instance;
-        if (inputHandler) {
-            inputHandler.unregisterInputCallback(AuditionInputType.SPACE,
+        if (this.inputHandler) {
+            this.inputHandler.unregisterInputCallback(AuditionInputType.SPACE,
                 (time: number) => this.evaluateInput(time));
-            inputHandler.unregisterInputCallback(AuditionInputType.LEFT,
+            this.inputHandler.unregisterInputCallback(AuditionInputType.LEFT,
                 (time: number) => this.handleNoteInput(AuditionNoteType.LEFT, time));
-            inputHandler.unregisterInputCallback(AuditionInputType.RIGHT,
+            this.inputHandler.unregisterInputCallback(AuditionInputType.RIGHT,
                 (time: number) => this.handleNoteInput(AuditionNoteType.RIGHT, time));
         }
 

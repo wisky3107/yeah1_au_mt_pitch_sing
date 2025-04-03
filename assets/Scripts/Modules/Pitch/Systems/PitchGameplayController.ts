@@ -25,9 +25,6 @@ interface PitchDetectionResult {
  */
 @ccclass('PitchGameplayController')
 export class PitchGameplayController extends Component {
-    // Singleton instance
-    private static _instance: PitchGameplayController = null;
-
     // Core components
     @property(PitchDetectionSystem)
     private detectionSystem: PitchDetectionSystem = null;
@@ -53,6 +50,9 @@ export class PitchGameplayController extends Component {
 
     @property({ type: Node, group: { name: "Gameplay UI", id: "gameplay" } })
     private microphone: Node = null;
+
+    @property({ type: PitchUIManager, group: { name: "Gameplay UI", id: "gameplay" } })
+    private pitchUIManager: PitchUIManager = null;
 
     // Game state
     private gameState: GameState = GameState.INIT;
@@ -109,22 +109,8 @@ export class PitchGameplayController extends Component {
     private readonly SCROLL_SMOOTHING_FACTOR: number = 0.1; // Controls how quickly the scrolling position updates
     //#endregion
 
-    /**
-     * Get the singleton instance
-     */
-    public static get instance(): PitchGameplayController {
-        return this._instance;
-    }
 
     onLoad() {
-        // Set up singleton instance
-        if (PitchGameplayController._instance !== null) {
-            this.node.destroy();
-            return;
-        }
-
-        PitchGameplayController._instance = this;
-
         // Initialize waveform visualization using the PitchWaveform component
         if (this.waveformVisualizer) {
             this.waveformVisualizer.initialize(this.microphone);
@@ -176,25 +162,25 @@ export class PitchGameplayController extends Component {
 
         // Calculate how many additional seconds we need
         const remainingDuration = targetDuration - currentDuration;
-        
+
         // Create extended notes array starting with original notes
         const extendedNotes: { note: MusicalNote, duration: number }[] = [...sequence.notes];
-        
+
         // Generate random notes to fill remaining duration
         let currentTime = currentDuration;
         while (currentTime < targetDuration) {
             // Generate random note between Do (0) and Si (6)
             const randomNote = Math.floor(Math.random() * 7) as MusicalNote;
-            
+
             // Generate random duration between 1 and 2 seconds
             const randomDuration = 1 + Math.random();
-            
+
             // Add the random note
             extendedNotes.push({
                 note: randomNote,
                 duration: randomDuration
             });
-            
+
             currentTime += randomDuration;
         }
 
@@ -230,7 +216,7 @@ export class PitchGameplayController extends Component {
         this.containerPosition = 0;
 
         // Initialize UI
-        PitchUIManager.instance.showGameplay(this.currentSequence);
+        this.pitchUIManager.showGameplay(this.currentSequence);
 
         // Initialize note indicators
         this.setupNoteIndicators();
@@ -322,7 +308,7 @@ export class PitchGameplayController extends Component {
             : 0;
 
         // Show results
-        PitchUIManager.instance.showResults(
+        this.pitchUIManager.showResults(
             success,
             this.timer.getRemainingTime(),
             accuracy
@@ -338,7 +324,7 @@ export class PitchGameplayController extends Component {
         this.gameState = GameState.CALIBRATING;
 
         // Show calibration UI
-        PitchUIManager.instance.showCalibration();
+        this.pitchUIManager.showCalibration();
 
         // Initialize detection system
         this.detectionSystem.initialize()
@@ -352,7 +338,7 @@ export class PitchGameplayController extends Component {
                         if (success) {
                             console.log('Calibration completed successfully');
                             // Return to main menu
-                            PitchUIManager.instance.showMainMenu();
+                            this.pitchUIManager.showMainMenu();
                             this.gameState = GameState.INIT;
                         } else {
                             console.error('Calibration failed');
@@ -383,7 +369,7 @@ export class PitchGameplayController extends Component {
         }
 
         // Update UI with current note
-        PitchUIManager.instance.updateCurrentNoteLabel(result.note);
+        this.pitchUIManager.updateCurrentNoteLabel(result.note);
 
         // Move butterfly to indicate current pitch
         this.moveButterfly(result.note, result.volume, result.frequency);
@@ -468,7 +454,7 @@ export class PitchGameplayController extends Component {
                 feedbackType = FeedbackType.MISS;
         }
 
-        PitchUIManager.instance.showFeedback(feedbackType);
+        this.pitchUIManager.showFeedback(feedbackType);
 
         // Update accuracy tracking
         this.totalNotesMatched++;
@@ -522,7 +508,7 @@ export class PitchGameplayController extends Component {
         if (this.gameState !== GameState.PLAYING) return;
 
         // Show time warning
-        PitchUIManager.instance.showTimeWarning(remainingTime);
+        this.pitchUIManager.showTimeWarning(remainingTime);
     }
 
     /**
@@ -543,7 +529,7 @@ export class PitchGameplayController extends Component {
         if (this.gameState !== GameState.PLAYING) return;
 
         // Update timer display
-        PitchUIManager.instance.updateTimer(this.timer.getRemainingTime());
+        this.pitchUIManager.updateTimer(this.timer.getRemainingTime());
 
         // Update scrolling
         this.updateScrolling(dt);
@@ -585,7 +571,7 @@ export class PitchGameplayController extends Component {
         this.totalAccuracy = 0;
 
         // Show main menu
-        PitchUIManager.instance.showMainMenu();
+        this.pitchUIManager.showMainMenu();
     }
 
     /**
@@ -783,7 +769,7 @@ export class PitchGameplayController extends Component {
         // Check if there are more notes
         if (this.currentNoteIndex < this.currentSequence.notes.length) {
             // Update UI for the next note
-            PitchUIManager.instance.updateTargetNoteLabel();
+            this.pitchUIManager.updateTargetNoteLabel(this.getCurrentTargetNote());
             this.highlightNoteIndicator(this.currentSequence.notes[this.currentNoteIndex].note);
 
             // Activate the next tile if it exists in the map
@@ -892,7 +878,7 @@ export class PitchGameplayController extends Component {
             if (indicator && indicator.active) {
                 const sprite = indicator.getComponent(Sprite);
                 if (sprite) {
-                    sprite.color = new Color(255, 255, 255, 255);
+                    sprite.color = new Color(255, 255, 255, 0);
                 }
             }
         }
@@ -903,7 +889,7 @@ export class PitchGameplayController extends Component {
             if (indicator && indicator.active) {
                 const sprite = indicator.getComponent(Sprite);
                 if (sprite) {
-                    sprite.color = new Color(255, 255, 0, 255); // Yellow highlight
+                    sprite.color = new Color(255, 255, 0, 125); // Yellow highlight
                 }
             }
         }

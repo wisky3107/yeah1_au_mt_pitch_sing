@@ -16,8 +16,6 @@ export enum AuditionInputType {
  */
 @ccclass('AuditionInputHandler')
 export class AuditionInputHandler extends Component {
-    // Singleton instance
-    private static _instance: AuditionInputHandler = null;
     // Input areas
     @property(Node)
     private leftInputArea: Node = null;
@@ -34,19 +32,8 @@ export class AuditionInputHandler extends Component {
     private lastInputTime: Map<AuditionInputType, number> = new Map();
     private inputDebounceTime: number = 100; // Minimum time between inputs (ms)
     
-    // Singleton pattern implementation
-    public static get instance(): AuditionInputHandler {
-        return this._instance;
-    }
-    
     onLoad() {
-        // Make this a singleton
-        if (AuditionInputHandler._instance === null) {
-            AuditionInputHandler._instance = this;
-            this.initialize();
-        } else {
-            this.node.destroy();
-        }
+        this.initialize();
     }
     
     /**

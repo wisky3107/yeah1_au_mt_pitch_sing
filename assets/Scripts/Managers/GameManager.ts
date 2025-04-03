@@ -31,4 +31,4 @@ export class GameManager {
 
     //#endregion
 }
-GameManager.instance = new GameManager();
+GameManager.instance = new GameManager();   

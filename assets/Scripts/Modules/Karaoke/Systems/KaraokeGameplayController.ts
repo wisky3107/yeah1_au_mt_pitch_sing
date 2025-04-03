@@ -18,14 +18,6 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('KaraokeGameplayController')
 export class KaraokeGameplayController extends Component {
-    //#region Singleton
-    private static _instance: KaraokeGameplayController = null;
-
-    public static get instance(): KaraokeGameplayController {
-        return this._instance;
-    }
-    //#endregion
-
     //#region Properties
     @property({ type: KaraokePitchDetectionSystem, tooltip: "Node containing KaraokePitchDetectionSystem component", group: { name: "Systems", id: "systems" } })
     private pitchDetection: KaraokePitchDetectionSystem = null;
@@ -51,7 +43,6 @@ export class KaraokeGameplayController extends Component {
     @property({ tooltip: "Path to default song to load (can be empty)", group: { name: "Config", id: "config" } })
     private defaultSongPath: string = "";
 
-
     //#endregion
 
     //#region Private Variables
@@ -76,9 +67,6 @@ export class KaraokeGameplayController extends Component {
 
     //#region Lifecycle Methods
     async onLoad() {
-        KaraokeGameplayController._instance = this;
-
-
         // Initialize subsystems
         this.initializeSubsystems();
 
@@ -112,7 +100,6 @@ export class KaraokeGameplayController extends Component {
     }
 
     onDestroy() {
-        KaraokeGameplayController._instance = null;
         // Clean up event listeners and resources
         this.removeEventListeners();
     }
@@ -135,6 +122,10 @@ export class KaraokeGameplayController extends Component {
             // Update scoring system with current time
             if (this.scoringSystem) {
                 this.scoringSystem.updateTime(currentTime);
+            }
+
+            if (this.uiManager) {
+                this.uiManager.updateTimer(currentTime, this.getCurrentPlaybackTime());
             }
         }
     }

@@ -155,9 +155,6 @@ export class KaraokeUIManager extends Component {
     //#endregion
 
     //#region Private Variables
-    // Controllers and managers
-    private gameController: KaraokeGameplayController = null;
-
     // Timer variables
     private totalDuration: number = 0;
     private remainingTime: number = 0;
@@ -189,7 +186,6 @@ export class KaraokeUIManager extends Component {
      * Initialize screen manager
      */
     start() {
-        this.gameController = KaraokeGameplayController.instance;
         // Set up UI elements based on wireframe layout
         this.setupUIElements();
 
@@ -212,8 +208,6 @@ export class KaraokeUIManager extends Component {
      * Update method for frame-by-frame updates
      */
     update(dt: number) {
-        // Update timer
-        this.updateTimer(dt);
         // Update lyrics scrolling
         this.updateLyricsScrolling(dt);
     }
@@ -239,16 +233,6 @@ export class KaraokeUIManager extends Component {
      */
     private setupUIElements() {
         // Implementation details
-    }
-
-    /**
-     * Handle back button click
-     */
-    private onBackButtonClicked() {
-        // Check if karaoke is in progress
-        if (this.gameController) {
-            this.gameController.handleExitRequest();
-        }
     }
 
     /**
@@ -399,25 +383,16 @@ export class KaraokeUIManager extends Component {
     /**
      * Update timer each frame
      */
-    private updateTimer(dt: number) {
+    public updateTimer(currentTime: number, elapsedTime: number) {
         if (!this.isTimerActive) return;
+        // Update remaining time
+        this.remainingTime = Math.max(0, this.totalDuration - elapsedTime);
+        // Update display
+        this.updateTimerDisplay(this.remainingTime);
 
-        // Update timer based on audio playback time
-        if (this.gameController) {
-            const currentSong = this.gameController.getCurrentSong();
-            if (currentSong) {
-                // Update remaining time
-                const elapsedTime = this.gameController.getCurrentPlaybackTime();
-                this.remainingTime = Math.max(0, this.totalDuration - elapsedTime);
-
-                // Update display
-                this.updateTimerDisplay(this.remainingTime);
-
-                // If timer reaches zero, handle timeout
-                if (this.remainingTime <= 0) {
-                    this.isTimerActive = false;
-                }
-            }
+        // If timer reaches zero, handle timeout
+        if (this.remainingTime <= 0) {
+            this.isTimerActive = false;
         }
     }
 

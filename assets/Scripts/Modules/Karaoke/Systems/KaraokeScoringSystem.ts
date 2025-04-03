@@ -9,14 +9,8 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('KaraokeScoringSystem')
 export class KaraokeScoringSystem extends Component {
-    //#region Singleton
-    private static _instance: KaraokeScoringSystem = null;
-    private static eventTarget: EventTarget = new EventTarget();
 
-    public static get instance(): KaraokeScoringSystem {
-        return this._instance;
-    }
-    //#endregion
+    private eventTarget: EventTarget = new EventTarget();
 
     //#region Private Variables
     private validDuration: number = 0;
@@ -25,17 +19,6 @@ export class KaraokeScoringSystem extends Component {
     private isPitchDetected: boolean = false;
     private isLyricActive: boolean = false;
     //#endregion
-
-    //#region Lifecycle Methods
-    onLoad() {
-        // Set up singleton instance
-        if (KaraokeScoringSystem._instance !== null) {
-            this.node.destroy();
-            return;
-        }
-
-        KaraokeScoringSystem._instance = this;
-    }
 
     onDestroy() {
         // Clean up resources
@@ -145,23 +128,23 @@ export class KaraokeScoringSystem extends Component {
     private emitScoreUpdated(): void {
         const scoreDetails = this.getScore();
 
-        KaraokeScoringSystem.emit(KaraokeConstants.EVENTS.SCORE_UPDATED, {
+        this.emit(KaraokeConstants.EVENTS.SCORE_UPDATED, {
             score: scoreDetails,
         });
     }
     //#endregion
 
     //#region Event Methods
-    public static on(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.on(eventName, callback, target);
+    public on(eventName: string, callback: (...args: any[]) => void, target?: any): void {
+        this.eventTarget?.on(eventName, callback, target);
     }
 
-    public static off(eventName: string, callback: (...args: any[]) => void, target?: any): void {
-        this.eventTarget.off(eventName, callback, target);
+    public off(eventName: string, callback: (...args: any[]) => void, target?: any): void {
+        this.eventTarget?.off(eventName, callback, target);
     }
 
-    private static emit(eventName: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
-        this.eventTarget.emit(eventName, arg1, arg2, arg3, arg4, arg5);
+    private emit(eventName: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
+        this.eventTarget?.emit(eventName, arg1, arg2, arg3, arg4, arg5);
     }
     //#endregion
 } 

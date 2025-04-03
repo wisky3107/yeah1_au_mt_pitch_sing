@@ -57,6 +57,9 @@ export class AuditionGameplayController extends Component {
     @property(AuditionAudioManager)
     private audioManager: AuditionAudioManager = null;
 
+    @property(AuditionUIManager)
+    private uimanager: AuditionUIManager = null;
+
     // State tracking
     private gameState: GameState = GameState.INIT;
     private songStartTime: number = 0;
@@ -178,7 +181,7 @@ export class AuditionGameplayController extends Component {
         this.currentSong = songData;
         // Initialize gameplay
         this.initGameplay();
-        AuditionUIManager.instance.showGameplay(this.currentSong);
+        this.uimanager.showGameplay(this.currentSong);
     }
 
     /**
@@ -223,7 +226,7 @@ export class AuditionGameplayController extends Component {
     private startGameplay(): void {
         // Record start time
         this.beatSystem.setReadyCallback(() => {
-            AuditionUIManager.instance.playReadyGoAnimation();
+            this.uimanager.playReadyGoAnimation();
         });
 
         this.songStartTime = Date.now();
@@ -299,7 +302,7 @@ export class AuditionGameplayController extends Component {
         this.songProgressBar.progress = progress + 0.1;
 
         // Also update UI manager progress
-        AuditionUIManager.instance.updateProgress(progress);
+        this.uimanager.updateProgress(progress);
     }
 
     /**
@@ -336,7 +339,7 @@ export class AuditionGameplayController extends Component {
                 feedbackType = FeedbackType.MISS;
         }
 
-        AuditionUIManager.instance.showFeedback(feedbackType);
+        this.uimanager.showFeedback(feedbackType);
     }
 
     /**
@@ -344,7 +347,7 @@ export class AuditionGameplayController extends Component {
      * @param score Current score
      */
     private updateScoreDisplay(score: number): void {
-        AuditionUIManager.instance.updateScore(score);
+        this.uimanager.updateScore(score);
     }
 
     /**
@@ -352,7 +355,7 @@ export class AuditionGameplayController extends Component {
      * @param combo Current combo
      */
     private updateComboDisplay(combo: number): void {
-        AuditionUIManager.instance.updateCombo(combo);
+        this.uimanager.updateCombo(combo);
     }
 
     /**
@@ -379,8 +382,8 @@ export class AuditionGameplayController extends Component {
         const experiencePoints = this.scoringSystem.calculateExperiencePoints();
 
         // Show results screen
-        AuditionUIManager.instance.showResults();
-        AuditionUIManager.instance.updateResults(score, accuracy, maxCombo, grade);
+        this.uimanager.showResults();
+        this.uimanager.updateResults(score, accuracy, maxCombo, grade);
 
         console.log(`Gameplay ended. Score: ${score}, Accuracy: ${accuracy.toFixed(2)}%, Max Combo: ${maxCombo}, Grade: ${grade}`);
     }
