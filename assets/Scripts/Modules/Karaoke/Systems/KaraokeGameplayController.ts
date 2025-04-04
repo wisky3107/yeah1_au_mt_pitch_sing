@@ -7,9 +7,8 @@ import { KaraokeAudioManager } from './KaraokeAudioManager';
 import { KaraokeCharacterAnimator } from './KaraokeCharacterAnimator';
 import { KaraokeScoringSystem } from './KaraokeScoringSystem';
 import { KaraokeUIManager } from '../UI/KaraokeUIManager';
-import { PitchWaveform } from '../../GameCommon/Pitch/PitchWaveform';
-import { PitchDetectionSystem } from '../../Pitch/Systems/PitchDetectionSystem';
 import { KaraokeSongModel } from '../../../Models/Songs/KaraokeSongModel';
+import { SongModel } from '../../../Models/Songs/SongModel';
 
 const { ccclass, property } = _decorator;
 
@@ -198,7 +197,7 @@ export class KaraokeGameplayController extends Component {
                 console.log(`Total lyrics interaction duration: ${totalInteractionDuration.toFixed(2)} seconds`);
 
                 // Load the audio
-                await this.audioManager.loadAudio(updatedSong.musicPath);
+                await this.audioManager.loadAudio(KaraokeSongModel.getBeatmapPath(updatedSong));
 
                 // Load lyrics into UI directly
                 if (this.uiManager) {
@@ -219,7 +218,7 @@ export class KaraokeGameplayController extends Component {
                 this.lyricsManager.setLyrics([]);
 
                 // Load the audio
-                await this.audioManager.loadAudio(songToLoad.musicPath);
+                await this.audioManager.loadAudio(KaraokeSongModel.getBeatmapPath(songToLoad));
 
                 // Change state to ready
                 this.changeState(KaraokeState.READY);

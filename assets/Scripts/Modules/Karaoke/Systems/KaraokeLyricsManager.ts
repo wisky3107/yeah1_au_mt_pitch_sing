@@ -23,7 +23,7 @@ export class KaraokeLyricsManager extends Component {
 
     //#region Lifecycle Methods
     onLoad() {
-     
+
     }
 
     onDestroy() {
@@ -45,9 +45,7 @@ export class KaraokeLyricsManager extends Component {
                 reject(new Error('Song or lyricPath is missing'));
                 return;
             }
-
-            const resourcePath = `karaoke/lyrics/${song.lyricPath}`;
-
+            const resourcePath = KaraokeSongModel.getLyricPath(song);
             resourceUtil.loadRes(resourcePath, JsonAsset, (err, jsonAsset: JsonAsset) => {
                 if (err) {
                     console.error(`Failed to load lyrics from path: ${resourcePath}`, err);

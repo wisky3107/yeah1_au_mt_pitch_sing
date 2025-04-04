@@ -1,7 +1,9 @@
 import { _decorator } from 'cc';
 import { PitchAccuracy } from '../Systems/KaraokeConstants';
 
-
+export const KaraokeConstants = {
+    RESOURCE_LYRIC_PATH: 'karaoke/lyrics',
+}
 
 /**
  * Result of pitch detection

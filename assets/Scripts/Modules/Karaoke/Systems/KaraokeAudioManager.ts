@@ -82,9 +82,8 @@ export class KaraokeAudioManager extends Component {
         return new Promise((resolve) => {
             // Stop any current playback
             this.stopPlayback();
-            const fullPath = `music/${path}`;
             // Load audio clip from resources using resourceUtil
-            resourceUtil.loadRes(fullPath, AudioClip, (err, clip) => {
+            resourceUtil.loadRes(path, AudioClip, (err, clip) => {
                 if (err) {
                     console.error(`Failed to load audio: ${path}`, err);
                     resolve(false);
