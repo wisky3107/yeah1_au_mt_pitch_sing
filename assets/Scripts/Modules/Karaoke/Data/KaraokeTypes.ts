@@ -1,41 +1,7 @@
 import { _decorator } from 'cc';
 import { PitchAccuracy } from '../Systems/KaraokeConstants';
 
-/**
- * Represents a lyric segment with start and end timestamps
- */
-export interface LyricSegment {
-    /** The text content of the lyric segment */
-    text: string;
-    /** Start time in seconds */
-    startTime: number;
-    /** End time in seconds */
-    endTime: number;
-    /** Whether the segment has been sung */
-    completed?: boolean;
-}
 
-/**
- * Represents a song with lyrics and audio path
- */
-export interface Song {
-    /** Unique identifier for the song */
-    id: string;
-    /** Title of the song */
-    title: string;
-    /** Artist name */
-    artist: string;
-    /** Path to the audio file */
-    audioPath: string;
-    /** Path to the lyric file */
-    lyricPath: string;
-    /** BPM (Beats Per Minute) of the song */
-    bpm: number;
-    /** Array of lyric segments */
-    lyrics: LyricSegment[];
-    /** Duration of the song in seconds */
-    duration: number;
-}
 
 /**
  * Result of pitch detection

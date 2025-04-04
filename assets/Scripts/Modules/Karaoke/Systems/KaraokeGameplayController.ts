@@ -1,6 +1,6 @@
 import { _decorator, Component, Node } from 'cc';
 import { KaraokeConstants, KaraokeState } from './KaraokeConstants';
-import { Song, LyricSegment, PitchDetectionResult } from '../Data/KaraokeTypes';
+import { PitchDetectionResult } from '../Data/KaraokeTypes';
 import { KaraokePitchDetectionSystem } from './KaraokePitchDetectionSystem';
 import { KaraokeLyricsManager } from './KaraokeLyricsManager';
 import { KaraokeAudioManager } from './KaraokeAudioManager';
@@ -9,6 +9,7 @@ import { KaraokeScoringSystem } from './KaraokeScoringSystem';
 import { KaraokeUIManager } from '../UI/KaraokeUIManager';
 import { PitchWaveform } from '../../GameCommon/Pitch/PitchWaveform';
 import { PitchDetectionSystem } from '../../Pitch/Systems/PitchDetectionSystem';
+import { KaraokeSongModel } from '../../../Models/Songs/KaraokeSongModel';
 
 const { ccclass, property } = _decorator;
 
@@ -47,21 +48,24 @@ export class KaraokeGameplayController extends Component {
 
     //#region Private Variables
     private state: KaraokeState = KaraokeState.INIT;
-    private currentSong: Song = null;
+    private currentSong: KaraokeSongModel = null;
     private microphoneInitialized: boolean = false;
     private isLyricActive: boolean = false;
     //#endregion
 
-    private availableSongs: Song[] = [
+    private availableSongs: KaraokeSongModel[] = [
         {
             id: 'TrongCom_ATVNCG',
             title: 'Trống Cơm',
             artist: 'ATVNCG',
             bpm: 86,
-            audioPath: 'TrongCom_ATVNCG',
+            musicPath: 'TrongCom_ATVNCG',
             lyricPath: 'trongcom',
             lyrics: [],
-            duration: 254 // This will be updated from the JSON data
+            duration: 254,
+            difficulty: 1,
+            previewStart: 0,
+            previewEnd: 10000,
         },
     ];
 
@@ -84,19 +88,7 @@ export class KaraokeGameplayController extends Component {
 
     start() {
         // Load default song if provided
-        if (this.defaultSongPath && this.defaultSongPath.length > 0) {
-            // First check if it matches an ID in availableSongs
-            const defaultSong = this.availableSongs.find(s => s.id === this.defaultSongPath);
-            if (defaultSong) {
-                this.loadSong(defaultSong.id);
-            } else {
-                // If not found by ID, try loading by path directly
-                this.loadSong(this.defaultSongPath);
-            }
-        } else if (this.availableSongs.length > 0) {
-            // If no default song path is provided but we have available songs, load the first one
-            this.loadSong(this.availableSongs[0].id);
-        }
+        this.loadSong(this.availableSongs[0]);
     }
 
     onDestroy() {
@@ -172,39 +164,14 @@ export class KaraokeGameplayController extends Component {
      * @param pathOrId Path or ID of the song to load
      * @param song Optional song data if already available
      */
-    public async loadSong(pathOrId: string, song?: Song): Promise<boolean> {
+    public async loadSong(song: KaraokeSongModel): Promise<boolean> {
         // Change state to loading
         this.changeState(KaraokeState.LOADING);
 
         try {
-            let songToLoad: Song = null;
-
             // If song data is provided, use it
-            if (song) {
-                songToLoad = song;
-            }
-            // Try to find the song in the availableSongs array by ID
-            else if (pathOrId) {
-                songToLoad = this.availableSongs.find(s => s.id === pathOrId);
-
-                // If not found by ID, try as a path
-                if (!songToLoad) {
-                    // For backward compatibility, create a temporary song object with the path
-                    songToLoad = {
-                        id: pathOrId,
-                        title: pathOrId,
-                        artist: 'Unknown',
-                        audioPath: pathOrId,
-                        lyricPath: pathOrId,
-                        bpm: 120,
-                        lyrics: [],
-                        duration: 0
-                    };
-                }
-            }
-
+            let songToLoad = song;
             if (!songToLoad) {
-                console.error('No song found with ID/path:', pathOrId);
                 this.changeState(KaraokeState.INIT);
                 return false;
             }
@@ -222,16 +189,16 @@ export class KaraokeGameplayController extends Component {
                         totalInteractionDuration += (lyric.endTime - lyric.startTime);
                     }
                 }
-                
+
                 // Update the scoring system with the total lyrics duration
                 if (this.scoringSystem) {
                     this.scoringSystem.setTotalLyricsDuration(totalInteractionDuration);
                 }
-                
+
                 console.log(`Total lyrics interaction duration: ${totalInteractionDuration.toFixed(2)} seconds`);
 
                 // Load the audio
-                await this.audioManager.loadAudio(updatedSong.audioPath);
+                await this.audioManager.loadAudio(updatedSong.musicPath);
 
                 // Load lyrics into UI directly
                 if (this.uiManager) {
@@ -252,7 +219,7 @@ export class KaraokeGameplayController extends Component {
                 this.lyricsManager.setLyrics([]);
 
                 // Load the audio
-                await this.audioManager.loadAudio(songToLoad.audioPath);
+                await this.audioManager.loadAudio(songToLoad.musicPath);
 
                 // Change state to ready
                 this.changeState(KaraokeState.READY);
@@ -403,7 +370,7 @@ export class KaraokeGameplayController extends Component {
      * Get the current song
      * @returns Current song or null if none
      */
-    public getCurrentSong(): Song | null {
+    public getCurrentSong(): KaraokeSongModel | null {
         return this.currentSong;
     }
 

@@ -1,7 +1,8 @@
 import { _decorator, Component, EventTarget, resources, JsonAsset } from 'cc';
 import { KaraokeConstants } from './KaraokeConstants';
-import { LyricSegment, Song } from '../Data/KaraokeTypes';
 import { resourceUtil } from '../../../Common/resourceUtil';
+import { LyricSegment } from '../../../Models/Songs/KaraokeSongModel';
+import { KaraokeSongModel } from '../../../Models/Songs/KaraokeSongModel';
 
 const { ccclass, property } = _decorator;
 
@@ -37,7 +38,7 @@ export class KaraokeLyricsManager extends Component {
      * @param song Song object containing lyricPath
      * @returns Promise with updated song including lyrics
      */
-    public loadLyrics(song: Song): Promise<Song> {
+    public loadLyrics(song: KaraokeSongModel): Promise<KaraokeSongModel> {
         return new Promise((resolve, reject) => {
             if (!song || !song.lyricPath) {
                 console.error('Song or lyricPath is missing');
