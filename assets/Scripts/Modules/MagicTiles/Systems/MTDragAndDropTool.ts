@@ -201,7 +201,7 @@ export class MTDragAndDropTool extends Component {
                 previewStart: 0,
                 previewEnd: 30,
                 // Use the actual assets rather than paths that don't exist
-                audioPath: null, // We'll override this in our implementation
+                musicPath: null, // We'll override this in our implementation
                 midiPath: null, // We'll override this in our implementation
                 backgroundImage: "magic_tiles/images/default_background",
                 thumbnail: "magic_tiles/images/default_cover"

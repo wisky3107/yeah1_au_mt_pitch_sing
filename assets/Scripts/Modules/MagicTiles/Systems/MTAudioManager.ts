@@ -2,7 +2,7 @@ import { _decorator, Node, AudioClip, AudioSource, game, director, error, Tween,
 import { AudioManager as CommonAudioManager } from '../../../Common/audioManager';
 import { resourceUtil } from '../../../Common/resourceUtil';
 import { loadMidi } from '../../../Common/MidiReader';
-import { BeatmapAudioData, MidiTrackInfo } from "../Data/MTDefines";
+import { BeatmapAudioData, MidiTrackInfo, MTConstant } from "../Data/MTDefines";
 
 const { ccclass, property } = _decorator;
 
@@ -73,8 +73,8 @@ export class MTAudioManager {
         try {
             // Load both resources in parallel for better performance
             const [audioClip, midiTrack] = await Promise.all([
-                this.loadAudioClip(audioPath),
-                loadMidi(midiPath, trackIndex)
+                this.loadAudioClip(`${MTConstant.AUDIO_PATH}/${audioPath}`),
+                loadMidi(`${MTConstant.MIDI_PATH}/${midiPath}`, trackIndex)
             ]);
 
             // Create beatmap audio data

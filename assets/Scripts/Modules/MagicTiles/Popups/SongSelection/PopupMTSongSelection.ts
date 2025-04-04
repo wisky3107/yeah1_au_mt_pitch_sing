@@ -26,8 +26,8 @@ export class PopupMTSongSelection extends PopupBase {
             level: 5,
             previewStart: 60000,
             previewEnd: 90000,
-            audioPath: "magic_tiles/audios/DauCoLoiLam_ATVNCG_bestcut",
-            midiPath: "magic_tiles/midis/DauCoLoiLam_ATVNCG_bestcut",
+            musicPath: "DauCoLoiLam_ATVNCG_bestcut",
+            midiPath: "DauCoLoiLam_ATVNCG_bestcut",
             backgroundImage: "magic_tiles/images/Perfect_EdSheeran_background",
             thumbnail: "magic_tiles/images/Perfect_EdSheeran_cover"
         },
@@ -40,8 +40,8 @@ export class PopupMTSongSelection extends PopupBase {
             level: 5,
             previewStart: 60000,
             previewEnd: 90000,
-            audioPath: "magic_tiles/audios/Lang_Rhymastic_ATVNCG",
-            midiPath: "magic_tiles/midis/Lang_Rhymastic_ATVNCG",
+            musicPath: "Lang_Rhymastic_ATVNCG",
+            midiPath: "Lang_Rhymastic_ATVNCG",
             backgroundImage: "magic_tiles/images/Lang_background",
             thumbnail: "magic_tiles/images/Lang_cover"
         },
@@ -54,8 +54,8 @@ export class PopupMTSongSelection extends PopupBase {
             level: 5,
             previewStart: 60000,
             previewEnd: 90000,
-            audioPath: "magic_tiles/audios/DauCoLoiLam_ATVNCG_Full",
-            midiPath: "magic_tiles/midis/DauCoLoiLam_ATVNCG_Full",
+            musicPath: "DauCoLoiLam_ATVNCG_Full",
+            midiPath: "DauCoLoiLam_ATVNCG_Full",
             backgroundImage: "magic_tiles/images/DauCoLoiLam_background",
             thumbnail: "magic_tiles/images/DauCoLoiLam_cover"
         }, {
@@ -67,8 +67,8 @@ export class PopupMTSongSelection extends PopupBase {
             level: 6,
             previewStart: 60000,
             previewEnd: 90000,
-            audioPath: "magic_tiles/audios/TrongCom_ATVNCG",
-            midiPath: "magic_tiles/midis/TrongCom_ATVNCG",
+            musicPath: "TrongCom_ATVNCG",
+            midiPath: "TrongCom_ATVNCG",
             backgroundImage: "magic_tiles/images/TrongCom_background",
             thumbnail: "magic_tiles/images/TrongCom_cover"
         },
@@ -81,8 +81,8 @@ export class PopupMTSongSelection extends PopupBase {
             level: 4,
             previewStart: 60000,
             previewEnd: 90000,
-            audioPath: "magic_tiles/audios/GiaNhu_SOOBIN_ATVNCG",
-            midiPath: "magic_tiles/midis/GiaNhu_SOOBIN_ATVNCG",
+            musicPath: "GiaNhu_SOOBIN_ATVNCG",
+            midiPath: "GiaNhu_SOOBIN_ATVNCG",
             backgroundImage: "magic_tiles/images/GiaNhu_background",
             thumbnail: "magic_tiles/images/GiaNhu_cover"
         }
