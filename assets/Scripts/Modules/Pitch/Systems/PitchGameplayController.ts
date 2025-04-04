@@ -763,9 +763,7 @@ export class PitchGameplayController extends Component {
 
     private advanceToNextNote(): boolean {
         if (!this.currentSequence) return false;
-
         this.currentNoteIndex++;
-
         // Check if there are more notes
         if (this.currentNoteIndex < this.currentSequence.notes.length) {
             // Update UI for the next note

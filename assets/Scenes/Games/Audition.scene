@@ -1501,7 +1501,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "musicFolder": "audition/music/",
     "musicSource": {
       "__id__": 45
     },

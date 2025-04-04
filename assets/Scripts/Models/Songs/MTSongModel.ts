@@ -1,3 +1,4 @@
+import { MTConstant } from "../../Modules/MagicTiles/Data/MTDefines";
 import { SongModel } from "./SongModel";
 
 export interface MTSongModel extends SongModel {
@@ -7,6 +8,6 @@ export interface MTSongModel extends SongModel {
 }
 export namespace MTSongModel {
     export function getMidiPath(song: MTSongModel): string {
-        return song.midiPath || song.id;
+        return `${MTConstant.RESOURCE_MIDI_PATH}/${song.midiPath || song.id}`;
     }
 }

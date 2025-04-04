@@ -5,6 +5,7 @@ import { AuditionScoringSystem } from '../Systems/AuditionScoringSystem';
 import { AuditionCharacterAnimation } from '../Systems/AuditionCharacterAnimation';
 import { AuditionUIManager, FeedbackType } from '../UI/AuditionUIManager';
 import { AuditionSongModel } from '../../../Models/Songs/AuditionSongModel';
+import { SongModel } from '../../../Models/Songs/SongModel';
 
 // Game state enum
 enum GameState {
@@ -199,7 +200,7 @@ export class AuditionGameplayController extends Component {
 
         // Load both song audio and dance data concurrently
         Promise.all([
-            this.audioManager.loadSong(this.currentSong.musicPath),
+            this.audioManager.loadSong(SongModel.getMusicPath(this.currentSong)),
             this.characterAnimation.loadDanceData(this.currentSong.id)
         ])
             .then(([songLoaded, danceDataLoaded]) => {
@@ -375,9 +376,6 @@ export class AuditionGameplayController extends Component {
         const maxCombo = this.scoringSystem.getMaxCombo();
         const accuracy = this.scoringSystem.getAccuracyPercentage();
         const grade = this.scoringSystem.getGrade();
-
-        // Calculate experience
-        const experiencePoints = this.scoringSystem.calculateExperiencePoints();
 
         // Show results screen
         this.uimanager.showResults();

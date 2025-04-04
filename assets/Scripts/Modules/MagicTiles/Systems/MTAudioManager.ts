@@ -74,8 +74,8 @@ export class MTAudioManager {
         try {
             // Load both resources in parallel for better performance
             const [audioClip, midiTrack] = await Promise.all([
-                this.loadAudioClip(`${SongConstant.RESOURCE_MUSIC_PATH}/${audioPath}`),
-                loadMidi(`${MTConstant.RESOURCE_MIDI_PATH}/${midiPath}`, trackIndex)
+                this.loadAudioClip(audioPath),
+                loadMidi(midiPath, trackIndex)
             ]);
 
             // Create beatmap audio data

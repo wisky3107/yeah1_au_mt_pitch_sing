@@ -1,3 +1,5 @@
+import { SongConstant } from "../../Constant/SongConstant";
+
 export interface SongModel {
     id: string;
     title: string;
@@ -12,8 +14,9 @@ export interface SongModel {
 }
 
 export namespace SongModel {
+    //if the music path is null then we use the id as the music path
     export function getMusicPath(song: SongModel): string {
-        return song.musicPath || song.id;
+        return `${SongConstant.RESOURCE_MUSIC_PATH}/${song.musicPath || song.id}`;
     }
 }
 

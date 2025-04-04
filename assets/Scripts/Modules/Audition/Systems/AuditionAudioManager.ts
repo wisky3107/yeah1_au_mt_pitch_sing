@@ -8,10 +8,6 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('AuditionAudioManager')
 export class AuditionAudioManager extends Component {
-
-    @property
-    private musicFolder: string = 'audition/music/';
-
     // Audio sources for music and sound effects
     @property(AudioSource)
     private musicSource: AudioSource = null;
@@ -90,8 +86,6 @@ export class AuditionAudioManager extends Component {
         }
     }
 
-
-
     /**
      * Load a song audio file
      * @param songPath Path to the song audio file
@@ -100,16 +94,15 @@ export class AuditionAudioManager extends Component {
     public loadSong(songPath: string): Promise<void> {
         return new Promise((resolve, reject) => {
             console.log(`Loading song: ${songPath}`);
-            const fullPath = this.musicFolder + songPath;
-            resourceUtil.loadRes(fullPath, AudioClip, (err, clip) => {
+            resourceUtil.loadRes(songPath, AudioClip, (err, clip) => {
                 if (err) {
-                    console.error(`Failed to load song: ${fullPath}`, err);
+                    console.error(`Failed to load song: ${songPath}`, err);
                     reject(err);
                     return;
                 }
 
                 this.musicSource.clip = clip;
-                console.log(`Song loaded: ${fullPath}`);
+                console.log(`Song loaded: ${songPath}`);
                 resolve();
             });
         });
