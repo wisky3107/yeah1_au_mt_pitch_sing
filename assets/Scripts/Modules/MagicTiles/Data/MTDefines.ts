@@ -2,8 +2,7 @@ import { AudioClip } from "cc";
 import { MTSongModel } from "../../../Models/Songs/MTSongModel";
 
 export const MTConstant = {
-    AUDIO_PATH: "magic_tiles/audios",
-    MIDI_PATH: "magic_tiles/midi",
+    RESOURCE_MIDI_PATH: "magic_tiles/midi",
 }
 
 export interface BeatmapAudioData {

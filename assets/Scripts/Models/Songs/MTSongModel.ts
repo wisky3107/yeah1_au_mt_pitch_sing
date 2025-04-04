@@ -5,8 +5,8 @@ export interface MTSongModel extends SongModel {
     backgroundImage?: string;
     level?: number;
 }
-
-export function getMidiPath(song: MTSongModel): string {
-    return song.midiPath || song.id;
+export namespace MTSongModel {
+    export function getMidiPath(song: MTSongModel): string {
+        return song.midiPath || song.id;
+    }
 }
-

@@ -15,9 +15,5 @@ export namespace SongModel {
     export function getMusicPath(song: SongModel): string {
         return song.musicPath || song.id;
     }
-
-    export function getMidiPath(song: MTSongModel): string {
-        return song.midiPath || song.id;
-    }
 }
 

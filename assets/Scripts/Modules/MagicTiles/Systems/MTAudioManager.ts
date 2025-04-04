@@ -3,6 +3,7 @@ import { AudioManager as CommonAudioManager } from '../../../Common/audioManager
 import { resourceUtil } from '../../../Common/resourceUtil';
 import { loadMidi } from '../../../Common/MidiReader';
 import { BeatmapAudioData, MidiTrackInfo, MTConstant } from "../Data/MTDefines";
+import { SongConstant } from "../../../Constant/SongConstant";
 
 const { ccclass, property } = _decorator;
 
@@ -73,8 +74,8 @@ export class MTAudioManager {
         try {
             // Load both resources in parallel for better performance
             const [audioClip, midiTrack] = await Promise.all([
-                this.loadAudioClip(`${MTConstant.AUDIO_PATH}/${audioPath}`),
-                loadMidi(`${MTConstant.MIDI_PATH}/${midiPath}`, trackIndex)
+                this.loadAudioClip(`${SongConstant.RESOURCE_MUSIC_PATH}/${audioPath}`),
+                loadMidi(`${MTConstant.RESOURCE_MIDI_PATH}/${midiPath}`, trackIndex)
             ]);
 
             // Create beatmap audio data
@@ -408,10 +409,10 @@ export class MTAudioManager {
 
         // Clear current beatmap data
         this._currentBeatmap = null;
-        
+
         // Clear beat callbacks
         this._beatCallbacks = [];
-        
+
         // Reset buffering and timer states
         this._isBuffering = false;
         this._playbackTimer = 0;

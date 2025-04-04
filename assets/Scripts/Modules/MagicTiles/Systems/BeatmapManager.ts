@@ -251,8 +251,8 @@ export class BeatmapManager {
 
         try {
             // Load the audio and MIDI using the audio manager
-            const { musicPath: audioPath, midiPath } = this.activeBeatmap.song;
-            return await this.audioManager.loadBeatmapAudioData(audioPath, midiPath);
+            const song = this.activeBeatmap.song;
+            return await this.audioManager.loadBeatmapAudioData(SongModel.getMusicPath(song), MTSongModel.getMidiPath(song));
         } catch (err) {
             console.error("Failed to load beatmap audio:", err);
             return null;
