@@ -1,4 +1,5 @@
 import { AudioClip } from "cc";
+import { MTSongModel } from "../../../Models/Songs/MTSongModel";
 
 export interface BeatmapAudioData {
     clip: AudioClip;
@@ -41,24 +42,8 @@ export enum NoteType {
     SLIDE = 2
 }
 
-// Define the beatmap metadata
-export interface BeatmapMetadata {
-    id: string;
-    title: string;
-    artist: string;
-    bpm: number;
-    difficulty: number;
-    level: number;
-    audioPath: string;
-    midiPath: string;
-    backgroundImage: string;
-    thumbnail: string;
-    previewStart: number;
-    previewEnd: number;
-}
-
 // Define the full beatmap structure
 export interface Beatmap {
-    metadata: BeatmapMetadata;
+    song: MTSongModel;
     notes: TrackNoteInfo[];
 }

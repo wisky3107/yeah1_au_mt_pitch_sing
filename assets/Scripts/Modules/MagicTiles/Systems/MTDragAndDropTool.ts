@@ -2,9 +2,10 @@ import { _decorator, Component, sys, assetManager, AudioClip, Asset, Node, game,
 import { MTAudioManager } from "./MTAudioManager";
 import { MTGameplayManager, GameState } from "./MTGameplayManager";
 import { BeatmapManager } from "./BeatmapManager";
-import { Beatmap, BeatmapMetadata, BeatmapAudioData, TrackNoteInfo, NoteType } from "../Data/MTDefines";
+import { Beatmap, BeatmapAudioData, TrackNoteInfo, NoteType } from "../Data/MTDefines";
 import { loadMidi, loadMidiFromURL } from "../../../Common/MidiReader";
 import { resourceUtil } from "../../../Common/resourceUtil";
+import { MTSongModel } from "../../../Models/Songs/MTSongModel";
 
 const { ccclass, property } = _decorator;
 
@@ -190,7 +191,7 @@ export class MTDragAndDropTool extends Component {
             const midiData = await loadMidiFromURL(midiURL);
 
             // Create a temporary beatmap metadata with direct references
-            const tempMetadata: BeatmapMetadata = {
+            const tempMetadata: MTSongModel = {
                 id: this._tempBeatmapId,
                 title: midiFileName, // Use MIDI filename without extension
                 artist: "Unknown Artist",
@@ -208,7 +209,7 @@ export class MTDragAndDropTool extends Component {
 
             // Create a temporary JSON data for the beatmap
             const tempBeatmap: Beatmap = {
-                metadata: tempMetadata,
+                song: tempMetadata,
                 notes: [] // Will be generated from MIDI
             };
 

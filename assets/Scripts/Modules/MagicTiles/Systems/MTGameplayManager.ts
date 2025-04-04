@@ -8,6 +8,7 @@ import { TapValidator } from './TapValidator';
 import { ScoreManager } from './ScoreManager';
 import { HitRating } from '../UI/Tile';
 import { BeatmapAudioData } from '../Data/MTDefines';
+import { MTSongModel } from '../../../Models/Songs/MTSongModel';
 
 const { ccclass, property } = _decorator;
 
@@ -69,7 +70,7 @@ export class MTGameplayManager extends Component {
 
     // Current data
     private survivalHP: number = 100;
-    private currentBeatmapId: string = "";
+    private currentSong: MTSongModel = null!;
     private elapsedTime: number = 0;
     private notesPassed: number = 0;
     private totalNotes: number = 0;
@@ -105,23 +106,23 @@ export class MTGameplayManager extends Component {
 
     /**
      * Start loading a beatmap
-     * @param beatmapId ID of the beatmap to load
+     * @param song ID of the beatmap to load
      */
-    async LoadBeatMap(beatmapId: string): Promise<boolean> {
+    async loadSong(song: MTSongModel): Promise<boolean> {
         // Reset states 
         this.resetGameState();
 
         // Set current beatmap ID
-        this.currentBeatmapId = beatmapId;
+        this.currentSong = song;
 
         // Change to loading state
         this.setGameState(GameState.LOADING);
 
         try {
             // Load the beatmap
-            const beatmap = await this.beatmapManager.loadBeatmapInfo(beatmapId);
+            const beatmap = await this.beatmapManager.loadSong(song);
             if (!beatmap) {
-                console.error(`Failed to load beatmap: ${beatmapId}`);
+                console.error(`Failed to load beatmap: ${song}`);
                 return false;
             }
 
@@ -134,7 +135,7 @@ export class MTGameplayManager extends Component {
             }
             //update notes if not exist
             if (beatmap.notes == null || beatmap.notes.length == 0) {
-                const beatmapUpdated = this.beatmapManager.updateNotes(beatmapId, audioLoaded.trackInfo.notes);
+                const beatmapUpdated = this.beatmapManager.updateNotes(song.id, audioLoaded.trackInfo.notes);
                 this.totalNotes = beatmapUpdated.notes.length;
             } else {
                 this.totalNotes = beatmap.notes.length;
@@ -452,8 +453,8 @@ export class MTGameplayManager extends Component {
      * Restart the current beatmap
      */
     restartGame() {
-        if (this.currentBeatmapId) {
-            this.LoadBeatMap(this.currentBeatmapId);
+        if (this.currentSong) {
+            this.loadSong(this.currentSong);
         }
     }
 
