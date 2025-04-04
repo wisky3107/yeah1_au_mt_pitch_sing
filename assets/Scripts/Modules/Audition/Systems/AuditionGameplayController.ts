@@ -4,9 +4,7 @@ import { AuditionBeatSystem, AuditionAccuracyRating } from '../Systems/AuditionB
 import { AuditionScoringSystem } from '../Systems/AuditionScoringSystem';
 import { AuditionCharacterAnimation } from '../Systems/AuditionCharacterAnimation';
 import { AuditionUIManager, FeedbackType } from '../UI/AuditionUIManager';
-import { SongData } from '../Data/SongData';
-import { POPUP } from '../../../Constant/PopupDefine';
-import { UIManager } from '../../../Common/uiManager';
+import { AuditionSongModel } from '../../../Models/Songs/AuditionSongModel';
 
 // Game state enum
 enum GameState {
@@ -65,18 +63,18 @@ export class AuditionGameplayController extends Component {
     private songStartTime: number = 0;
     private songDuration: number = 0;
     private notesProcessed: number = 0;
-    private currentSong: SongData = null;
+    private currentSong: AuditionSongModel = null;
 
-    //test data should load from csv
+    //test data should load from server
     // Available songs in the game
-    private availableSongs: SongData[] = [
+    private availableSongs: AuditionSongModel[] = [
         {
             id: 'DauCoLoiLam_ATVNCG_Full',
             title: 'Đâu Có Lỗi Lầm',
             artist: 'ATVNCG',
             difficulty: 1,
             bpm: 128,
-            audioPath: 'DauCoLoiLam_ATVNCG_Full',
+            musicPath: 'DauCoLoiLam_ATVNCG_Full',
             previewStart: 35000,
             previewEnd: 50000
         },
@@ -86,7 +84,7 @@ export class AuditionGameplayController extends Component {
             artist: 'ATVNCG',
             difficulty: 2,
             bpm: 86,
-            audioPath: 'TrongCom_ATVNCG',
+            musicPath: 'TrongCom_ATVNCG',
             previewStart: 35000,
             previewEnd: 50000
         },
@@ -96,7 +94,7 @@ export class AuditionGameplayController extends Component {
      * Returns the list of available songs in the game
      * @returns Array of SongData objects
      */
-    public getAvailableSongs(): SongData[] {
+    public getAvailableSongs(): AuditionSongModel[] {
         return this.availableSongs;
     }
 
@@ -104,7 +102,7 @@ export class AuditionGameplayController extends Component {
      * Returns the list of unlocked songs in the game
      * @returns Array of SongData objects
      */
-    public getUnlockedSongs(): SongData[] {
+    public getUnlockedSongs(): AuditionSongModel[] {
         return this.availableSongs;
     }
 
@@ -201,7 +199,7 @@ export class AuditionGameplayController extends Component {
 
         // Load both song audio and dance data concurrently
         Promise.all([
-            this.audioManager.loadSong(this.currentSong.audioPath),
+            this.audioManager.loadSong(this.currentSong.musicPath),
             this.characterAnimation.loadDanceData(this.currentSong.id)
         ])
             .then(([songLoaded, danceDataLoaded]) => {

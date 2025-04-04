@@ -2,7 +2,7 @@ import { _decorator, Component, Node, Button, Label, ScrollView, Prefab, instant
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
 import { AuditionUIManager } from './AuditionUIManager';
 import { AuditionGameplayController } from '../Systems/AuditionGameplayController';
-import { SongData } from '../Data/SongData';
+import { AuditionSongModel } from '../Data/SongData';
 const { ccclass, property } = _decorator;
 
 /**
@@ -157,7 +157,7 @@ export class AuditionSongSelectionController extends Component {
     private onSongSelected(songId: string): void {
 
         this.selectedSongId = songId;
-        const selectedSong: SongData = {
+        const selectedSong: AuditionSongModel = {
             id: songId,
             title: 'Song Title',
             artist: 'Artist Name',

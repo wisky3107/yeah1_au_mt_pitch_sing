@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, Label, Button, UITransform, Sprite, Color, Tween, tween, Vec3, game, UIOpacity, ParticleSystem2D, Animation } from 'cc';
-import { SongData } from '../Data/SongData';
+import { AuditionSongModel } from '../Data/SongData';
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
 const { ccclass, property } = _decorator;
 
@@ -135,7 +135,7 @@ export class AuditionUIManager extends Component {
         console.log('Showing song selection');
     }
 
-    public showGameplay(songData: SongData): void {
+    public showGameplay(songData: AuditionSongModel): void {
         this.hideAllScreens();
         if (this.gameplayScreen) {
             this.gameplayScreen.active = true;
