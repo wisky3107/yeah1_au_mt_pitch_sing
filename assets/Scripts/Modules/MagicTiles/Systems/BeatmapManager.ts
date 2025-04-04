@@ -126,16 +126,13 @@ export class BeatmapManager {
                 artist: data.metadata.artist,
                 bpm: data.metadata.bpm,
                 difficulty: data.metadata.difficulty,
-                difficultyName: data.metadata.difficultyName,
                 level: data.metadata.level || 1,
-                preview: {
-                    start: data.metadata.previewStart || 0,
-                    end: data.metadata.previewEnd || 30
-                },
                 audioPath: data.metadata.audioPath,
                 midiPath: data.metadata.midiPath,
                 backgroundImage: data.metadata.backgroundImage || "",
-                coverImage: data.metadata.coverImage || ""
+                thumbnail: data.metadata.coverImage || "",
+                previewStart: data.metadata.previewStart || 0,
+                previewEnd: data.metadata.previewEnd || 30
             },
             notes: []
         };
@@ -384,10 +381,10 @@ export class BeatmapManager {
         const beatmap = this.beatmaps.get(beatmapId);
         if (!beatmap) return [];
 
-        const { start, end } = beatmap.metadata.preview;
+        const { previewStart, previewEnd } = beatmap.metadata;
 
         return beatmap.notes.filter(note =>
-            note.time >= start && note.time <= end
+            note.time >= previewStart && note.time <= previewEnd
         );
     }
 

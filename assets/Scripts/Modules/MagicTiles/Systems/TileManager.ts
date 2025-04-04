@@ -917,19 +917,6 @@ export class TileManager extends Component {
     }
 
     /**
-     * Update tile positions in batch using the typed arrays
-     */
-    private updateTilePositionsFromArray() {
-        for (const tile of this.activeTiles) {
-            const index = this.tileIndices.get(tile);
-            if (index !== undefined) {
-                // Update node position from the typed array
-                this.updateTilePosition(tile, this.tilePositionsY[index]);
-            }
-        }
-    }
-
-    /**
      * Check if a tile is already in the update queue
      */
     private isInUpdateQueue(tile: Tile): boolean {

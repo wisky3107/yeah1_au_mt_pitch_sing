@@ -196,17 +196,14 @@ export class MTDragAndDropTool extends Component {
                 artist: "Unknown Artist",
                 bpm: midiData.tempo || 120,
                 difficulty: 3,
-                difficultyName: "Medium",
                 level: 5,
-                preview: {
-                    start: 0,
-                    end: 30
-                },
+                previewStart: 0,
+                previewEnd: 30,
                 // Use the actual assets rather than paths that don't exist
                 audioPath: null, // We'll override this in our implementation
                 midiPath: null, // We'll override this in our implementation
                 backgroundImage: "magic_tiles/images/default_background",
-                coverImage: "magic_tiles/images/default_cover"
+                thumbnail: "magic_tiles/images/default_cover"
             };
 
             // Create a temporary JSON data for the beatmap

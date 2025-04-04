@@ -89,8 +89,6 @@ export class PopupMTSongSelection extends PopupBase {
      * @param songId The ID of the selected song
      */
     private onSongSelected(songId: string): void {
-
-
         if (!this.gameplayManager) {
             console.error('GameplayManager not found');
             return;

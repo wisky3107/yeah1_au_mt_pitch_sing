@@ -53,7 +53,7 @@ export class MTItemSong extends Component {
         }
         
         // Load cover image if available
-        if (this.coverSprite && songData.coverImage) {
+        if (this.coverSprite && songData.thumbnail) {
             // Cover image loading can be implemented here
         }
     }

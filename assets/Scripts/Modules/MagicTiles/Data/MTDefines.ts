@@ -48,16 +48,13 @@ export interface BeatmapMetadata {
     artist: string;
     bpm: number;
     difficulty: number;
-    difficultyName: string;
     level: number;
-    preview: {
-        start: number;
-        end: number;
-    };
     audioPath: string;
     midiPath: string;
     backgroundImage: string;
-    coverImage: string;
+    thumbnail: string;
+    previewStart: number;
+    previewEnd: number;
 }
 
 // Define the full beatmap structure
