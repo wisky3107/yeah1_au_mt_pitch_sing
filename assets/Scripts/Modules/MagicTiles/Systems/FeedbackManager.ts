@@ -34,9 +34,6 @@ export class FeedbackManager extends Component {
     // Combo label
     @property(Label)
     comboLabel: Label = null!;
-    // Container for feedback elements
-    @property(Node)
-    feedbackContainer: Node = null!;
 
     // Camera for effects
     @property(Camera)
@@ -106,12 +103,6 @@ export class FeedbackManager extends Component {
         if (this.comboLabel) {
             this.comboLabel.string = "";
             this.comboLabel.node.active = false;
-        }
-
-        // Create container if not provided
-        if (!this.feedbackContainer) {
-            this.feedbackContainer = new Node("FeedbackContainer");
-            this.feedbackContainer.parent = this.node;
         }
     }
 
