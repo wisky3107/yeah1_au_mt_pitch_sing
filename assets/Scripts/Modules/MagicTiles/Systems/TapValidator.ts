@@ -75,8 +75,6 @@ export class TapValidator extends Component {
     validateTap(lane: number, tapTime: number, rating: HitRating): HitRating {
         // Update combo based on rating
         this.updateCombo(rating);
-        console.log("combo", this.combo);
-        
         // Notify listeners of the rating
         this.onRatingCallbacks.forEach(callback => callback(lane, rating));
         return rating;

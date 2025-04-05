@@ -156,9 +156,6 @@ export class Tile extends Component {
         // Position the tile
         this.node.position = new Vec3(0, startY, 0);
 
-        // Set the correct color based on note type
-        // this.updateVisualByType();
-
         // Reset tweens
         if (this.moveTween) {
             this.moveTween.stop();
@@ -175,7 +172,7 @@ export class Tile extends Component {
             this.opacityTween = null;
         }
 
-        // Reset opacity
+        this.background.color = this.normalColor;
         this.opacity.opacity = 255;
 
         const noteHeight = note.duration * scrollSpeed;
@@ -521,9 +518,6 @@ export class Tile extends Component {
         // Fade out
         this.opacityTween = tween(this.opacity)
             .to(0.3, { opacity: 100 })
-            .call(() => {
-                this.node.active = false;
-            })
             .start();
     }
 

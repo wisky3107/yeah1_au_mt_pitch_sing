@@ -207,7 +207,7 @@
     "spawnPositionY": 1200,
     "targetPositionY": -400,
     "recyclePositionY": -1500,
-    "lookAheadTime": 4,
+    "lookAheadTime": 2,
     "defaultScrollSpeed": 600,
     "laneWidth": 160,
     "maxPoolSize": 50,
