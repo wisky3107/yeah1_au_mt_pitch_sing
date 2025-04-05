@@ -3,5 +3,7 @@ export const SCENE_NAME = {
     AUDITION: "Audition",
     MT: "MagicTile",
     PITCH: "Pitch",
-    KARAOKE: "Karaoke"
+    KARAOKE: "Karaoke",
+    INVENTORY: "Inventory",
+    ONBOARDING: "Onboarding"
 }
