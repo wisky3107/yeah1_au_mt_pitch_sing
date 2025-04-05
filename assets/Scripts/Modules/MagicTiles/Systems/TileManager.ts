@@ -87,8 +87,7 @@ export class TileManager extends Component {
     private touchedTiles: Map<number, Tile> = new Map();
     private minTileHeight: number = 300.0;
 
-    // Replace Map with direct arrays for lane tiles
-    private laneArrays: Tile[][] = [];
+    // We'll use activeTiles for all operations
 
     // Reusable Vector3 objects to minimize garbage collection
     private tempVec3: Vec3 = new Vec3();
@@ -165,21 +164,8 @@ export class TileManager extends Component {
         this.tilePositionsY = new Float32Array(this.maxPoolSize);
         this.tileIndices = new Map();
         this.nextTileIndex = 0;
-
-        // Initialize lane arrays
-        this.initLaneArrays();
     }
 
-    /**
-     * Initialize lane arrays for faster lookups
-     */
-    private initLaneArrays() {
-        const laneCount = Math.max(4, this.laneContainers.length);
-        this.laneArrays = new Array(laneCount);
-        for (let i = 0; i < laneCount; i++) {
-            this.laneArrays[i] = [];
-        }
-    }
 
     /**
      * Ensure we have the correct number of lane containers
@@ -204,11 +190,8 @@ export class TileManager extends Component {
             }
         }
 
-        //init lands
+        //init lane width
         this.laneWidth = this.laneContainers[0].getComponent(UITransform)!.width;
-
-        // Initialize lane arrays
-        this.initLaneArrays();
     }
 
     initGame() {
@@ -220,10 +203,6 @@ export class TileManager extends Component {
         this.activeTiles = [];
         this.touchedTiles.clear();
 
-        // Reset lane arrays
-        for (let i = 0; i < this.laneArrays.length; i++) {
-            this.laneArrays[i].length = 0;
-        }
         // Calculate optimal scroll speed based on note data
         this.calculateDynamicScrollSpeed();
         // Clear any active tiles
@@ -404,10 +383,6 @@ export class TileManager extends Component {
         // Add to active tiles
         this.activeTiles.push(tile);
 
-        // Add to lane array for faster lookups
-        if (lane >= 0 && lane < this.laneArrays.length) {
-            this.laneArrays[lane].push(tile);
-        }
     }
 
     /**
@@ -590,16 +565,6 @@ export class TileManager extends Component {
         // Add back to pool
         this.tilePool.push(tile);
 
-        // Remove from lane array
-        if (laneIndex >= 0 && laneIndex < this.laneArrays.length) {
-            const laneArray = this.laneArrays[laneIndex];
-            const index = laneArray.indexOf(tile);
-            if (index !== -1) {
-                // Fast removal without creating a new array
-                laneArray[index] = laneArray[laneArray.length - 1];
-                laneArray.pop();
-            }
-        }
 
         // Remove from position tracking
         this.tileIndices.delete(tile);
@@ -621,13 +586,9 @@ export class TileManager extends Component {
             }
         }
 
-        // Get tiles only for the specific lane using our optimized array
-        const laneTiles = (laneIndex >= 0 && laneIndex < this.laneArrays.length)
-            ? this.laneArrays[laneIndex]
-            : [];
-
-        // Find hitable tiles in this lane
-        const hitableTiles = laneTiles.filter(tile =>
+        // Find hitable tiles in this lane by filtering activeTiles
+        const hitableTiles = this.activeTiles.filter(tile => 
+            tile.getLane() === laneIndex && 
             tile.getStatus() === TileStatus.ACTIVE
         );
 
@@ -838,10 +799,6 @@ export class TileManager extends Component {
         // Add to active tiles
         this.activeTiles.push(tile);
 
-        // Add to lane array
-        if (lane >= 0 && lane < this.laneArrays.length) {
-            this.laneArrays[lane].push(tile);
-        }
     }
 
     /**
@@ -874,14 +831,6 @@ export class TileManager extends Component {
             this.activeTiles.splice(index, 1);
         }
 
-        // Remove from lane array
-        const lane = tile.getLane();
-        if (lane >= 0 && lane < this.laneArrays.length) {
-            const laneIndex = this.laneArrays[lane].indexOf(tile);
-            if (laneIndex >= 0) {
-                this.laneArrays[lane].splice(laneIndex, 1);
-            }
-        }
 
         // Return to pool
         this.returnTileToPool(tile);
