@@ -1,1 +1,20 @@
-function _0x42b4(){var _0x16103e=['chunks:///sample.js','9951056JwbqJa','2592UubVso','virtual:///prerequisite-imports/sample','3125062OGZRFX','9236496jlGZvS','6179022YfmCed','1cWizJT','20537TTdqCu','10DWJwnG','7bjSQgL','register','2919070KEssoK','36oTBekL','581104VMvoaQ','__esModule'];_0x42b4=function(){return _0x16103e;};return _0x42b4();}var _0x57628c=_0x5852;function _0x5852(_0x3c94fb,_0x36d774){var _0x42b4a3=_0x42b4();return _0x5852=function(_0x5852bb,_0x2798d3){_0x5852bb=_0x5852bb-0x13c;var _0x2611f0=_0x42b4a3[_0x5852bb];return _0x2611f0;},_0x5852(_0x3c94fb,_0x36d774);}(function(_0x4f1303,_0x5db8b6){var _0xb10e3a=_0x5852,_0x579aad=_0x4f1303();while(!![]){try{var _0xbad69f=-parseInt(_0xb10e3a(0x14b))/0x1*(-parseInt(_0xb10e3a(0x148))/0x2)+parseInt(_0xb10e3a(0x141))/0x3*(-parseInt(_0xb10e3a(0x142))/0x4)+-parseInt(_0xb10e3a(0x140))/0x5+parseInt(_0xb10e3a(0x149))/0x6+-parseInt(_0xb10e3a(0x13e))/0x7*(-parseInt(_0xb10e3a(0x145))/0x8)+-parseInt(_0xb10e3a(0x14a))/0x9*(parseInt(_0xb10e3a(0x13d))/0xa)+-parseInt(_0xb10e3a(0x13c))/0xb*(parseInt(_0xb10e3a(0x146))/0xc);if(_0xbad69f===_0x5db8b6)break;else _0x579aad['push'](_0x579aad['shift']());}catch(_0xff2590){_0x579aad['push'](_0x579aad['shift']());}}}(_0x42b4,0xe2c69),System[_0x57628c(0x13f)](_0x57628c(0x144),[],function(){return{'execute':function(){}};}),function(_0x163a7c){var _0x462a3b=_0x57628c;_0x163a7c(_0x462a3b(0x147),_0x462a3b(0x144));}(function(_0x2e3a41,_0x40b7c4){var _0x1fe00f=_0x57628c;System[_0x1fe00f(0x13f)](_0x2e3a41,[_0x40b7c4],function(_0x536c08,_0x2c4525){return{'setters':[function(_0x3b3898){var _0x18d2cb=_0x5852,_0x51b103={};for(var _0x1e2979 in _0x3b3898){if(_0x1e2979!=='default'&&_0x1e2979!==_0x18d2cb(0x143))_0x51b103[_0x1e2979]=_0x3b3898[_0x1e2979];}_0x536c08(_0x51b103);}],'execute':function(){}};});}));
+System.register("chunks:///sample.js",[],(function(){return{execute:function(){}}}));
+
+(function(r) {
+  r('virtual:///prerequisite-imports/sample', 'chunks:///sample.js'); 
+})(function(mid, cid) {
+    System.register(mid, [cid], function (_export, _context) {
+    return {
+        setters: [function(_m) {
+            var _exportObj = {};
+
+            for (var _key in _m) {
+              if (_key !== "default" && _key !== "__esModule") _exportObj[_key] = _m[_key];
+            }
+      
+            _export(_exportObj);
+        }],
+        execute: function () { }
+    };
+    });
+});

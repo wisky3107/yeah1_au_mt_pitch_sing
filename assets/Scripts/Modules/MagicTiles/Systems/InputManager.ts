@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, EventTouch, UITransform, Vec3, input, Input, EventMouse, UIOpacity, Sprite, Color, Camera, EventKeyboard, KeyCode } from 'cc';
+import { _decorator, Component, Node, EventTouch, UITransform, Vec3, input, Input, EventMouse, UIOpacity, Sprite, Color, Camera, EventKeyboard, KeyCode, Screen, screen } from 'cc';
 import { TileManager } from './TileManager';
 import { HitRating } from '../UI/Tile';
 import { TapValidator } from './TapValidator';
@@ -40,6 +40,10 @@ export class InputManager extends Component {
     // Reference to the tap validator
     @property(TapValidator)
     tapValidator: TapValidator = null!;
+
+    // Reference to the canvas node
+    @property(UITransform)
+    canvasTransform: UITransform = null!;
 
     // Reference to the game camera
     @property(Camera)
@@ -100,7 +104,7 @@ export class InputManager extends Component {
         // Calculate lane width
         this.laneCount = 4; // Magic Tiles typically has 4 lanes
         this.laneWidth = transform.width / this.laneCount;
-        this.laneStartX = 0.0;
+        this.laneStartX = this.canvasTransform.width / 2 - transform.width / 2;
     }
 
     /**
