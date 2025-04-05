@@ -13,7 +13,9 @@ export enum UserInteractEventType {
 export enum ViewBeginType {
     NONE,
     HIDE,
-    SHOW
+    SHOW,
+    INSTANCE_SHOW,
+    INSTANCE_HIDE
 }
 
 export interface Point {

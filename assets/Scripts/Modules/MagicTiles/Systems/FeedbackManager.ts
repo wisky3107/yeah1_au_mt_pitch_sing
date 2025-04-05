@@ -19,19 +19,6 @@ enum FeedbackType {
  */
 @ccclass('FeedbackManager')
 export class FeedbackManager extends Component {
-    // Prefabs for rating popups
-    @property(Prefab)
-    perfectPrefab: Prefab = null!;
-
-    @property(Prefab)
-    greatPrefab: Prefab = null!;
-
-    @property(Prefab)
-    coolPrefab: Prefab = null!;
-
-    @property(Prefab)
-    missPrefab: Prefab = null!;
-
     @property(Animation)
     animScoreFeedBacks: Animation = null;
 
@@ -47,11 +34,6 @@ export class FeedbackManager extends Component {
     // Combo label
     @property(Label)
     comboLabel: Label = null!;
-
-    // Combo popup prefab
-    @property(Prefab)
-    comboPopupPrefab: Prefab = null!;
-
     // Container for feedback elements
     @property(Node)
     feedbackContainer: Node = null!;
@@ -63,6 +45,12 @@ export class FeedbackManager extends Component {
     // Animation node for camera shake
     @property(Node)
     cameraShakeNode: Node = null!;
+
+    @property(Label)
+    lbMessage: Label = null!;
+
+    @property(UIOpacity)
+    opacityMessage: UIOpacity = null!;
 
     // Reference to the audio manager
     private audioManager: MTAudioManager = null!;
@@ -97,13 +85,6 @@ export class FeedbackManager extends Component {
     @property
     feedbackScaleMultiplier: number = 1.5;
 
-    // Add properties for score popup and message prefabs
-    @property(Prefab)
-    scorePopupPrefab: Prefab = null!;
-
-    @property(Prefab)
-    messagePopupPrefab: Prefab = null!;
-
     // For backward compatibility and easier reference
     get perfectAnimNode(): Node { return this.feedbackNodes[0]; }
     get goodNode(): Node { return this.feedbackNodes[1]; }
@@ -132,187 +113,6 @@ export class FeedbackManager extends Component {
             this.feedbackContainer = new Node("FeedbackContainer");
             this.feedbackContainer.parent = this.node;
         }
-
-        // Preload object pools for better performance
-        if (this.perfectPrefab) {
-            PoolManager.instance.preloadPool(this.perfectPrefab, 10);
-        }
-        if (this.greatPrefab) {
-            PoolManager.instance.preloadPool(this.greatPrefab, 10);
-        }
-        if (this.coolPrefab) {
-            PoolManager.instance.preloadPool(this.coolPrefab, 10);
-        }
-        if (this.missPrefab) {
-            PoolManager.instance.preloadPool(this.missPrefab, 5);
-        }
-        if (this.comboPopupPrefab) {
-            PoolManager.instance.preloadPool(this.comboPopupPrefab, 3);
-        }
-
-        // Create and preload score popup prefab if needed
-        if (!this.scorePopupPrefab) {
-            // Create a score popup prefab dynamically
-            this.createScorePopupPrefab();
-        } else {
-            PoolManager.instance.preloadPool(this.scorePopupPrefab, 1);
-        }
-
-        // Create and preload message popup prefab if needed
-        if (!this.messagePopupPrefab) {
-            // Create a message popup prefab dynamically
-            this.createMessagePopupPrefab();
-        } else {
-            PoolManager.instance.preloadPool(this.messagePopupPrefab, 1);
-        }
-    }
-
-    /**
-     * Create a score popup prefab dynamically if one isn't provided
-     */
-    private createScorePopupPrefab() {
-        // Since we can't create actual prefabs at runtime, we'll use a node as a template
-        // and implement our own simple pooling for these specific nodes
-
-        // Create a template node that we'll clone
-        const scoreNode = new Node("ScorePopup");
-
-        // Add label component
-        const label = scoreNode.addComponent(Label);
-        label.fontSize = 36;
-        label.color = new Color(255, 255, 100, 255);
-
-        // Add opacity component
-        scoreNode.addComponent(UIOpacity);
-
-        // Create a parent node for our pool if not exists
-        if (!this._poolRoot) {
-            this._poolRoot = new Node("PoolContainer");
-            this._poolRoot.parent = this.node;
-            this._poolRoot.active = false;
-        }
-
-        // Create a pool for score popups
-        if (!this._scorePopupPool) {
-            this._scorePopupPool = [];
-        }
-
-        // Pre-instantiate some nodes
-        for (let i = 0; i < 10; i++) {
-            const node = instantiate(scoreNode);
-            node.parent = this._poolRoot;
-            node.active = false;
-            this._scorePopupPool.push(node);
-        }
-
-        // Store the template
-        this._scorePopupTemplate = scoreNode;
-        // The template itself should be parented to our pool root but inactive
-        scoreNode.parent = this._poolRoot;
-        scoreNode.active = false;
-    }
-
-    /**
-     * Create a message popup prefab dynamically if one isn't provided
-     */
-    private createMessagePopupPrefab() {
-        // Since we can't create actual prefabs at runtime, we'll use a node as a template
-        // and implement our own simple pooling for these specific nodes
-
-        // Create a template node that we'll clone
-        const messageNode = new Node("Message");
-
-        // Add label component
-        const label = messageNode.addComponent(Label);
-        label.fontSize = 48;
-        label.color = new Color(255, 255, 255, 255);
-
-        // Add opacity component
-        messageNode.addComponent(UIOpacity);
-
-        // Create a parent node for our pool if not exists
-        if (!this._poolRoot) {
-            this._poolRoot = new Node("PoolContainer");
-            this._poolRoot.parent = this.node;
-            this._poolRoot.active = false;
-        }
-
-        // Create a pool for message popups
-        if (!this._messagePopupPool) {
-            this._messagePopupPool = [];
-        }
-
-        // Pre-instantiate some nodes
-        for (let i = 0; i < 3; i++) {
-            const node = instantiate(messageNode);
-            node.parent = this._poolRoot;
-            node.active = false;
-            this._messagePopupPool.push(node);
-        }
-
-        // Store the template
-        this._messagePopupTemplate = messageNode;
-        // The template itself should be parented to our pool root but inactive
-        messageNode.parent = this._poolRoot;
-        messageNode.active = false;
-    }
-
-    /**
-     * Get a score popup node from our custom pool
-     */
-    private getScorePopupFromPool(): Node {
-        let node: Node;
-
-        if (this._scorePopupPool.length > 0) {
-            // Get from pool
-            node = this._scorePopupPool.pop()!;
-        } else {
-            // Create new if pool is empty
-            node = instantiate(this._scorePopupTemplate);
-        }
-
-        node.active = true;
-        return node;
-    }
-
-    /**
-     * Return a score popup node to our custom pool
-     */
-    private putScorePopupToPool(node: Node): void {
-        if (!node) return;
-
-        node.active = false;
-        node.removeFromParent();
-        this._scorePopupPool.push(node);
-    }
-
-    /**
-     * Get a message popup node from our custom pool
-     */
-    private getMessagePopupFromPool(): Node {
-        let node: Node;
-
-        if (this._messagePopupPool.length > 0) {
-            // Get from pool
-            node = this._messagePopupPool.pop()!;
-        } else {
-            // Create new if pool is empty
-            node = instantiate(this._messagePopupTemplate);
-        }
-
-        node.active = true;
-        return node;
-    }
-
-    /**
-     * Return a message popup node to our custom pool
-     */
-    private putMessagePopupToPool(node: Node): void {
-        if (!node) return;
-
-        node.active = false;
-        node.removeFromParent();
-        this._messagePopupPool.push(node);
     }
 
     /**
@@ -333,28 +133,23 @@ export class FeedbackManager extends Component {
         const position = this.getLanePosition(lane);
 
         // Get the appropriate prefab based on rating
-        let prefab: Prefab | null = null;
         let soundEffect: string = "";
 
         switch (rating) {
             case HitRating.PERFECT:
-                prefab = this.perfectPrefab;
                 soundEffect = this.perfectSoundEffect;
                 this.showFeedback(FeedbackType.PERFECT);
                 this.particleSystemPerfectFragments.resetSystem();
                 break;
             case HitRating.GREAT:
-                prefab = this.greatPrefab;
                 soundEffect = this.greatSoundEffect;
                 this.showFeedback(FeedbackType.GREAT);
                 break;
             case HitRating.COOL:
-                prefab = this.coolPrefab;
                 soundEffect = this.coolSoundEffect;
                 this.showFeedback(FeedbackType.COOL);
                 break;
             case HitRating.MISS:
-                prefab = this.missPrefab;
                 soundEffect = this.missSoundEffect;
                 this.showFeedback(FeedbackType.MISS);
                 break;
@@ -364,42 +159,6 @@ export class FeedbackManager extends Component {
         if (soundEffect) {
             this.audioManager.playSound(soundEffect);
         }
-
-        // Show visual feedback
-        if (prefab) {
-            this.showFeedbackPrefab(prefab, position);
-        }
-    }
-
-    /**
-     * Show a feedback prefab at a specific position
-     */
-    private showFeedbackPrefab(prefab: Prefab, position: Vec3) {
-        // Get node from pool instead of instantiating
-        const feedbackNode = PoolManager.instance.getNode(prefab, this.feedbackContainer);
-        feedbackNode.position = position;
-
-        // Set up animations
-        const opacity = feedbackNode.getComponent(UIOpacity) || feedbackNode.addComponent(UIOpacity);
-        opacity.opacity = 255;
-
-        // Reset scale
-        feedbackNode.scale = new Vec3(1, 1, 1);
-
-        // Scale and fade animation
-        tween(feedbackNode)
-            .to(this.feedbackDuration * 0.3, { scale: new Vec3(this.feedbackScaleMultiplier, this.feedbackScaleMultiplier, 1) })
-            .to(this.feedbackDuration * 0.7, { position: new Vec3(position.x, position.y + 50, position.z) })
-            .start();
-
-        tween(opacity)
-            .delay(this.feedbackDuration * 0.3)
-            .to(this.feedbackDuration * 0.7, { opacity: 0 })
-            .call(() => {
-                // Return to pool instead of destroying
-                PoolManager.instance.putNode(feedbackNode);
-            })
-            .start();
     }
 
     /**
@@ -450,39 +209,6 @@ export class FeedbackManager extends Component {
     private showComboMilestone(combo: number) {
         // Play combo sound
         this.audioManager.playSound(this.comboSoundEffect);
-
-        // Show combo popup if available
-        if (this.comboPopupPrefab) {
-            // Get from pool instead of instantiating
-            const popupNode = PoolManager.instance.getNode(this.comboPopupPrefab, this.feedbackContainer);
-
-            // Position in the center of the screen
-            popupNode.position = new Vec3(0, 0, 0);
-
-            // Reset scale
-            popupNode.scale = new Vec3(1, 1, 1);
-
-            // Update label if present
-            const label = popupNode.getComponentInChildren(Label);
-            if (label) {
-                label.string = `${combo} COMBO!`;
-            }
-
-            // Animate the popup
-            tween(popupNode)
-                .to(0.2, { scale: new Vec3(1.5, 1.5, 1) })
-                .to(0.2, { scale: new Vec3(1, 1, 1) })
-                .delay(1)
-                .to(0.3, { position: new Vec3(0, 100, 0) })
-                .call(() => {
-                    // Return to pool instead of destroying
-                    PoolManager.instance.putNode(popupNode);
-                })
-                .start();
-
-            // Trigger camera shake effect
-            this.shakeCamera(0.2, combo / 300); // Intensity increases with combo
-        }
     }
 
     /**
@@ -540,86 +266,7 @@ export class FeedbackManager extends Component {
      * @param position Position to show the popup
      */
     showScorePopup(score: number, position: Vec3 = new Vec3(0, 0, 0)) {
-        // Check if we have a prefab to use
-        if (this.scorePopupPrefab) {
-            // Get a node from the pool
-            const scoreNode = PoolManager.instance.getNode(this.scorePopupPrefab, this.feedbackContainer);
-            scoreNode.position = position;
 
-            // Get the label component and update text
-            const label = scoreNode.getComponent(Label);
-            if (label) {
-                label.string = `+${score}`;
-            }
-
-            // Reset opacity
-            const opacity = scoreNode.getComponent(UIOpacity);
-            if (opacity) {
-                opacity.opacity = 255;
-            }
-
-            // Animate the score popup
-            tween(scoreNode)
-                .to(0.5, { position: new Vec3(position.x, position.y + 80, position.z) })
-                .delay(0.2)
-                .to(0.3, { position: new Vec3(position.x, position.y + 120, position.z) })
-                .call(() => {
-                    // Return to pool instead of destroying
-                    PoolManager.instance.putNode(scoreNode);
-                })
-                .start();
-        } else if (this._scorePopupTemplate) {
-            // Use our custom pool if prefab is not available but we have a template
-            const scoreNode = this.getScorePopupFromPool();
-            scoreNode.parent = this.feedbackContainer;
-            scoreNode.position = position;
-
-            // Get the label component and update text
-            const label = scoreNode.getComponent(Label);
-            if (label) {
-                label.string = `+${score}`;
-            }
-
-            // Reset opacity
-            const opacity = scoreNode.getComponent(UIOpacity);
-            if (opacity) {
-                opacity.opacity = 255;
-            }
-
-            // Animate the score popup
-            tween(scoreNode)
-                .to(0.5, { position: new Vec3(position.x, position.y + 80, position.z) })
-                .delay(0.2)
-                .to(0.3, { position: new Vec3(position.x, position.y + 120, position.z) })
-                .call(() => {
-                    // Return to our custom pool
-                    this.putScorePopupToPool(scoreNode);
-                })
-                .start();
-        } else {
-            // Fallback to the old method if no prefab or template is available
-            // Create a label node
-            const scoreNode = new Node("ScorePopup");
-            scoreNode.parent = this.feedbackContainer;
-            scoreNode.position = position;
-
-            // Add label component
-            const label = scoreNode.getComponent(Label) || scoreNode.addComponent(Label);
-            label.string = `+${score}`;
-            label.fontSize = 36;
-            label.color = new Color(255, 255, 100, 255);
-
-            // Animate the score popup
-            tween(scoreNode)
-                .to(0.5, { position: new Vec3(position.x, position.y + 80, position.z) })
-                .delay(0.2)
-                .to(0.3, { position: new Vec3(position.x, position.y + 120, position.z) })
-                .call(() => {
-                    scoreNode.removeFromParent();
-                    scoreNode.destroy();
-                })
-                .start();
-        }
     }
 
     /**
@@ -639,95 +286,39 @@ export class FeedbackManager extends Component {
      * @param message Text to display
      * @param duration How long to show the message
      */
+    private _messageTween: Tween<UIOpacity> = null!;
     showMessage(message: string, duration: number = 2.0, fontSize: number = 80) {
-        // Check if we have a prefab to use
-        if (this.messagePopupPrefab) {
-            // Get a node from the pool
-            const messageNode = PoolManager.instance.getNode(this.messagePopupPrefab, this.feedbackContainer);
-            messageNode.position = new Vec3(0, 0, 0);
+        this.lbMessage.string = message;
+        this.lbMessage.node.active = true;
+        this.lbMessage.fontSize = fontSize;
 
-            // Get the label component and update text
-            const label = messageNode.getComponent(Label);
-            if (label) {
-                label.string = message;
-                label.fontSize = fontSize;
-                label.lineHeight = fontSize;
-            }
-
-            // Get opacity component
-            const opacity = messageNode.getComponent(UIOpacity);
-            if (opacity) {
-                opacity.opacity = 0;
-
-                // Fade in and out
-                tween(opacity)
-                    .to(0.3, { opacity: 255 })
-                    .delay(duration - 0.6)
-                    .to(0.3, { opacity: 0 })
-                    .call(() => {
-                        // Return to pool instead of destroying
-                        PoolManager.instance.putNode(messageNode);
-                    })
-                    .start();
-            }
-        } else if (this._messagePopupTemplate) {
-            // Use our custom pool if prefab is not available but we have a template
-            const messageNode = this.getMessagePopupFromPool();
-            messageNode.parent = this.feedbackContainer;
-            messageNode.position = new Vec3(0, 0, 0);
-
-            // Get the label component and update text
-            const label = messageNode.getComponent(Label);
-            if (label) {
-                label.string = message;
-                label.fontSize = fontSize;
-                label.lineHeight = fontSize;
-            }
-
-            // Get opacity component
-            const opacity = messageNode.getComponent(UIOpacity);
-            if (opacity) {
-                opacity.opacity = 0;
-
-                // Fade in and out
-                tween(opacity)
-                    .to(0.3, { opacity: 255 })
-                    .delay(duration - 0.6)
-                    .to(0.3, { opacity: 0 })
-                    .call(() => {
-                        // Return to our custom pool
-                        this.putMessagePopupToPool(messageNode);
-                    })
-                    .start();
-            }
-        } else {
-            // Fallback to the old method if no prefab or template is available
-            // Create a label node
-            const messageNode = new Node("Message");
-            messageNode.parent = this.feedbackContainer;
-            messageNode.position = new Vec3(0, 0, 0);
-
-            // Add label component
-            const label = messageNode.getComponent(Label) || messageNode.addComponent(Label);
-            label.string = message;
-            label.fontSize = fontSize;
-            label.color = new Color(255, 255, 255, 255);
-
-            // Add opacity component for fade effect
-            const opacity = messageNode.getComponent(UIOpacity) || messageNode.addComponent(UIOpacity);
-            opacity.opacity = 0;
-
-            // Fade in and out
-            tween(opacity)
-                .to(0.3, { opacity: 255 })
-                .delay(duration - 0.6)
-                .to(0.3, { opacity: 0 })
-                .call(() => {
-                    messageNode.removeFromParent();
-                    messageNode.destroy();
-                })
-                .start();
+        this.opacityMessage.opacity = 255;
+        // Cancel any existing tween
+        if (this._messageTween) {
+            this._messageTween.stop();
         }
+
+        // Fade in and out cycles based on duration, then disappear
+        const cycleDuration = duration / 3; // Divide total duration by 3 cycles
+        const fadeDuration = cycleDuration / 2; // Each fade in and out takes half of the cycle
+
+        this._messageTween = tween(this.opacityMessage)
+            // First cycle
+            .to(fadeDuration, { opacity: 255 }, { easing: 'smooth' })
+            .to(fadeDuration, { opacity: 100 }, { easing: 'smooth' })
+            // Second cycle
+            .to(fadeDuration, { opacity: 255 }, { easing: 'smooth' })
+            .to(fadeDuration, { opacity: 100 }, { easing: 'smooth' })
+            // Third cycle
+            .to(fadeDuration, { opacity: 255 }, { easing: 'smooth' })
+            .to(fadeDuration, { opacity: 100 }, { easing: 'smooth' })
+            // Final fade out
+            .to(fadeDuration, { opacity: 0 }, { easing: 'smooth' })
+            .call(() => {
+                this.lbMessage.node.active = false;
+            })
+            .start();
+
     }
 
     /**

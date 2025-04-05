@@ -206,14 +206,20 @@ export class AnimationPanel extends VisiblePanel {
                 this.visibleIndex = -1;
                 break;
             case ViewBeginType.HIDE:
-                this.visibleIndex = 0;
-                this.setPanelVisible(false, 0.0);
+                this.setAnimVisible(false, null, this.hideDuration);
                 this.dimNode?.setPanelVisible(false, 0.0);
                 break;
             case ViewBeginType.SHOW:
-                this.visibleIndex = 1;
-                this.setPanelVisible(true, 0.0);
+                this.setAnimVisible(true, null, this.showDuration);
                 this.dimNode?.setPanelVisible(true, 0.0);
+                break;
+            case ViewBeginType.INSTANCE_SHOW:
+                this.setAnimVisible(true, null, 0.02);
+                this.dimNode?.setPanelVisible(true, 0.0);
+                break;
+            case ViewBeginType.INSTANCE_HIDE:
+                this.setAnimVisible(false, null, 0.02);
+                this.dimNode?.setPanelVisible(false, 0.0);
                 break;
         }
     }
@@ -238,67 +244,93 @@ export class AnimationPanel extends VisiblePanel {
         this.node.active = true;
         this.node.position = v3(this.showFromPosX, this.showFromPosY, 0.0);
         this.node.setScale(v3(this.showFromScale, this.showFromScale, this.showFromScale));
-        
+
         if (this.enableRotation) {
             this.node.setRotationFromEuler(0, 0, this.showFromRotation);
         }
-        
+
         if (this.enableOpacity) {
             this.opMain = this.getComponent(UIOpacity) || this.addComponent(UIOpacity);
             this.opMain.opacity = this.showFromOpacity;
         }
 
-        this.visibleTween?.stop();
-        this.visibleTween = tween(this.node);
 
-        // Position animation
-        this.visibleTween.to(timeAction, { position: Vec3.ZERO }, { easing: this.getEasingShowAnim() });
+        if (timeAction === 0) {
+            this.node.position = this.beginPosition;
+            this.node.setScale(Vec3.ONE);
+            if (this.enableRotation) {
+                this.node.setRotationFromEuler(0, 0, 0);
+            }
+            if (this.enableOpacity) {
+                this.opMain.opacity = 255;
+            }
+            callback?.();
+        } else {
+            this.visibleTween?.stop();
+            this.visibleTween = tween(this.node);
 
-        // Scale animation
-        this.visibleTween.to(timeAction, { scale: Vec3.ONE }, { easing: this.getEasingShowAnim() });
+            // Position animation
+            this.visibleTween.to(timeAction, { position: this.beginPosition }, { easing: this.getEasingShowAnim() });
 
-        // Rotation animation
-        if (this.enableRotation) {
-            this.visibleTween.to(timeAction, { eulerAngles: new Vec3(0, 0, 0) }, { easing: this.getEasingShowAnim() });
+            // Scale animation
+            this.visibleTween.to(timeAction, { scale: Vec3.ONE }, { easing: this.getEasingShowAnim() });
+
+            // Rotation animation
+            if (this.enableRotation) {
+                this.visibleTween.to(timeAction, { eulerAngles: new Vec3(0, 0, 0) }, { easing: this.getEasingShowAnim() });
+            }
+
+            // Opacity animation
+            if (this.enableOpacity) {
+                tween(this.opMain)
+                    .to(timeAction, { opacity: 255 }, { easing: this.getEasingShowAnim() })
+                    .start();
+            }
+
+            this.visibleTween.call(() => callback?.()).start();
         }
-
-        // Opacity animation
-        if (this.enableOpacity) {
-            tween(this.opMain)
-                .to(timeAction, { opacity: 255 }, { easing: this.getEasingShowAnim() })
-                .start();
-        }
-
-        this.visibleTween.call(() => callback?.()).start();
         this.setDimBackground(true, timeAction, this.dimDuration);
     }
 
     private hideAnimation(callback: () => void, timeAction: number) {
-        this.visibleTween?.stop();
-        this.visibleTween = tween(this.node);
-
-        // Position animation
-        this.visibleTween.to(timeAction, { position: v3(this.hideToPosX, this.hideToPosY, 0.0) }, { easing: this.getEasingHideAnim() });
-
-        // Scale animation
-        this.visibleTween.to(timeAction, { scale: v3(this.hideToScale, this.hideToScale, this.hideToScale) }, { easing: this.getEasingHideAnim() });
-
-        // Rotation animation
-        if (this.enableRotation) {
-            this.visibleTween.to(timeAction, { eulerAngles: new Vec3(0, 0, this.hideToRotation) }, { easing: this.getEasingHideAnim() });
-        }
-
-        // Opacity animation
-        if (this.enableOpacity) {
-            tween(this.opMain)
-                .to(timeAction, { opacity: this.hideToOpacity }, { easing: this.getEasingHideAnim() })
-                .start();
-        }
-
-        this.visibleTween.call(() => {
+        if (timeAction === 0) {
+            this.node.position = v3(this.hideToPosX, this.hideToPosY, 0.0);
+            this.node.setScale(v3(this.hideToScale, this.hideToScale, this.hideToScale));
+            if (this.enableRotation) {
+                this.node.setRotationFromEuler(0, 0, this.hideToRotation);
+            }
+            if (this.enableOpacity) {
+                this.opMain.opacity = this.hideToOpacity;
+            }
             this.node.active = false;
             callback?.();
-        }).start();
+        } else {
+            this.visibleTween?.stop();
+            this.visibleTween = tween(this.node);
+
+            // Position animation
+            this.visibleTween.to(timeAction, { position: v3(this.hideToPosX, this.hideToPosY, 0.0) }, { easing: this.getEasingHideAnim() });
+
+            // Scale animation
+            this.visibleTween.to(timeAction, { scale: v3(this.hideToScale, this.hideToScale, this.hideToScale) }, { easing: this.getEasingHideAnim() });
+
+            // Rotation animation
+            if (this.enableRotation) {
+                this.visibleTween.to(timeAction, { eulerAngles: new Vec3(0, 0, this.hideToRotation) }, { easing: this.getEasingHideAnim() });
+            }
+
+            // Opacity animation
+            if (this.enableOpacity) {
+                tween(this.opMain)
+                    .to(timeAction, { opacity: this.hideToOpacity }, { easing: this.getEasingHideAnim() })
+                    .start();
+            }
+
+            this.visibleTween.call(() => {
+                this.node.active = false;
+                callback?.();
+            }).start();
+        }
         this.setDimBackground(false, 0.0, this.dimDuration);
     }
 

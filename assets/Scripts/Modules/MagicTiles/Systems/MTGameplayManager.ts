@@ -479,9 +479,6 @@ export class MTGameplayManager extends Component {
         // Change to waiting state
         this.setGameState(GameState.WAITING_FOR_START);
 
-        // Show message to tap to start
-        this.feedbackManager.showMessage("Tap to Start", 0, 140);
-
         // Initialize the tileManager with a minimal setup to just show the beginning tile
         if (this.tileManager) {
             // Set up tileManager to show the beginning tile but not start the full song
