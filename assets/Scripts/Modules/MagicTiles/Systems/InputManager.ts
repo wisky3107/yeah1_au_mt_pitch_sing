@@ -237,43 +237,43 @@ export class InputManager extends Component {
     private onTouchMove(event: EventTouch) {
         if (!this.isEnabled) return;
 
-        const touches = event.getTouches();
-        for (const touch of touches) {
-            const touchID = touch.getID();
-            if (this.activeTouches.has(touchID)) {
-                const touchInfo = this.activeTouches.get(touchID)!;
+        // const touches = event.getTouches();
+        // for (const touch of touches) {
+        //     const touchID = touch.getID();
+        //     if (this.activeTouches.has(touchID)) {
+        //         const touchInfo = this.activeTouches.get(touchID)!;
 
-                const touchLocation = touch.getLocation();
-                const worldPos = this.convertToWorldSpace(touchLocation.x, touchLocation.y);
+        //         const touchLocation = touch.getLocation();
+        //         const worldPos = this.convertToWorldSpace(touchLocation.x, touchLocation.y);
 
-                // Update touch position
-                touchInfo.position = worldPos;
+        //         // Update touch position
+        //         touchInfo.position = worldPos;
 
-                // Check if the touch moved to a different lane
-                const newLane = this.getLaneFromPosition(worldPos.x);
-                if (newLane >= 0 && newLane !== touchInfo.lane) {
-                    // End touch in current lane
-                    this.tileManager.handleLaneTouch(touchInfo.lane, false);
+        //         // Check if the touch moved to a different lane
+        //         const newLane = this.getLaneFromPosition(worldPos.x);
+        //         if (newLane >= 0 && newLane !== touchInfo.lane) {
+        //             // End touch in current lane
+        //             this.tileManager.handleLaneTouch(touchInfo.lane, false);
 
-                    // Hide feedback in old lane
-                    this.hideTapFeedback(touchInfo.lane);
+        //             // Hide feedback in old lane
+        //             this.hideTapFeedback(touchInfo.lane);
 
-                    // Update lane
-                    touchInfo.lane = newLane;
-                    touchInfo.node = this.tapFeedbackNodes[newLane];
+        //             // Update lane
+        //             touchInfo.lane = newLane;
+        //             touchInfo.node = this.tapFeedbackNodes[newLane];
 
-                    // Show feedback in new lane
-                    this.showTapFeedback(newLane);
+        //             // Show feedback in new lane
+        //             this.showTapFeedback(newLane);
 
-                    // Start touch in new lane
-                    const gameTime = this.tileManager.getGameTime();
-                    const rating = this.tileManager.handleLaneTouch(newLane, true);
+        //             // Start touch in new lane
+        //             const gameTime = this.tileManager.getGameTime();
+        //             const rating = this.tileManager.handleLaneTouch(newLane, true);
 
-                    // Validate the tap
-                    this.tapValidator.validateTap(newLane, gameTime, rating);
-                }
-            }
-        }
+        //             // Validate the tap
+        //             this.tapValidator.validateTap(newLane, gameTime, rating);
+        //         }
+        //     }
+        // }
     }
 
     /**
