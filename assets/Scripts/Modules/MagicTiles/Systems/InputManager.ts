@@ -59,16 +59,19 @@ export class InputManager extends Component {
 
     // Touch tracking
     private activeTouches: Map<number, TouchInfo> = new Map();
-
+    private nodeOpacities: UIOpacity[] = [];
     // Callback for lane tap events
     private _laneTapCallback: ((lane: number) => void) | null = null;
 
     // Track which key corresponds to which lane for key up handling
     private activeKeyLanes: Map<KeyCode, number> = new Map();
+    private transNode: UITransform = null;
 
     onLoad() {
         // Initialize tap feedback nodes
         this.initTapFeedback();
+
+        this.transNode = this.node.getComponent(UITransform);
 
         // Register event listeners
         this.registerEvents();
@@ -120,6 +123,7 @@ export class InputManager extends Component {
                 // Add opacity component for fade effect
                 const opacity = feedbackNode.addComponent(UIOpacity);
                 opacity.opacity = 0;
+                this.nodeOpacities.push(opacity);
 
                 // Add to feedback nodes
                 this.tapFeedbackNodes.push(feedbackNode);
@@ -156,7 +160,7 @@ export class InputManager extends Component {
         // input.on(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
         // input.on(Input.EventType.MOUSE_MOVE, this.onMouseMove, this);
         // input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
-        
+
         // Register keyboard events
         input.on(Input.EventType.KEY_DOWN, this.onKeyDown, this);
         input.on(Input.EventType.KEY_UP, this.onKeyUp, this);
@@ -176,7 +180,7 @@ export class InputManager extends Component {
         // input.off(Input.EventType.MOUSE_DOWN, this.onMouseDown, this);
         // input.off(Input.EventType.MOUSE_MOVE, this.onMouseMove, this);
         // input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this);
-        
+
         // Unregister keyboard events
         input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
         input.off(Input.EventType.KEY_UP, this.onKeyUp, this);
@@ -406,8 +410,7 @@ export class InputManager extends Component {
     private showTapFeedback(lane: number) {
         if (lane < 0 || lane >= this.tapFeedbackNodes.length) return;
 
-        const feedbackNode = this.tapFeedbackNodes[lane];
-        const opacity = feedbackNode.getComponent(UIOpacity);
+        const opacity = this.nodeOpacities[lane];
 
         // Reset opacity
         if (opacity) {
@@ -426,9 +429,7 @@ export class InputManager extends Component {
     private hideTapFeedback(lane: number) {
         if (lane < 0 || lane >= this.tapFeedbackNodes.length) return;
 
-        const feedbackNode = this.tapFeedbackNodes[lane];
-        const opacity = feedbackNode.getComponent(UIOpacity);
-
+        const opacity = this.nodeOpacities[lane];
         // Fade out
         if (opacity) {
             opacity.opacity = 0;
@@ -439,17 +440,10 @@ export class InputManager extends Component {
      * Convert screen coordinates to world space
      */
     private convertToWorldSpace(x: number, y: number): Vec3 {
-
-
         const camera = this.camera;
         if (!camera) {
-            // Fallback to manual conversion if no camera is found
-            const transform = this.node.getComponent(UITransform);
-            if (!transform) return new Vec3(x, y, 0);
-
-            const width = transform.width;
-            const height = transform.height;
-
+            const width = this.transNode.width;
+            const height = this.transNode.height;
             // Convert to centered coordinates
             const worldX = x - width / 2;
             const worldY = y - height / 2;
@@ -551,7 +545,7 @@ export class InputManager extends Component {
         if (!this.isEnabled) return;
 
         let lane = -1;
-        
+
         // Map keys to lanes
         switch (event.keyCode) {
             case KeyCode.KEY_A:  // 'a' key
@@ -572,7 +566,7 @@ export class InputManager extends Component {
         if (lane >= 0 && lane < this.laneCount) {
             // Store which key is active for which lane
             this.activeKeyLanes.set(event.keyCode, lane);
-            
+
             // Show tap feedback
             this.showTapFeedback(lane);
 
@@ -599,14 +593,14 @@ export class InputManager extends Component {
         // Check if this key was being tracked
         if (this.activeKeyLanes.has(event.keyCode)) {
             const lane = this.activeKeyLanes.get(event.keyCode)!;
-            
+
             // Notify the tile manager about the key release
             const gameTime = this.tileManager.getGameTime();
             const rating = this.tileManager.handleLaneTouch(lane, false);
-            
+
             // Hide tap feedback
             this.hideTapFeedback(lane);
-            
+
             // Remove from active keyss 
             this.activeKeyLanes.delete(event.keyCode);
         }

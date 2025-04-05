@@ -339,33 +339,8 @@ export class TileManager extends Component {
 
         // Spawn tiles that should be visible
         this.spawnTiles();
-
-        // Update tile priorities based on distance from target
-        // this.updateTilePriorities();
-
         // Use balanced update for better performance
         this.balancedUpdateActiveTiles();
-    }
-
-    /**
-     * Update tile update priorities based on distance from target position
-     */
-    private updateTilePriorities() {
-        for (const tile of this.activeTiles) {
-            const distanceToTarget = Math.abs(tile.node.position.y - this.targetPositionY);
-
-            // Tiles far from the target position update less frequently
-            // Closer tiles update every frame for maximum precision
-            let priority = 0; // Default: update every frame
-
-            if (distanceToTarget > 1500) {
-                priority = 2; // Update every 3rd frame
-            } else if (distanceToTarget > 1000) {
-                priority = 1; // Update every other frame
-            }
-
-            tile.setUpdatePriority(priority);
-        }
     }
 
     /**

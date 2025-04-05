@@ -79,7 +79,6 @@ export class TapValidator extends Component {
         
         // Notify listeners of the rating
         this.onRatingCallbacks.forEach(callback => callback(lane, rating));
-        
         return rating;
     }
     
