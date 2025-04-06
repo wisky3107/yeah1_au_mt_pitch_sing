@@ -1,6 +1,9 @@
-import { _decorator, Component, Node, Animation, SkeletalAnimation, AnimationClip, resources } from 'cc';
+import { _decorator, Component, Node } from 'cc';
 import { PitchConstants, MusicalNote, PitchAccuracy } from './PitchConstants';
-import { resourceUtil } from '../../../Common/resourceUtil';
+import { Character } from '../../Character/Character';
+import { UserManager } from '../../../Managers/UserManager';
+import { CharacterAnimationUtils } from '../../GameCommon/CharacterAnimationUtils';
+
 const { ccclass, property } = _decorator;
 
 /**
@@ -9,207 +12,161 @@ const { ccclass, property } = _decorator;
  */
 @ccclass('PitchCharacterAnimator')
 export class PitchCharacterAnimator extends Component {
-    // Character model
-    @property(Node)
-    private characterNode: Node = null;
-    
-    // Animation component
-    @property(Animation)
-    private animationComponent: Animation = null;
-    
-    @property(SkeletalAnimation)
-    private skeletalAnimation: SkeletalAnimation = null;
-    
-    // Animation properties
-    @property
-    private transitionDuration: number = 0.3; // Duration for animation transitions
-    
+    @property({ type: Character, tooltip: "Character component", group: { name: "Character", id: "character" } })
+    private character: Character = null;
+
+    @property({ tooltip: "Transition time between animations in seconds", group: { name: "Animation", id: "animation" } })
+    private transitionDuration: number = 0.3;
+
+    @property({ tooltip: "Name of the idle animation", group: { name: "Animation", id: "animation" } })
+    private idleAnimationName: string = "idle";
+
     // Current state
     private currentNote: MusicalNote = null;
     private isAnimating: boolean = false;
-    private animationClips: Map<MusicalNote, AnimationClip> = new Map();
-    private idleAnimationClip: AnimationClip = null;
-    
-    // Animation names
-    private readonly IDLE_ANIMATION: string = 'Idle';
-    
+    private isInitialized: boolean = false;
+
     onLoad() {
-        // Initialize animation component if not set
-        if (!this.animationComponent && this.characterNode) {
-            this.animationComponent = this.characterNode.getComponent(Animation);
-        }
-        
-        if (!this.skeletalAnimation && this.characterNode) {
-            this.skeletalAnimation = this.characterNode.getComponent(SkeletalAnimation);
-        }
+        this.initialize();
     }
-    
-    start() {
-        // Load animation clips
-        this.loadAnimationClips();
-    }
-    
+
     /**
-     * Load animation clips for each note
+     * Initialize the character and load animations
      */
-    private loadAnimationClips(): void {
-        // Load idle animation
-        resourceUtil.loadRes(`pitch/animations/${this.IDLE_ANIMATION}`, AnimationClip, (err, clip) => {
-            if (err) {
-                console.error(`Failed to load idle animation: ${err}`);
-                return;
-            }
+    private async initialize(): Promise<void> {
+        if (!this.character) {
+            console.error('Character component not found');
+            return;
+        }
+
+        try {
+            // Initialize character with user's selected character
+            await this.character.init(null, UserManager.instance.characterId);
+
+            // Get all animation names
+            const animationNames = [
+                this.idleAnimationName,
+                ...Object.keys(PitchConstants.NOTE_ANIMATIONS).map(key => PitchConstants.NOTE_ANIMATIONS[key as unknown as MusicalNote])
+            ];
+
+            // Load all animations
+            const clips = await CharacterAnimationUtils.getInstance().loadMultipleAnimations(animationNames);
             
-            this.idleAnimationClip = clip;
-            this.registerAnimationClip(this.IDLE_ANIMATION, clip);
-            console.log('Idle animation loaded');
-            
+            // Apply animations to character
+            await CharacterAnimationUtils.getInstance().applyAnimationsToCharacter(this.character, clips);
+
+            this.isInitialized = true;
+            console.log('Pitch character animations initialized');
+
             // Play idle animation initially
             this.playIdleAnimation();
-        });
-        
-        // Load note animations
-        for (let i = 0; i < 7; i++) {
-            const note = i as MusicalNote;
-            const animationName = PitchConstants.NOTE_ANIMATIONS[note];
-            
-            resourceUtil.loadRes(`pitch/animations/${animationName}`, AnimationClip, (err, clip) => {
-                if (err) {
-                    console.error(`Failed to load animation for note ${PitchConstants.NOTE_NAMES[note]}: ${err}`);
-                    return;
-                }
-                
-                this.animationClips.set(note, clip);
-                this.registerAnimationClip(animationName, clip);
-                console.log(`Animation for note ${PitchConstants.NOTE_NAMES[note]} loaded`);
-            });
+        } catch (error) {
+            console.error('Failed to initialize pitch character animations:', error);
         }
     }
-    
-    /**
-     * Register an animation clip with the animation component
-     * @param name Animation name
-     * @param clip Animation clip
-     */
-    private registerAnimationClip(name: string, clip: AnimationClip): void {
-        if (!this.animationComponent) return;
-        
-        // Check if the animation state already exists
-        if (!this.animationComponent.getState(name)) {
-            this.animationComponent.createState(clip, name);
-        }
-    }
-    
+
     /**
      * Play animation for a specific note
      * @param note Musical note
      * @param accuracy Detection accuracy
      */
     public playNoteAnimation(note: MusicalNote, accuracy: PitchAccuracy): void {
-        if (!this.animationComponent || note === null) return;
-        
+        if (!this.isInitialized || !this.character) return;
+
         const animationName = PitchConstants.NOTE_ANIMATIONS[note];
-        const animationState = this.animationComponent.getState(animationName);
-        
-        if (!animationState) {
-            console.warn(`Animation state not found for note ${PitchConstants.NOTE_NAMES[note]}`);
+        if (!animationName) {
+            console.warn(`Animation not found for note ${PitchConstants.NOTE_NAMES[note]}`);
             return;
         }
-        
+
         // Skip if already playing this note animation
         if (this.currentNote === note && this.isAnimating) return;
-        
+
         this.currentNote = note;
         this.isAnimating = true;
-        
+
         // Play animation with crossfade
-        this.animationComponent.crossFade(animationName, this.transitionDuration);
-        
+        this.character.playAnimation(animationName, this.transitionDuration);
+
         console.log(`Playing animation for note ${PitchConstants.NOTE_NAMES[note]}`);
-        
-        // Set up callback to return to idle when animation completes
-        animationState.once('finished', () => {
-            this.isAnimating = false;
-            this.playIdleAnimation();
-        });
+
+        // Get animation state to handle completion
+        const state = this.character.getState(animationName);
+        if (state) {
+            state.once('finished', () => {
+                this.isAnimating = false;
+                this.playIdleAnimation();
+            });
+        }
     }
-    
+
     /**
      * Play idle animation
      */
     public playIdleAnimation(): void {
-        if (!this.animationComponent) return;
-        
-        const animationState = this.animationComponent.getState(this.IDLE_ANIMATION);
-        
-        if (!animationState) {
-            console.warn('Idle animation state not found');
-            return;
-        }
-        
+        if (!this.isInitialized || !this.character) return;
+
         this.currentNote = null;
         this.isAnimating = false;
-        
+
         // Play idle animation with crossfade
-        this.animationComponent.crossFade(this.IDLE_ANIMATION, this.transitionDuration);
-        
+        this.character.playAnimation(this.idleAnimationName, this.transitionDuration);
+
         console.log('Playing idle animation');
     }
-    
+
     /**
      * Play a special animation (e.g., for game start/end)
      * @param animationName Animation name
      * @param loop Whether to loop the animation
      * @param callback Callback function when animation completes
      */
-    public playSpecialAnimation(animationName: string, loop: boolean = false, callback?: () => void): void {
-        if (!this.animationComponent) return;
-        
-        resourceUtil.loadRes(`pitch/animations/${animationName}`, AnimationClip, (err, clip) => {
-            if (err) {
-                console.error(`Failed to load special animation ${animationName}: ${err}`);
-                return;
-            }
+    public async playSpecialAnimation(animationName: string, loop: boolean = false, callback?: () => void): Promise<void> {
+        if (!this.isInitialized || !this.character) return;
+
+        try {
+            // Load the special animation
+            const clip = await CharacterAnimationUtils.getInstance().loadAnimationClip(animationName);
             
-            this.registerAnimationClip(animationName, clip);
-            
-            const animationState = this.animationComponent.getState(animationName);
-            
-            if (!animationState) {
-                console.warn(`Special animation state not found: ${animationName}`);
-                return;
-            }
-            
+            // Apply the animation to the character
+            await CharacterAnimationUtils.getInstance().applyAnimationsToCharacter(this.character, [clip]);
+
             this.currentNote = null;
             this.isAnimating = true;
-            
-            // Set loop property
-            animationState.wrapMode = loop ? 2 : 1; // 1 = Normal, 2 = Loop
-            
-            // Play animation with crossfade
-            this.animationComponent.crossFade(animationName, this.transitionDuration);
-            
+
+            // Play the animation
+            this.character.playAnimation(animationName, this.transitionDuration);
+
             console.log(`Playing special animation: ${animationName}`);
-            
-            // Set up callback when animation completes
-            if (!loop && callback) {
-                animationState.once('finished', callback);
+
+            // Handle animation completion
+            const state = this.character.getState(animationName);
+            if (state && !loop) {
+                state.once('finished', () => {
+                    this.isAnimating = false;
+                    if (callback) callback();
+                    this.playIdleAnimation();
+                });
             }
-        });
+        } catch (error) {
+            console.error(`Failed to play special animation ${animationName}:`, error);
+            this.playIdleAnimation();
+        }
     }
-    
+
     /**
      * Stop all animations and return to idle
      */
     public stopAllAnimations(): void {
-        if (!this.animationComponent) return;
-        
-        this.animationComponent.stop();
+        if (!this.isInitialized || !this.character) return;
+
+        this.isAnimating = false;
+        this.currentNote = null;
         this.playIdleAnimation();
-        
+
         console.log('All animations stopped');
     }
-    
+
     /**
      * Check if an animation is currently playing
      * @returns True if an animation is playing
@@ -217,7 +174,7 @@ export class PitchCharacterAnimator extends Component {
     public isAnimationPlaying(): boolean {
         return this.isAnimating;
     }
-    
+
     /**
      * Get the current note being animated
      * @returns Current note or null if idle

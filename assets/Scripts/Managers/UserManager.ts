@@ -22,6 +22,10 @@ export class UserManager {
     public get coins(): number {
         return this.userdata?.coin ?? 0;
     }
+
+    public get characterId(): string {
+        return "boy";
+    }
 }
 const user = new UserManager();
 

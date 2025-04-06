@@ -2,6 +2,9 @@ import { _decorator, Component, Node, Animation, Prefab, SkeletalAnimation, inst
 import { AuditionAccuracyRating } from './AuditionBeatSystem';
 import { AuditionCharacterAnimationData, SpecialStateType, DanceAnimationState } from './AuditionCharacterAnimationData';
 import { resourceUtil } from '../../../Common/resourceUtil';
+import { Character } from '../../Character/Character';
+import { UserManager } from '../../../Managers/UserManager';
+import { CharacterAnimationUtils } from '../../GameCommon/CharacterAnimationUtils';
 const { ccclass, property } = _decorator;
 
 /**
@@ -19,12 +22,8 @@ interface InputRecord {
 @ccclass('AuditionCharacterAnimation')
 export class AuditionCharacterAnimation extends Component {
     // Character model/sprite
-    @property(Node)
-    private character: Node = null;
-
-    // Animation component
-    @property(Animation)
-    private animationController: Animation = null;
+    @property(Character)
+    private character: Character = null;
 
     // Animation configuration
     @property
@@ -47,15 +46,17 @@ export class AuditionCharacterAnimation extends Component {
     private musicSpeed: number = 1.0; // Speed multiplier based on music BPM
 
     public loadDanceData(songId: string) {
-        if (!this.animationController && this.character) {
-            this.animationController = this.character.getComponent(Animation);
-        }
+
         return new Promise((resolve, reject) => {
+            
             // Initialize animation controller if not set
             // Initialize dance move data
             AuditionCharacterAnimationData.initialize();
             const songDance = songId + '_Dance';
-            AuditionCharacterAnimationData.loadDanceData(songDance)
+            Promise.all([
+                this.character.init(null, UserManager.instance.characterId),
+                AuditionCharacterAnimationData.loadDanceData(songDance),
+            ])
                 .then(() => {
                     // Get all animation names from the loaded dance data
                     this.animNames = AuditionCharacterAnimationData.getAllAnimationNames();
@@ -66,7 +67,7 @@ export class AuditionCharacterAnimation extends Component {
                     });
                     console.log(`Loading ${this.animNames.length} dance animations for song: ${songId}`);
                     // Load all animations for this dance
-                    return this.loadDanceAnims(this.animNames)
+                    return CharacterAnimationUtils.getInstance().loadMultipleAnimations(this.animNames);
                 })
                 .then((clips) => {
                     console.log(`Successfully loaded ${clips.length} dance animations`);
@@ -86,83 +87,8 @@ export class AuditionCharacterAnimation extends Component {
         for (let i = 0; i < clips.length; i++) {
             const clip = clips[i];
             const animName = animNames[i];
-            this.animationController.createState(clip, animName);
+            this.character.createState(clip, animName);
         }
-    }
-
-    public testLoadDanceAnim() {
-        this.loadDanceAnim('Breakdance');
-    }
-
-    /**
-     * Loads multiple dance animations by their names
-     * @param animNames Array of animation names to load
-     * @returns Promise that resolves with an array of loaded animation clips
-     */
-    public async loadDanceAnims(animNames: string[]): Promise<AnimationClip[]> {
-        const clipPromises: Promise<AnimationClip>[] = [];
-
-        // Create a promise for each animation name
-        for (const animName of animNames) {
-            clipPromises.push(this.loadDanceAnim(animName));
-        }
-
-        try {
-            // Wait for all animations to load
-            const clips = await Promise.all(clipPromises);
-            return clips;
-        } catch (error) {
-            console.error('Failed to load multiple dance animations:', error);
-            throw error;
-        }
-    }
-
-    // Load prefab with SkeletalAnimation component and play animation
-    public async loadDanceAnim(animName: string): Promise<AnimationClip> {
-        return new Promise((resolve, reject) => {
-            // Load the prefab that contains SkeletalAnimation component
-            resourceUtil.loadRes(`audition/anims/${animName}`, Prefab, (err, prefabAsset) => {
-                if (err) {
-                    console.error('Failed to load character as  nimation prefab:', err);
-                    reject(err);
-                    return;
-                }
-
-                try {
-                    // Instantiate the prefab to access its components
-                    const prefabNode = instantiate(prefabAsset);
-
-                    // Get the SkeletalAnimation component from the prefab
-                    const skeletalAnimation: SkeletalAnimation = prefabNode.getComponent(SkeletalAnimation);
-
-                    if (!skeletalAnimation) {
-                        console.error(`No SkeletalAnimation component found in prefab: ${animName}`);
-                        prefabNode.destroy();
-                        reject(new Error('Missing SkeletalAnimation component'));
-                        return;
-                    }
-
-                    // Get animation clips from the skeletal animation
-                    const clip = skeletalAnimation.clips[0];
-
-                    if (!clip) {
-                        console.error(`No animation clips found in prefab: ${animName}`);
-                        prefabNode.destroy();
-                        reject(new Error('No animation clips found'));
-                        return;
-                    }
-
-                    prefabNode.destroy();
-                    console.log(`Successfully loaded and setup animation prefab: ${animName}`);
-                    clip.name = animName;//set anim name
-                    this.animMap.set(animName, clip);
-                    resolve(clip);//return to clips index 0
-                } catch (error) {
-                    console.error('Error processing animation prefab:', error);
-                    reject(error);
-                }
-            });
-        });
     }
 
     /**
@@ -248,9 +174,9 @@ export class AuditionCharacterAnimation extends Component {
      * Play an animation with optional speed and callback
      */
     private playAnimation(animationName: string, danceState: DanceAnimationState, speed: number = 1.0, callback?: () => void): void {
-        if (!this.animationController) return;
+        if (!this.character) return;
 
-        const state = this.animationController.getState(animationName);
+        const state = this.character.getState(animationName);
         if (!state) {
             console.error(`Animation state not found: ${animationName}`);
             return;
@@ -262,11 +188,11 @@ export class AuditionCharacterAnimation extends Component {
         if (danceState && danceState.transitions && danceState.transitions.length > 0) {
             // Use the exit time from the first transition as blend time
             const exitTime = danceState.transitions[0].exitTime || 0.95;
-            this.animationController.crossFade(animationName, exitTime);
+            this.character.playAnimation(animationName, exitTime);
             // state.play();
         } else {
             // Default play without blend time if no transition data
-            this.animationController.crossFade(animationName, 0.3);
+            this.character.playAnimation(animationName, 0.3);
         }
 
         if (callback) {

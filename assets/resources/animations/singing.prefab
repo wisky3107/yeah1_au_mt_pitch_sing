@@ -1,7 +1,7 @@
 [
   {
     "__type__": "cc.Prefab",
-    "_name": "MainChar",
+    "_name": "singing",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_native": "",
@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "MainChar",
+    "_name": "singing",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": null,
@@ -30,7 +30,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 0.031,
+      "y": 0,
       "z": 0
     },
     "_lrot": {
@@ -57,7 +57,7 @@
     "_id": ""
   },
   {
-    "__type__": "e50e6LGYARIrKzmtafJs/JO",
+    "__type__": "cc.SkeletalAnimation",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -68,12 +68,21 @@
     "__prefab": {
       "__id__": 3
     },
-    "skeletalAnimation": null,
+    "playOnLoad": false,
+    "_clips": [
+      {
+        "__uuid__": "1e0e2cd3-f808-46cd-b3c6-274c2fe9303a@73b7f",
+        "__expectedType__": "cc.AnimationClip"
+      }
+    ],
+    "_defaultClip": null,
+    "_useBakedAnimation": false,
+    "_sockets": [],
     "_id": ""
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "2eA9DVMJRCib3NQxxbxGKf"
+    "fileId": "14bJi5zJZK3ZhylHbjgumZ"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -83,7 +92,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "b4HPL6hidIp51mfc8A1g0g",
+    "fileId": "efZ176cClP4I7Xl6i6zQqM",
     "instance": null,
     "targetOverrides": null
   }
