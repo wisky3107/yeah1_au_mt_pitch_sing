@@ -2,7 +2,7 @@
   "ver": "1.0.8",
   "importer": "auto-atlas",
   "imported": true,
-  "uuid": "08c781a6-2b06-4571-b850-a2909ab47ba7",
+  "uuid": "16dd8ad9-0ba8-4687-917e-f5d0773a1616",
   "files": [
     ".json"
   ],
@@ -13,7 +13,7 @@
     "padding": 2,
     "allowRotation": true,
     "forceSquared": false,
-    "powerOfTwo": true,
+    "powerOfTwo": false,
     "algorithm": "MaxRects",
     "format": "png",
     "quality": 80,

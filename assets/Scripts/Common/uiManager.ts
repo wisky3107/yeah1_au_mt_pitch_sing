@@ -7,10 +7,10 @@ import { POPUP } from "../Constant/PopupDefine";
 const { ccclass, property } = _decorator;
 
 export enum PopupLayer {
-    LAYER_1 = "GlobalCanvas/Layer1",
-    LAYER_2 = "GlobalCanvas/Layer2",
-    LAYER_3 = "GlobalCanvas/Layer3",
-    LAYER_4 = "GlobalCanvas/Layer4",
+    LAYER_1 = "GlobalCanvas/Root/Layer1",
+    LAYER_2 = "GlobalCanvas/Root/Layer2",
+    LAYER_3 = "GlobalCanvas/Root/Layer3",
+    LAYER_4 = "GlobalCanvas/Root/Layer4",
 }
 
 @ccclass("UIManager")
