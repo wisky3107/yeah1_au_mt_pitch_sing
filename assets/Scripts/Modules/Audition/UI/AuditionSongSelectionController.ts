@@ -1,8 +1,6 @@
 import { _decorator, Component, Node, Button, Label, ScrollView, Prefab, instantiate, Layout, AudioSource } from 'cc';
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
-import { AuditionUIManager } from './AuditionUIManager';
-import { AuditionGameplayController } from '../Systems/AuditionGameplayController';
-import { AuditionSongModel } from '../Data/SongData';
+import { AuditionSongModel } from '../../../Models/Songs/AuditionSongModel';
 const { ccclass, property } = _decorator;
 
 /**
@@ -163,7 +161,7 @@ export class AuditionSongSelectionController extends Component {
             artist: 'Artist Name',
             difficulty: 1,
             bpm: 120,
-            audioPath: 'audition/audio/song.mp3',
+            musicPath: 'audition/audio/song.mp3',
             previewStart: 0,
             previewEnd: 100,
         };
