@@ -242,6 +242,7 @@ export class AnimationPanel extends VisiblePanel {
 
     private showAnimation(callback: () => void, timeAction: number) {
         this.node.active = true;
+        
         this.node.position = v3(this.showFromPosX, this.showFromPosY, 0.0);
         this.node.setScale(v3(this.showFromScale, this.showFromScale, this.showFromScale));
 

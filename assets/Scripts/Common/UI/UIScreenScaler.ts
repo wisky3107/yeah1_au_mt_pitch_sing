@@ -21,6 +21,9 @@ export class UIScreenScaler extends Component {
         }
 
         this.widget = this.targetNode.getComponent(Widget);
+        if (!this.widget) {
+            this.widget = this.targetNode.addComponent(Widget);
+        }
         this.transform = this.targetNode.getComponent(UITransform);
 
         // Register for window resize events

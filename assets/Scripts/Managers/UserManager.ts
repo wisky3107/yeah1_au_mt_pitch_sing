@@ -1,4 +1,5 @@
 
+import { CharacterGender } from "../Models/CharacterCustomizationModel";
 import { UserModel } from "../Models/UserModel";
 import { GameManager } from "./GameManager";
 
@@ -24,7 +25,7 @@ export class UserManager {
     }
 
     public get characterId(): string {
-        return "boy";
+        return CharacterGender.Male;
     }
 }
 const user = new UserManager();

@@ -3,4 +3,5 @@ export const POPUP = {
     LOADING: "PopupLoading",
     SAMPLE: "PopupSample",
     CONFIRM: "PopupConfirm",
+    CHARACTER_CUSTOMIZATION: "PopupCharacterCustomization",
 };

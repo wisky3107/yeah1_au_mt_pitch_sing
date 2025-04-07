@@ -227,15 +227,16 @@
         "__editorExtras__": {},
         "_native": "",
         "_effectAsset": {
-          "__uuid__": "f648964e-8d32-41fc-9ac9-7a1e714dd17b",
+          "__uuid__": "4a31bd46-8da1-4d9a-add5-9ac43967159e",
           "__expectedType__": "cc.EffectAsset"
         },
         "_techIdx": 0,
         "_defines": [
           {
-            "DCC_APP_NAME": 5,
             "USE_ALBEDO_MAP": true
           },
+          {},
+          {},
           {},
           {},
           {}
@@ -276,16 +277,36 @@
                 {}
               ]
             }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
           }
         ],
         "_props": [
           {
+            "roughness": 0,
             "mainTexture": {
               "__uuid__": "729e891f-d50a-4fe6-94d8-39ee054dbe27@6c48a",
               "__expectedType__": "cc.Texture2D"
-            },
-            "albedoScale": 0.800000011920929
+            }
           },
+          {},
+          {},
           {},
           {},
           {}

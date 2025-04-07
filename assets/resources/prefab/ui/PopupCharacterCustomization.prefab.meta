@@ -2,12 +2,12 @@
   "ver": "1.1.50",
   "importer": "prefab",
   "imported": true,
-  "uuid": "f5b715e3-3c4b-4102-8513-aa79b822365a",
+  "uuid": "64e2602d-4b7a-4395-8078-cd848f0e767b",
   "files": [
     ".json"
   ],
   "subMetas": {},
   "userData": {
-    "syncNodeName": "boy"
+    "syncNodeName": "PopupCharacterCustomization"
   }
 }
