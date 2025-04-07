@@ -303,7 +303,7 @@ if (isFakeData && DEBUG) {
 
 export function setFakeData(): void {
     isFakeData = true;
-    initFakeData();
+    APIFakeData.isFakeData = true;
 }
 
 // Export the API instance

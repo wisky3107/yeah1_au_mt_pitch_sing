@@ -5,6 +5,7 @@ import { requestFandomData, saveFandomSelection } from '../../../Network/FandomA
 import { UIManager } from '../../../Common/uiManager';
 import { POPUP } from '../../../Constant/PopupDefine';
 import { UIRunningLabel } from '../../../Common/UI/UIRunningLabel';
+import { AnimationPanel } from '../../../Common/UI/AnimationPanel';
 
 const { ccclass, property } = _decorator;
 
@@ -12,6 +13,9 @@ const { ccclass, property } = _decorator;
 export class PopupFandomSelection extends PopupBase {
     @property(UIRunningLabel)
     private lblGreeting: UIRunningLabel = null;
+
+    @property(AnimationPanel)
+    private animPanelGreeting: AnimationPanel = null;
 
     @property([Button])
     private fandomButtons: Button[] = [];
@@ -32,8 +36,12 @@ export class PopupFandomSelection extends PopupBase {
         super.show(data, callback);
         this.onDone = data.onDone;
 
+        //init values
+        this.fandomModel.currentCharacterIndex = 0;
+        this.fandomModel.fandomOptions[0].isSelected = true;
+
         this.loadFandomData();
-        this.initFandomButtons();
+        this.updateFandomButtons();
         this.showCurrentCharacter();
     }
 
@@ -51,7 +59,7 @@ export class PopupFandomSelection extends PopupBase {
         });
     }
 
-    private initFandomButtons(): void {
+    private updateFandomButtons(): void {
         this.fandomModel.fandomOptions.forEach((option, index) => {
             if (index < this.fandomButtons.length) {
                 const button = this.fandomButtons[index];
@@ -60,13 +68,16 @@ export class PopupFandomSelection extends PopupBase {
                 // Set button text
                 if (label) {
                     label.string = option.name;
+                    label.color = option.isSelected ?
+                        new Color(255, 255, 255, 255) :
+                        new Color(200, 200, 200, 175);
                 }
 
                 // Set button state
                 button.interactable = option.isEnabled;
-                button.normalColor = option.isSelected ? 
-                    new Color(255, 255, 255, 255) : 
-                    new Color(200, 200, 200, 255);
+                button.normalColor = option.isSelected ?
+                    new Color(255, 255, 255, 255) :
+                    new Color(200, 200, 200, 175);
             }
         });
     }
@@ -84,6 +95,7 @@ export class PopupFandomSelection extends PopupBase {
 
         // Update greeting text
         if (this.lblGreeting) {
+            this.animPanelGreeting.doShow();
             this.lblGreeting.setText(character.greeting);
         }
 
@@ -98,26 +110,19 @@ export class PopupFandomSelection extends PopupBase {
         this.fandomModel.fandomOptions.forEach(option => {
             option.isSelected = option.id === this.fandomModel.selectedFandom;
         });
-        this.initFandomButtons();
+        this.updateFandomButtons();
         this.btnConfirm.interactable = !!this.fandomModel.selectedFandom;
-    }
-
-    public onTouch_NextCharacter(): void {
-        this.fandomModel.currentCharacterIndex = 
-            (this.fandomModel.currentCharacterIndex + 1) % this.fandomModel.characters.length;
-        this.showCurrentCharacter();
-    }
-
-    public onTouch_PrevCharacter(): void {
-        this.fandomModel.currentCharacterIndex = 
-            (this.fandomModel.currentCharacterIndex - 1 + this.fandomModel.characters.length) 
-            % this.fandomModel.characters.length;
-        this.showCurrentCharacter();
     }
 
     public onTouch_SelectFandom(event: Event, customData: string): void {
         const fandomType = customData as FandomType;
         this.fandomModel.selectedFandom = fandomType;
+        // Update the current character to match the selected fandom
+        const selectedCharacterIndex = this.fandomModel.characters.findIndex(character => character.fandomType === fandomType);
+        if (selectedCharacterIndex !== -1) {
+            this.fandomModel.currentCharacterIndex = selectedCharacterIndex;
+            this.showCurrentCharacter();
+        }
         this.updateFandomSelection();
     }
 

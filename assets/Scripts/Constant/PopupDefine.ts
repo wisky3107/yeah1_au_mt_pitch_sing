@@ -4,5 +4,5 @@ export const POPUP = {
     SAMPLE: "PopupSample",
     CONFIRM: "PopupConfirm",
     CHARACTER_CUSTOMIZATION: "PopupCharacterCustomization",
-    FANDOM_SELECTION: 'PopupFandomSelection',
+    FANDOM_SELECTION: "PopupFandomSelection",
 } as const;

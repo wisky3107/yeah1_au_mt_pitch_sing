@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, Label, Button, UITransform, Sprite, Color, Tween, tween, Vec3, game, UIOpacity, ParticleSystem2D, Animation } from 'cc';
-import { AuditionSongModel } from '../Data/SongData';
 import { AuditionAudioManager } from '../Systems/AuditionAudioManager';
+import { AuditionSongModel } from '../../../Models/Songs/AuditionSongModel';
 const { ccclass, property } = _decorator;
 
 /**
