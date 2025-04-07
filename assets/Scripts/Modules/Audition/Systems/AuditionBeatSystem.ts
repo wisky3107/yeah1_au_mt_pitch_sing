@@ -178,7 +178,7 @@ export class AuditionBeatSystem extends Component {
         }
 
         //test auto plays
-        this.setAutoPlay(true);
+        // this.setAutoPlay(true);
     }
     //#endregion
 
