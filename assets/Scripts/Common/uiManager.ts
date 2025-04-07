@@ -1,4 +1,4 @@
-import { _decorator, Node, find, isValid, Component, Prefab, instantiate, CCString, } from "cc";
+import { _decorator, Node, find, isValid, Component, Prefab, instantiate, CCString, Camera, } from "cc";
 import { resourceUtil } from "./resourceUtil";
 import { CurrentEnviroment, GameConstant } from "../Constant/Constants";
 import { PopupLoading } from "../Modules/Popup/Loading/PopupLoading";
@@ -314,4 +314,15 @@ export class UIManager {
 
     //#endregion
 
+    //#region camera
+
+    private camera: Camera = null;
+    public getGlobalCamera(): Camera {
+        if (!this.camera) {
+            this.camera = find("GlobalCanvas/Camera").getComponent(Camera);
+        }
+        return this.camera;
+    }
+
+    //#endregion
 }

@@ -39,14 +39,14 @@ export class OnboardingController extends Component {
         return new Promise<void>((resolve) => {
             UIManager.instance.preloadDialog(POPUP.CHARACTER_CUSTOMIZATION);//repload while show the dialog
             // First welcome message
-            this.lbMessage.setText("Chào mừng bạn đến với chương trình Tân Binh Toàn Năng", 3.0);
+            this.lbMessage.setText("Chào mừng bạn đến với chương trình Tân Binh Toàn Năng", 1.0);
 
             // Second welcome message after 5 seconds
             this.scheduleOnce(() => {
-                this.lbMessage.setText("Hãy giới thiệu đôi chút về bạn nào!", 3.0);
+                this.lbMessage.setText("Hãy giới thiệu đôi chút về bạn nào!", 1.0);
                 // Resolve after the second message is shown and its duration
-                this.scheduleOnce(() => resolve(), 3.0);
-            }, 5.0);
+                this.scheduleOnce(() => resolve(), 2.0);
+            }, 3.0);
         });
     }
 

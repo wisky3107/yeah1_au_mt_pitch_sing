@@ -65,4 +65,13 @@ export class FandomModel {
             isEnabled: true
         }
     ];
+
+    public getCharacterByFandomType(fandomType: FandomType): IFandomCharacter {
+        return this.characters.find(character => character.fandomType === fandomType);
+    }   
+
+    public getCurrentFandomCharacter(): IFandomCharacter {
+        return this.characters[this.currentCharacterIndex];
+    }
+
 } 

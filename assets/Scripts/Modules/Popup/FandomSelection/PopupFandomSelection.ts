@@ -6,6 +6,7 @@ import { UIManager } from '../../../Common/uiManager';
 import { POPUP } from '../../../Constant/PopupDefine';
 import { UIRunningLabel } from '../../../Common/UI/UIRunningLabel';
 import { AnimationPanel } from '../../../Common/UI/AnimationPanel';
+import { GameManager } from '../../../Managers/GameManager';
 
 const { ccclass, property } = _decorator;
 
@@ -138,6 +139,7 @@ export class PopupFandomSelection extends PopupBase {
                 return;
             }
 
+            GameManager.instance.setFandomModel(this.fandomModel);
             this.onDone?.();
             this.doUImanagerHide();
         });

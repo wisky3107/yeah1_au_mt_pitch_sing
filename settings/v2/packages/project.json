@@ -36,24 +36,24 @@
   },
   "layer": [
     {
-      "name": "POPUP_2D",
-      "value": 1
+      "name": "SCENE_UI_3D",
+      "value": 262144
     },
     {
-      "name": "POPUP_3D",
-      "value": 2
+      "name": "SCENE_UI_2D",
+      "value": 524288
     },
     {
       "name": "GAME_LAYER_1",
-      "value": 16
+      "value": 1
     },
     {
       "name": "GAME_LAYER_2",
-      "value": 32
+      "value": 2
     },
     {
       "name": "GAME_LAYER_3",
-      "value": 64
+      "value": 4
     }
   ]
 }

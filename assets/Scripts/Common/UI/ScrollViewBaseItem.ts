@@ -1,6 +1,4 @@
 import { _decorator, Component, Node } from 'cc';
-import { AudioManager } from '../../Utils/audioManager';
-import { GameConstant } from '../../Constant/Constants';
 const { ccclass, property } = _decorator;
 
 @ccclass('ScrollViewBaseItem')
