@@ -102,7 +102,7 @@
         "_value": false
       },
       "profiler": {
-        "_value": true
+        "_value": false
       },
       "occlusion-query": {
         "_value": false
@@ -193,7 +193,6 @@
       "particle",
       "particle-2d",
       "procedural-animation",
-      "profiler",
       "skeletal-animation",
       "tween",
       "ui",
