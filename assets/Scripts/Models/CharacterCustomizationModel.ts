@@ -26,6 +26,14 @@ export class CharacterCustomizationModel {
     selectedEyeStyleId?: string;
     characterName?: string;
     gender: CharacterGender = CharacterGender.Male;
+
+    public getSkinColor(): ISkinColor {
+        return this.skinColors.find(color => color.id === this.selectedSkinColorId);
+    }
+
+    public getEyeStyle(): IEyeStyle {
+        return this.eyeStyles.find(style => style.id === this.selectedEyeStyleId);
+    }
 }
 
 export enum CustomizationTab {

@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Label, Button, Sprite, Color } from 'cc';
+import { _decorator, Component, Node, Label, Button, Sprite, Color, AnimationClip } from 'cc';
 import { PopupBase } from '../../../Common/UI/PopupBase';
 import { FandomModel, FandomType, IFandomOption } from '../../../Models/FandomModel';
 import { requestFandomData, saveFandomSelection } from '../../../Network/FandomAPI';
@@ -7,6 +7,7 @@ import { POPUP } from '../../../Constant/PopupDefine';
 import { UIRunningLabel } from '../../../Common/UI/UIRunningLabel';
 import { AnimationPanel } from '../../../Common/UI/AnimationPanel';
 import { GameManager } from '../../../Managers/GameManager';
+import { CharacterModel } from '../../Character/CharacterModel';
 
 const { ccclass, property } = _decorator;
 
@@ -30,6 +31,12 @@ export class PopupFandomSelection extends PopupBase {
     @property([Node])
     private characterNodes: Node[] = [];
 
+    @property([CharacterModel])
+    private characterModels: CharacterModel[] = [];
+
+    @property(AnimationClip)
+    private animationClip: AnimationClip = null;
+
     private fandomModel: FandomModel = new FandomModel();
     private onDone: Function = null;
 
@@ -40,10 +47,18 @@ export class PopupFandomSelection extends PopupBase {
         //init values
         this.fandomModel.currentCharacterIndex = 0;
         this.fandomModel.fandomOptions[0].isSelected = true;
-
+        this.initModels();
         this.loadFandomData();
         this.updateFandomButtons();
         this.showCurrentCharacter();
+    }
+
+    private initModels(): void {
+        this.characterModels.forEach(model => {
+            model.setUIMesh(this.node.layer);
+            model.skeletalAnimation?.createState(this.animationClip, 'idle');
+            model.skeletalAnimation?.play('idle');
+        });
     }
 
     private loadFandomData(): void {

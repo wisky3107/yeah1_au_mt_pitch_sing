@@ -37,114 +37,186 @@
 	Motion:dance_start
 	Transition:
 		SrcState:dance_start
-		DestState:ac01_buocqua
+		DestState:SIA_Ballad_ANM12
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac01_buocqua]
+[SIA_Ballad_ANM12]
 	Speed:1
-	Motion:ac01_buocqua
+	Motion:SIA_Ballad_ANM12
 	Transition:
-		SrcState:ac01_buocqua
-		DestState:ac02_channhipnhip
+		SrcState:SIA_Ballad_ANM12
+		DestState:SIA_Ballad_ANM05
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac02_channhipnhip]
+[SIA_Ballad_ANM05]
 	Speed:1
-	Motion:ac02_channhipnhip
+	Motion:SIA_Ballad_ANM05
 	Transition:
-		SrcState:ac02_channhipnhip
-		DestState:ac03_daytaybuocngang
+		SrcState:SIA_Ballad_ANM05
+		DestState:SIA_Ballad_ANM18
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac03_daytaybuocngang]
+[SIA_Ballad_ANM18]
 	Speed:1
-	Motion:ac03_daytaybuocngang
+	Motion:SIA_Ballad_ANM18
 	Transition:
-		SrcState:ac03_daytaybuocngang
-		DestState:ac04_daytayxuongduoi
+		SrcState:SIA_Ballad_ANM18
+		DestState:SIA_Ballad_ANM03
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac04_daytayxuongduoi]
+[SIA_Ballad_ANM03]
 	Speed:1
-	Motion:ac04_daytayxuongduoi
+	Motion:SIA_Ballad_ANM03
 	Transition:
-		SrcState:ac04_daytayxuongduoi
-		DestState:ac05_giutay
+		SrcState:SIA_Ballad_ANM03
+		DestState:SIA_Ballad_ANM16
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac05_giutay]
+[SIA_Ballad_ANM16]
 	Speed:1
-	Motion:ac05_giutay
+	Motion:SIA_Ballad_ANM16
 	Transition:
-		SrcState:ac05_giutay
-		DestState:ac06_giotaylenvadecheonguc
+		SrcState:SIA_Ballad_ANM16
+		DestState:SIA_Ballad_ANM09
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac06_giotaylenvadecheonguc]
+[SIA_Ballad_ANM09]
 	Speed:1
-	Motion:ac06_giotaylenvadecheonguc
+	Motion:SIA_Ballad_ANM09
 	Transition:
-		SrcState:ac06_giotaylenvadecheonguc
-		DestState:ac07_giotay
+		SrcState:SIA_Ballad_ANM09
+		DestState:SIA_Ballad_ANM20
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac07_giotay]
+[SIA_Ballad_ANM20]
 	Speed:1
-	Motion:ac07_giotay
+	Motion:SIA_Ballad_ANM20
 	Transition:
-		SrcState:ac07_giotay
-		DestState:ac11_nhap1chan
+		SrcState:SIA_Ballad_ANM20
+		DestState:SIA_Ballad_ANM07
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac11_nhap1chan]
+[SIA_Ballad_ANM07]
 	Speed:1
-	Motion:ac11_nhap1chan
+	Motion:SIA_Ballad_ANM07
 	Transition:
-		SrcState:ac11_nhap1chan
-		DestState:ac13_quaylungvagiotay
+		SrcState:SIA_Ballad_ANM07
+		DestState:SIA_Ballad_ANM14
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac13_quaylungvagiotay]
+[SIA_Ballad_ANM14]
 	Speed:1
-	Motion:ac13_quaylungvagiotay
+	Motion:SIA_Ballad_ANM14
 	Transition:
-		SrcState:ac13_quaylungvagiotay
-		DestState:ac14_quotay2bentren
+		SrcState:SIA_Ballad_ANM14
+		DestState:SIA_Ballad_ANM01
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac14_quotay2bentren]
+[SIA_Ballad_ANM01]
 	Speed:1
-	Motion:ac14_quotay2bentren
+	Motion:SIA_Ballad_ANM01
 	Transition:
-		SrcState:ac14_quotay2bentren
-		DestState:ac16_shuffledance
+		SrcState:SIA_Ballad_ANM01
+		DestState:SIA_Ballad_ANM10
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac16_shuffledance]
+[SIA_Ballad_ANM10]
 	Speed:1
-	Motion:ac16_shuffledance
+	Motion:SIA_Ballad_ANM10
 	Transition:
-		SrcState:ac16_shuffledance
-		DestState:ac17_uta
+		SrcState:SIA_Ballad_ANM10
+		DestState:SIA_Ballad_ANM17
 		TransitionDuration:.125
 		TransitionOffset:0
 		ExitTime:.875
-[ac17_uta]
+[SIA_Ballad_ANM17]
 	Speed:1
-	Motion:ac17_uta
+	Motion:SIA_Ballad_ANM17
 	Transition:
-		SrcState:ac17_uta
+		SrcState:SIA_Ballad_ANM17
+		DestState:SIA_Ballad_ANM04
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[SIA_Ballad_ANM04]
+	Speed:1
+	Motion:SIA_Ballad_ANM04
+	Transition:
+		SrcState:SIA_Ballad_ANM04
+		DestState:SIA_Ballad_ANM13
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[SIA_Ballad_ANM13]
+	Speed:1
+	Motion:SIA_Ballad_ANM13
+	Transition:
+		SrcState:SIA_Ballad_ANM13
+		DestState:SIA_Ballad_ANM02
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[SIA_Ballad_ANM02]
+	Speed:1
+	Motion:SIA_Ballad_ANM02
+	Transition:
+		SrcState:SIA_Ballad_ANM02
+		DestState:SIA_Ballad_ANM19
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[SIA_Ballad_ANM19]
+	Speed:1
+	Motion:SIA_Ballad_ANM19
+	Transition:
+		SrcState:SIA_Ballad_ANM19
+		DestState:SIA_Ballad_ANM08
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[SIA_Ballad_ANM08]
+	Speed:1
+	Motion:SIA_Ballad_ANM08
+	Transition:
+		SrcState:SIA_Ballad_ANM08
+		DestState:SIA_Ballad_ANM15
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[SIA_Ballad_ANM15]
+	Speed:1
+	Motion:SIA_Ballad_ANM15
+	Transition:
+		SrcState:SIA_Ballad_ANM15
+		DestState:SIA_Ballad_ANM06
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[SIA_Ballad_ANM06]
+	Speed:1
+	Motion:SIA_Ballad_ANM06
+	Transition:
+		SrcState:SIA_Ballad_ANM06
+		DestState:SIA_Ballad_ANM11
+		TransitionDuration:.125
+		TransitionOffset:0
+		ExitTime:.875
+[SIA_Ballad_ANM11]
+	Speed:1
+	Motion:SIA_Ballad_ANM11
+	Transition:
+		SrcState:SIA_Ballad_ANM11
 		DestState:dance_end
 		TransitionDuration:.125
 		TransitionOffset:0

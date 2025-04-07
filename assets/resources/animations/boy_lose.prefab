@@ -71,7 +71,7 @@
     "playOnLoad": false,
     "_clips": [
       {
-        "__uuid__": "1e0e2cd3-f808-46cd-b3c6-274c2fe9303a@73b7f",
+        "__uuid__": "16244269-f32e-4553-abe7-945e73ee5177@73b7f",
         "__expectedType__": "cc.AnimationClip"
       }
     ],
@@ -93,6 +93,7 @@
       "__id__": 0
     },
     "fileId": "634nCodT5AFa63BJuCC/eP",
+    "instance": null,
     "targetOverrides": null
   }
 ]

@@ -71,14 +71,11 @@
     "playOnLoad": false,
     "_clips": [
       {
-        "__uuid__": "1e0e2cd3-f808-46cd-b3c6-274c2fe9303a@73b7f",
+        "__uuid__": "43bda13e-4809-4af7-84e5-f9f7ba37b1f8@73b7f",
         "__expectedType__": "cc.AnimationClip"
       }
     ],
-    "_defaultClip": {
-      "__uuid__": "1e0e2cd3-f808-46cd-b3c6-274c2fe9303a@73b7f",
-      "__expectedType__": "cc.AnimationClip"
-    },
+    "_defaultClip": null,
     "_useBakedAnimation": false,
     "_sockets": [],
     "_id": ""
@@ -96,6 +93,7 @@
       "__id__": 0
     },
     "fileId": "efZ176cClP4I7Xl6i6zQqM",
+    "instance": null,
     "targetOverrides": null
   }
 ]

@@ -66,7 +66,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 524288,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -119,7 +119,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 524288,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -294,7 +294,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 524288,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -466,7 +466,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 524288,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -628,7 +628,6 @@
     "glowSprite": {
       "__id__": 5
     },
-    "keyLabel": null,
     "opacity": {
       "__id__": 30
     },
@@ -646,13 +645,6 @@
       "r": 255,
       "g": 112,
       "b": 67,
-      "a": 255
-    },
-    "spaceNoteColor": {
-      "__type__": "cc.Color",
-      "r": 255,
-      "g": 235,
-      "b": 59,
       "a": 255
     },
     "perfectColor": {
@@ -676,9 +668,6 @@
       "b": 47,
       "a": 255
     },
-    "hitAnimDuration": 0.3,
-    "missAnimDuration": 0.4,
-    "appearAnimDuration": 0.2,
     "_id": ""
   },
   {

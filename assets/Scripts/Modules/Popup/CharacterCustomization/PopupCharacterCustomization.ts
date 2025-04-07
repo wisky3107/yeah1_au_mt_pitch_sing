@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, ScrollView, Prefab, Label, Sprite, Button, Color, SpriteFrame, EditBox, SkinnedMeshRenderer, Material } from 'cc';
+import { _decorator, Component, Node, ScrollView, Prefab, Label, Sprite, Button, Color, SpriteFrame, EditBox, SkinnedMeshRenderer, Material, UIMeshRenderer, AnimationClip } from 'cc';
 import { PopupBase } from '../../../Common/UI/PopupBase';
 import { requestCharacterCustomization, saveCharacterCustomization } from '../../../Network/CharacterCustomizationAPI';
 import { resourceUtil } from '../../../Common/resourceUtil';
@@ -7,6 +7,8 @@ import { UIManager } from '../../../Common/uiManager';
 import { POPUP } from '../../../Constant/PopupDefine';
 import { CharacterCustomizationModel, ICharacterFeature, ISkinColor, CharacterGender } from '../../../Models/CharacterCustomizationModel';
 import { CustomizationTab } from '../../../Models/CharacterCustomizationModel';
+import { CharacterModel } from '../../Character/CharacterModel';
+import { UserManager } from '../../../Managers/UserManager';
 
 const { ccclass, property } = _decorator;
 
@@ -37,10 +39,16 @@ export class PopupCharacterCustomization extends PopupBase {
     private lblGender: Label = null;
 
     @property(Node)
-    private characterMale: Node = null;
+    private characterAnchor: Node = null;
 
-    @property(Node)
-    private characterFemale: Node = null;
+    @property(AnimationClip)
+    private animationClip: AnimationClip = null;
+
+    @property(CharacterModel)
+    private characterMale: CharacterModel = null;
+
+    @property(CharacterModel)
+    private characterFemale: CharacterModel = null;
 
     private customizationData: CharacterCustomizationModel = null;
     private currentTab: CustomizationTab = CustomizationTab.SkinColor;
@@ -48,11 +56,12 @@ export class PopupCharacterCustomization extends PopupBase {
     private selectedEyeStyleId: string = null;
     private characterGender: CharacterGender = CharacterGender.Male;
     private onDone: Function = null;
-    
+
     show(data: { onDone: Function }, callback?: () => void): void {
         super.show(data, callback);
         this.onDone = data.onDone;
 
+        this.initModels();
         this.loadCharacterModel();
         this.loadCustomizationData();
         this.initTabs();
@@ -63,11 +72,25 @@ export class PopupCharacterCustomization extends PopupBase {
         this.updateGenderDisplay();
     }
 
+    private initModels() {
+        this.characterMale.setUIMesh(this.node.layer);
+
+        this.characterFemale.setUIMesh(this.node.layer);
+
+        this.characterMale.skeletalAnimation?.createState(this.animationClip, 'idle');
+        this.characterFemale.skeletalAnimation?.createState(this.animationClip, 'idle');
+    }
+
     private updateGenderDisplay(): void {
         if (!this.customizationData) return;
         this.lblGender.string = this.characterGender === CharacterGender.Male ? 'Nhân vật nam' : 'Nhân vật nữ';
-        this.characterMale.active = this.characterGender === CharacterGender.Male;
-        this.characterFemale.active = this.characterGender === CharacterGender.Female;
+        this.characterMale.node.active = this.characterGender === CharacterGender.Male;
+        this.characterFemale.node.active = this.characterGender === CharacterGender.Female;
+        if (this.characterGender === CharacterGender.Male) {
+            this.characterMale.skeletalAnimation?.play('idle');
+        } else {
+            this.characterFemale.skeletalAnimation?.play('idle');
+        }
         this.loadCharacterModel();
     }
 
@@ -76,23 +99,14 @@ export class PopupCharacterCustomization extends PopupBase {
         const activeCharacter = this.characterGender === CharacterGender.Male ? this.characterMale : this.characterFemale;
         if (!activeCharacter) return;
 
-        // Get the SkinnedMeshRenderer component
-        const meshRenderer = activeCharacter.getComponentInChildren(SkinnedMeshRenderer);
-        if (!meshRenderer) return;
 
-        // Get the first material (skin material)
-        const materials = meshRenderer.materials;
-        if (!materials || materials.length === 0) return;
-
-        const skinMaterial = materials[0];
-        if (!skinMaterial) return;
 
         // Update the skin color if a color is selected
         if (this.selectedSkinColorId) {
             const skinColor = this.customizationData.skinColors.find(s => s.id === this.selectedSkinColorId);
             if (skinColor && skinColor.color) {
                 // Set the main color of the material
-                skinMaterial.setProperty('mainColor', skinColor.color);
+                activeCharacter.setSkinColor(skinColor.color);
             }
         }
     }
@@ -231,7 +245,9 @@ export class PopupCharacterCustomization extends PopupBase {
                 this.showMessage('Failed to save character customization.');
                 return;
             }
-
+            this.customizationData.selectedSkinColorId = this.selectedSkinColorId;
+            this.customizationData.selectedEyeStyleId = this.selectedEyeStyleId;
+            UserManager.instance.setCharacterCustomization(this.customizationData);
             this.onDone?.();
             this.doUImanagerHide();
         });

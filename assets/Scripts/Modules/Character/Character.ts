@@ -1,5 +1,8 @@
-import { _decorator, Component, Node, SkeletalAnimation, Prefab, instantiate, AnimationClip, AnimationState } from 'cc';
+import { _decorator, Component, Node, SkeletalAnimation, Prefab, instantiate, AnimationClip, AnimationState, Color, Texture2D } from 'cc';
 import { resourceUtil } from '../../Common/resourceUtil';
+import { CharacterModel } from './CharacterModel';
+import { UserManager } from '../../Managers/UserManager';
+import { CharacterCustomizationModel } from '../../Models/CharacterCustomizationModel';
 const { ccclass, property } = _decorator;
 
 /**
@@ -21,6 +24,9 @@ export class Character extends Component {
     private characterId: string = '';
     private isLoaded: boolean = false;
     private characterNode: Node = null;
+    private characterModel: CharacterModel = null;
+    private skinColor: Color = Color.WHITE.clone();
+    private eyeStyle: string = '';
 
     /**
      * Initialize the character with custom data
@@ -29,10 +35,23 @@ export class Character extends Component {
      */
     public async init(data: any, characterId: string): Promise<void> {
         this.characterId = characterId;
-        
+        const characterCustomization: CharacterCustomizationModel = UserManager.instance.getCharacterCustomization();
+        if (characterCustomization != null && characterCustomization.skinColors && characterCustomization.skinColors.length > 0) {
+            const skinColor = characterCustomization.getSkinColor();
+            if (skinColor && skinColor.color) {
+                this.skinColor = skinColor.color;
+            }
+            const eyeStyle = characterCustomization.getEyeStyle();
+            if (eyeStyle && eyeStyle.spritePath) {
+                this.eyeStyle = eyeStyle.spritePath;
+            }
+        }
         // Load the character prefab
-        await this.loadCharacterPrefab();
-        
+        this.characterModel = await this.loadCharacterPrefab();
+        this.characterModel.setSkinColor(this.skinColor);
+
+        //todo: need to update eye
+
         // Initialize with custom data if needed
         if (data) {
             // Handle custom initialization data here
@@ -42,7 +61,7 @@ export class Character extends Component {
     /**
      * Load the character prefab using resourceUtil
      */
-    private loadCharacterPrefab(): Promise<void> {
+    private loadCharacterPrefab(): Promise<CharacterModel> {
         return new Promise((resolve, reject) => {
             resourceUtil.loadRes(`prefab/character/${this.characterId}`, Prefab, (err: any, prefab: Prefab) => {
                 if (err) {
@@ -54,9 +73,16 @@ export class Character extends Component {
                 // Instantiate the prefab
                 this.characterNode = instantiate(prefab);
                 this.node.addChild(this.characterNode);
+                const characterModel = this.characterNode.getComponent(CharacterModel);
+                if (!characterModel) {
+                    console.error(`No CharacterModel component found in character: ${this.characterId}`);
+                    reject(new Error('Missing CharacterModel component'));
+                    return;
+                }
+
 
                 // Get the skeletal animation component
-                this.skeletalAnimation = this.characterNode.getComponent(SkeletalAnimation);
+                this.skeletalAnimation = characterModel.skeletalAnimation;
                 if (!this.skeletalAnimation) {
                     console.error(`No SkeletalAnimation component found in character: ${this.characterId}`);
                     reject(new Error('Missing SkeletalAnimation component'));
@@ -64,7 +90,7 @@ export class Character extends Component {
                 }
 
                 this.isLoaded = true;
-                resolve();
+                resolve(characterModel);
             });
         });
     }
