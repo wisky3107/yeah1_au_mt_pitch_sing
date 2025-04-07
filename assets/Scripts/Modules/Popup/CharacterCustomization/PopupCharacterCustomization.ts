@@ -47,9 +47,11 @@ export class PopupCharacterCustomization extends PopupBase {
     private selectedSkinColorId: string = null;
     private selectedEyeStyleId: string = null;
     private characterGender: CharacterGender = CharacterGender.Male;
-
-    show(data?: any, callback?: () => void): void {
+    private onDone: Function = null;
+    
+    show(data: { onDone: Function }, callback?: () => void): void {
         super.show(data, callback);
+        this.onDone = data.onDone;
 
         this.loadCharacterModel();
         this.loadCustomizationData();
@@ -230,6 +232,7 @@ export class PopupCharacterCustomization extends PopupBase {
                 return;
             }
 
+            this.onDone?.();
             this.doUImanagerHide();
         });
     }

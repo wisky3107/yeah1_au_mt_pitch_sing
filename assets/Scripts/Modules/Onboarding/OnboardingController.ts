@@ -1,7 +1,8 @@
-import { _decorator, Component, Label, Node } from 'cc';
+import { _decorator, Component, director, Label, Node } from 'cc';
 import { UIRunningLabel } from '../../Common/UI/UIRunningLabel';
 import { UIManager } from '../../Common/uiManager';
 import { POPUP } from '../../Constant/PopupDefine';
+import { SCENE_NAME } from '../../Constant/SceneDefine';
 const { ccclass, property } = _decorator;
 
 @ccclass('OnboardingController')
@@ -17,8 +18,16 @@ export class OnboardingController extends Component {
         }, 5.0);
 
         // this.scheduleOnce(() => {
-            UIManager.instance.showDialog(POPUP.CHARACTER_CUSTOMIZATION);
+        UIManager.instance.showDialog(POPUP.CHARACTER_CUSTOMIZATION, [{
+            onDone: () => {
+                this.onDoneCharacterCustomization();
+            }
+        }]);
         // }, 8.0);
+    }
+
+    private onDoneCharacterCustomization() {
+        director.loadScene(SCENE_NAME.HOME);
     }
 }
 
