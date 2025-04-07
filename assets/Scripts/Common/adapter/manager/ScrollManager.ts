@@ -1,4 +1,4 @@
-import { UITransform, Widget, _decorator, Node, EventTouch, Vec3, instantiate, EventMouse, macro, easing, Label, sp, Graphics, Color } from 'cc';
+import { UITransform, Widget, _decorator, Node, EventTouch, Vec3, instantiate, EventMouse, macro, easing, Label, sp, Graphics, Color, NodeEventType } from 'cc';
 import { Manager } from '../abstract/Manager';
 import { ScrollAdapter } from '../abstract/ScrollAdapter';
 import { ADAPTER_DEBUG_CONTENT, DEBUG_DRAW_LIND_WIDTH, DEBUG_DRAW_FILL_COLOR, DEBUG_DRAW_BORDER_COLOR } from '../define/debug';
@@ -272,7 +272,7 @@ export class ScrollManager extends Manager {
     }
     private _simulateEvent(event: EventTouch, type: string, isSimulate: boolean = true) {
         if (!event) return
-        const _event = new EventTouch(event.getTouches(), event.bubbles)
+        const _event = new EventTouch(event.getTouches(), event.bubbles, NodeEventType.TOUCH_START)
         var target = event.target as Node
         _event.type = type
         _event.touch = event.touch

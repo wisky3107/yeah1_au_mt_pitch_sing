@@ -1,0 +1,147 @@
+import { _decorator, Component, Node, Label, Button, Sprite, Color } from 'cc';
+import { PopupBase } from '../../../Common/UI/PopupBase';
+import { FandomModel, FandomType, IFandomOption } from '../../../Models/FandomModel';
+import { requestFandomData, saveFandomSelection } from '../../../Network/FandomAPI';
+import { UIManager } from '../../../Common/uiManager';
+import { POPUP } from '../../../Constant/PopupDefine';
+import { UIRunningLabel } from '../../../Common/UI/UIRunningLabel';
+
+const { ccclass, property } = _decorator;
+
+@ccclass('PopupFandomSelection')
+export class PopupFandomSelection extends PopupBase {
+    @property(UIRunningLabel)
+    private lblGreeting: UIRunningLabel = null;
+
+    @property([Button])
+    private fandomButtons: Button[] = [];
+
+    @property([Label])
+    private fandomLabels: Label[] = [];
+
+    @property(Button)
+    private btnConfirm: Button = null;
+
+    @property([Node])
+    private characterNodes: Node[] = [];
+
+    private fandomModel: FandomModel = new FandomModel();
+    private onDone: Function = null;
+
+    show(data: { onDone: Function }, callback?: () => void): void {
+        super.show(data, callback);
+        this.onDone = data.onDone;
+
+        this.loadFandomData();
+        this.initFandomButtons();
+        this.showCurrentCharacter();
+    }
+
+    private loadFandomData(): void {
+        requestFandomData((data, error) => {
+            if (error) {
+                console.error('Failed to load fandom data:', error);
+                return;
+            }
+
+            if (data?.selectedFandom) {
+                this.fandomModel.selectedFandom = data.selectedFandom;
+                this.updateFandomSelection();
+            }
+        });
+    }
+
+    private initFandomButtons(): void {
+        this.fandomModel.fandomOptions.forEach((option, index) => {
+            if (index < this.fandomButtons.length) {
+                const button = this.fandomButtons[index];
+                const label = this.fandomLabels[index];
+
+                // Set button text
+                if (label) {
+                    label.string = option.name;
+                }
+
+                // Set button state
+                button.interactable = option.isEnabled;
+                button.normalColor = option.isSelected ? 
+                    new Color(255, 255, 255, 255) : 
+                    new Color(200, 200, 200, 255);
+            }
+        });
+    }
+
+    private showCurrentCharacter(): void {
+        // Hide all character nodes first
+        this.characterNodes.forEach(node => {
+            if (node) {
+                node.active = false;
+            }
+        });
+
+        const character = this.fandomModel.characters[this.fandomModel.currentCharacterIndex];
+        if (!character) return;
+
+        // Update greeting text
+        if (this.lblGreeting) {
+            this.lblGreeting.setText(character.greeting);
+        }
+
+        // Show the current character node
+        const currentCharacterNode = this.characterNodes[this.fandomModel.currentCharacterIndex];
+        if (currentCharacterNode) {
+            currentCharacterNode.active = true;
+        }
+    }
+
+    private updateFandomSelection(): void {
+        this.fandomModel.fandomOptions.forEach(option => {
+            option.isSelected = option.id === this.fandomModel.selectedFandom;
+        });
+        this.initFandomButtons();
+        this.btnConfirm.interactable = !!this.fandomModel.selectedFandom;
+    }
+
+    public onTouch_NextCharacter(): void {
+        this.fandomModel.currentCharacterIndex = 
+            (this.fandomModel.currentCharacterIndex + 1) % this.fandomModel.characters.length;
+        this.showCurrentCharacter();
+    }
+
+    public onTouch_PrevCharacter(): void {
+        this.fandomModel.currentCharacterIndex = 
+            (this.fandomModel.currentCharacterIndex - 1 + this.fandomModel.characters.length) 
+            % this.fandomModel.characters.length;
+        this.showCurrentCharacter();
+    }
+
+    public onTouch_SelectFandom(event: Event, customData: string): void {
+        const fandomType = customData as FandomType;
+        this.fandomModel.selectedFandom = fandomType;
+        this.updateFandomSelection();
+    }
+
+    public onTouch_Confirm(): void {
+        if (!this.fandomModel.selectedFandom) {
+            this.showMessage('Vui lòng chọn FANDOM bạn muốn tham gia.');
+            return;
+        }
+
+        saveFandomSelection(this.fandomModel.selectedFandom, (success, error) => {
+            if (error || !success) {
+                this.showMessage('Không thể lưu lựa chọn FANDOM.');
+                return;
+            }
+
+            this.onDone?.();
+            this.doUImanagerHide();
+        });
+    }
+
+    private showMessage(message: string): void {
+        UIManager.instance.showDialog(POPUP.MESSAGE, [{
+            message,
+            buttonText: 'OK'
+        }]);
+    }
+} 
