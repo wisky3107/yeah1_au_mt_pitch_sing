@@ -39,7 +39,6 @@ export class KaraokeCharacterAnimator extends Component {
 
     start() {
         // Play idle animation by default
-        this.playAnimation(this.idleAnimationName);
     }
 
     onDestroy() {
@@ -61,6 +60,7 @@ export class KaraokeCharacterAnimator extends Component {
             .then(() => {
                 // Log available animations
                 console.log(`Initialized animations for character`);
+                this.playAnimation(this.idleAnimationName);
             })
             .catch((error) => {
                 console.error(`Failed to initialize character animations: ${error}`);

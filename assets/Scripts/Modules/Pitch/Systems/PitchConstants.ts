@@ -96,26 +96,25 @@ export class PitchConstants {
     
     // Animation names
     public static readonly ANIMATIONS: { [key in MusicalNote]: string } = {
-        [MusicalNote.DO]: "do_animation",
-        [MusicalNote.RE]: "re_animation",
-        [MusicalNote.MI]: "mi_animation",
-        [MusicalNote.FA]: "fa_animation",
-        [MusicalNote.SOL]: "sol_animation",
-        [MusicalNote.LA]: "la_animation",
-        [MusicalNote.SI]: "si_animation"
+        [MusicalNote.DO]: "pitch_do",
+        [MusicalNote.RE]: "pitch_re",
+        [MusicalNote.MI]: "pitch_mi",
+        [MusicalNote.FA]: "pitch_fa",
+        [MusicalNote.SOL]: "pitch_sol",
+        [MusicalNote.LA]: "pitch_la",
+        [MusicalNote.SI]: "pitch_si"
     };
     
     // Animation names - Alias for compatibility
     public static readonly NOTE_ANIMATIONS: { [key in MusicalNote]: string } = {
-        [MusicalNote.DO]: "do_animation",
-        [MusicalNote.RE]: "re_animation",
-        [MusicalNote.MI]: "mi_animation",
-        [MusicalNote.FA]: "fa_animation",
-        [MusicalNote.SOL]: "sol_animation",
-        [MusicalNote.LA]: "la_animation",
-        [MusicalNote.SI]: "si_animation"
+        [MusicalNote.DO]: "pitch_do",
+        [MusicalNote.RE]: "pitch_re",
+        [MusicalNote.MI]: "pitch_mi",
+        [MusicalNote.FA]: "pitch_fa",
+        [MusicalNote.SOL]: "pitch_sol",
+        [MusicalNote.LA]: "pitch_la",
+        [MusicalNote.SI]: "pitch_si"
     };
-    
     // Event names
     public static readonly EVENTS = {
         PITCH_DETECTED: "pitch_detected",

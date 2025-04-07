@@ -71,7 +71,7 @@
     "playOnLoad": false,
     "_clips": [
       {
-        "__uuid__": "43bda13e-4809-4af7-84e5-f9f7ba37b1f8@73b7f",
+        "__uuid__": "6838fafa-3367-44dc-b91d-7680423bc0a6@73b7f",
         "__expectedType__": "cc.AnimationClip"
       }
     ],
@@ -82,7 +82,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "14bJi5zJZK3ZhylHbjgumZ"
+    "fileId": "629BXh0WJA4KrO9oqwARI6"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -92,7 +92,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "efZ176cClP4I7Xl6i6zQqM",
+    "fileId": "634nCodT5AFa63BJuCC/eP",
     "instance": null,
     "targetOverrides": null
   }

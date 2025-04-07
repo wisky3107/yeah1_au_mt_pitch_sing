@@ -105,6 +105,7 @@ export class CharacterModel extends Component {
         return [
             this.topClothMesh,
             this.bottomClothMesh,
+            this.shoesMesh,
             this.eyesMesh,
             this.faceMesh,
             this.hairMesh,
