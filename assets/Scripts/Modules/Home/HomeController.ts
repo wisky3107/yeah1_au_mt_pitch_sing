@@ -1,4 +1,4 @@
-import { _decorator, Component, director, Node, Scene } from 'cc';
+import { _decorator, Component, director, game, Node, Scene } from 'cc';
 import { loadMidi } from '../../Common/MidiReader';
 import { POPUP } from '../../Constant/PopupDefine';
 import { UIManager } from '../../Common/uiManager';
@@ -6,6 +6,7 @@ import { SCENE_NAME } from '../../Constant/SceneDefine';
 import { GameManager } from '../../Managers/GameManager';
 import { PopupProcessLoading } from '../Popup/ProcessLoading/PopupProcessLoading';
 import { SceneLoader } from '../../Common/SceneLoader';
+import { GameType } from '../../Constant/GameDefine';
 const { ccclass, property } = _decorator;
 
 /**
@@ -95,32 +96,28 @@ export class HomeController extends Component {
      * Navigate to the Pitch game scene
      */
     public onPitchGameClicked(): void {
-        SceneLoader.instance.loadSceneAsync(SCENE_NAME.PITCH, POPUP.PITCH_LOADING)
-            .catch(error => SceneLoader.instance.handleSceneLoadError('Pitch Game', error));
+        UIManager.instance.showDialog(POPUP.SONG_SELECTION, [{ game: GameType.PITCH }]);
     }
 
     /**
      * Navigate to the Karaoke game scene
      */
     public onKaraokeGameClicked(): void {
-        SceneLoader.instance.loadSceneAsync(SCENE_NAME.KARAOKE, POPUP.KARAOKE_LOADING)
-            .catch(error => SceneLoader.instance.handleSceneLoadError('Karaoke Game', error));
+        UIManager.instance.showDialog(POPUP.SONG_SELECTION, [{ game: GameType.KARAOKE }]);
     }
 
     /**
      * Navigate to the Magic Tiles game scene
      */
     public onMagicTilesGameClicked(): void {
-        SceneLoader.instance.loadSceneAsync(SCENE_NAME.MT, POPUP.MAGIC_TILE_LOADING)
-            .catch(error => SceneLoader.instance.handleSceneLoadError('Magic Tiles Game', error));
+        UIManager.instance.showDialog(POPUP.SONG_SELECTION, [{ game: GameType.MAGIC_TILE }]);
     }
 
     /**
      * Navigate to the Audition game scene
      */
     public onAuditionGameClicked(): void {
-        SceneLoader.instance.loadSceneAsync(SCENE_NAME.AUDITION, POPUP.AUDITION_LOADING)
-            .catch(error => SceneLoader.instance.handleSceneLoadError('Audition Game', error));
+        UIManager.instance.showDialog(POPUP.SONG_SELECTION, [{ game: GameType.AUDITION }]);
     }
 
     //#endregion

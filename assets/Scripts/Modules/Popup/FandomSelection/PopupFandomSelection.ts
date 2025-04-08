@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, Label, Button, Sprite, Color, AnimationClip } from 'cc';
 import { PopupBase } from '../../../Common/UI/PopupBase';
-import { FandomModel, FandomType, IFandomOption } from '../../../Models/FandomModel';
+import { FandomModel, FandomType, FandomOption } from '../../../Models/FandomModel';
 import { requestFandomData, saveFandomSelection } from '../../../Network/FandomAPI';
 import { UIManager } from '../../../Common/uiManager';
 import { POPUP } from '../../../Constant/PopupDefine';

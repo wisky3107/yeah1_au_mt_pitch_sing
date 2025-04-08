@@ -1,6 +1,6 @@
 import { CurrentEnviroment, GameConstant } from '../Constant/Constants';
 import { StorageManager } from './storageManager';
-import { _decorator, Node, AudioClip, sys, AudioSource, game, director, Component, error, AudioSourceComponent, Tween, tween, easing } from "cc";
+import { _decorator, Node, AudioClip, sys, AudioSource, game, director, Component, error, AudioSourceComponent, Tween, tween, easing, path } from "cc";
 import { resourceUtil } from './resourceUtil';
 const { ccclass, property } = _decorator;
 
@@ -106,11 +106,39 @@ export class AudioManager {
                 isMusic: true,
             };
             this.audios[name] = tmp;
+            clearTimeout(this.previewTimeout);
             source.stop();
             source.clip = clip;
             source.volume = this.bgmVolume;
             source.loop = loop;
             source.play();
+        })
+        return source;
+    }
+
+    previewTimeout: number = 0;
+    //start and end are in milliseconds
+    playPreviewSong(path: string, start: number = 0.0, end: number = 0.0, callback: Function = null): AudioSource {
+        let source = this.asMusic;
+        resourceUtil.loadRes(path, AudioClip, (error, clip: AudioClip) => {
+            if (error) {
+                if (CurrentEnviroment.LOG) console.error(error);
+                return;
+            }
+            if (!clip) return null;
+            source.stop();
+            source.clip = clip;
+            source.currentTime = start / 1000;
+            source.volume = this.sfxVolume;
+            source.play();
+
+            // Schedule the source to stop after the duration
+            const duration = end - start;
+            clearTimeout(this.previewTimeout);
+            this.previewTimeout = setTimeout(() => {
+                source.stop();
+                callback?.();
+            }, duration);
         })
         return source;
     }

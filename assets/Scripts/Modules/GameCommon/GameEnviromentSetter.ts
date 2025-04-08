@@ -20,9 +20,6 @@ export class GameEnviromentSetter extends Component {
     @property
     public FAKEDATA: boolean = false;
 
-    @property(Node)
-    sckContainer: Node = null;
-
     @property(Sprite)
     sprtProcessBar: Sprite = null;
 
