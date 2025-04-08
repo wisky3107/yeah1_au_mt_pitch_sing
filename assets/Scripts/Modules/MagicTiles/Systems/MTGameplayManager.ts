@@ -9,6 +9,8 @@ import { ScoreManager } from './ScoreManager';
 import { HitRating } from '../UI/Tile';
 import { BeatmapAudioData } from '../Data/MTDefines';
 import { MTSongModel } from '../../../Models/Songs/MTSongModel';
+import { POPUP } from '../../../Constant/PopupDefine';
+import { UIManager } from '../../../Common/uiManager';
 
 const { ccclass, property } = _decorator;
 
@@ -102,6 +104,8 @@ export class MTGameplayManager extends Component {
         //test play sample song 
         // this.LoadBeatMap("DauCoLoiLam_ATVNCG_bestcut");
         // this.LoadBeatMap("Perfect_EdSheeran_demo");
+
+        UIManager.instance.hidePopup(POPUP.MAGIC_TILE_LOADING);
     }
 
     /**

@@ -1,10 +1,19 @@
-import { _decorator, Component, director, Node } from 'cc';
+import { _decorator, Component, director, Node, Scene } from 'cc';
 import { loadMidi } from '../../Common/MidiReader';
 import { POPUP } from '../../Constant/PopupDefine';
 import { UIManager } from '../../Common/uiManager';
 import { SCENE_NAME } from '../../Constant/SceneDefine';
 import { GameManager } from '../../Managers/GameManager';
+import { PopupProcessLoading } from '../Popup/ProcessLoading/PopupProcessLoading';
+import { SceneLoader } from '../../Common/SceneLoader';
 const { ccclass, property } = _decorator;
+
+/**
+ * Extends the Scene type to include loading progress
+ */
+interface SceneWithProgress extends Scene {
+    _loadingProgress?: number;
+}
 
 @ccclass('HomeController')
 export class HomeController extends Component {
@@ -86,28 +95,32 @@ export class HomeController extends Component {
      * Navigate to the Pitch game scene
      */
     public onPitchGameClicked(): void {
-        director.loadScene(SCENE_NAME.PITCH);
+        SceneLoader.instance.loadSceneAsync(SCENE_NAME.PITCH, POPUP.PITCH_LOADING)
+            .catch(error => SceneLoader.instance.handleSceneLoadError('Pitch Game', error));
     }
 
     /**
      * Navigate to the Karaoke game scene
      */
     public onKaraokeGameClicked(): void {
-        director.loadScene(SCENE_NAME.KARAOKE);
+        SceneLoader.instance.loadSceneAsync(SCENE_NAME.KARAOKE, POPUP.KARAOKE_LOADING)
+            .catch(error => SceneLoader.instance.handleSceneLoadError('Karaoke Game', error));
     }
 
     /**
      * Navigate to the Magic Tiles game scene
      */
     public onMagicTilesGameClicked(): void {
-        director.loadScene(SCENE_NAME.MT);
+        SceneLoader.instance.loadSceneAsync(SCENE_NAME.MT, POPUP.MAGIC_TILE_LOADING)
+            .catch(error => SceneLoader.instance.handleSceneLoadError('Magic Tiles Game', error));
     }
 
     /**
      * Navigate to the Audition game scene
      */
     public onAuditionGameClicked(): void {
-        director.loadScene(SCENE_NAME.AUDITION);
+        SceneLoader.instance.loadSceneAsync(SCENE_NAME.AUDITION, POPUP.AUDITION_LOADING)
+            .catch(error => SceneLoader.instance.handleSceneLoadError('Audition Game', error));
     }
 
     //#endregion

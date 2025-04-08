@@ -7,6 +7,8 @@ import { PitchUIManager } from '../UI/PitchUIManager';
 import { PitchNoteSequence, PitchSequenceLibrary } from '../Data/PitchNoteSequence';
 import { PitchTile } from '../UI/PitchTile';
 import { PitchWaveform } from '../../GameCommon/Pitch/PitchWaveform';
+import { UIManager } from '../../../Common/uiManager';
+import { POPUP } from '../../../Constant/PopupDefine';
 const { ccclass, property } = _decorator;
 
 /**
@@ -198,6 +200,8 @@ export class PitchGameplayController extends Component {
      * @param sequenceId Sequence ID to play
      */
     public startGame(sequenceId: string): void {
+        UIManager.instance.hidePopup(POPUP.PITCH_LOADING);
+
         // Get the sequence
         const sequence = PitchSequenceLibrary.getSequenceById(sequenceId);
         if (!sequence) {

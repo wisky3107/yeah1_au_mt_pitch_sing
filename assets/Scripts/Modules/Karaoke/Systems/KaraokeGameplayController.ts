@@ -8,7 +8,8 @@ import { KaraokeCharacterAnimator } from './KaraokeCharacterAnimator';
 import { KaraokeScoringSystem } from './KaraokeScoringSystem';
 import { KaraokeUIManager } from '../UI/KaraokeUIManager';
 import { KaraokeSongModel } from '../../../Models/Songs/KaraokeSongModel';
-import { SongModel } from '../../../Models/Songs/SongModel';
+import { UIManager } from '../../../Common/uiManager';
+import { POPUP } from '../../../Constant/PopupDefine';
 
 const { ccclass, property } = _decorator;
 
@@ -467,11 +468,10 @@ export class KaraokeGameplayController extends Component {
             switch (newState) {
                 case KaraokeState.INIT:
                 case KaraokeState.LOADING:
-                    this.uiManager.showLoadingState(true);
                     break;
 
                 case KaraokeState.READY:
-                    this.uiManager.showLoadingState(false);
+                    UIManager.instance.hidePopup(POPUP.KARAOKE_LOADING);
                     this.uiManager.showReadyState();
                     this.uiManager.stopTimer();
                     break;

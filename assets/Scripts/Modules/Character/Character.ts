@@ -152,6 +152,9 @@ export class Character extends Component {
     }
 
     public getState(animName: string): AnimationState {
+        if (this.skeletalAnimation == null) {
+            return null;
+        }
         return this.skeletalAnimation.getState(animName);
     }
 }

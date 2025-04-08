@@ -32,7 +32,8 @@ export class GameEnviromentSetter extends Component {
     @property(Label)
     lbError: Label = null;
 
-    private sceneName = SCENE_NAME.ONBOARDING;
+    //tmp by pass the onboarding flow
+    private sceneName = SCENE_NAME.HOME;
     
     protected onLoad(): void {
         if (DEBUG) {
@@ -100,7 +101,7 @@ export class GameEnviromentSetter extends Component {
             this.step_initManagers()
                 .then(res => {
                     resolve("success");
-                })
+                }) 
                 .catch(error => {
                     reject(error);
                 })
@@ -118,10 +119,10 @@ export class GameEnviromentSetter extends Component {
 
     step_ProcessPreloadSceneAssets() {
         return new Promise((resolve, reject) => {
-            if (DEBUG) {
-                resolve("done load scene")
-                return;
-            }
+            // if (DEBUG) {
+            //     resolve("done load scene")
+            //     return;
+            // }
 
             director.preloadScene(this.sceneName, (completedCount, totalCount, item) => {
                 if (this.sprtProcessBar) {

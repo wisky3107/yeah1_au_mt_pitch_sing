@@ -7,4 +7,13 @@ export const POPUP = {
     FANDOM_SELECTION: "PopupFandomSelection",
     CHARACTER_DIALOG: "PopupCharacterDialog",
     HIGHLIGHT: "PopupHighlight",
+
+    //full screen loading
+    PROCESS_LOADING: "PopupProcessLoading",
+    GAME_LOADING: "PopupGameLoading",
+    AUDITION_LOADING: "PopupAuditionLoading",
+    KARAOKE_LOADING: "PopupKaraokeLoading",
+    PITCH_LOADING: "PopupPitchLoading",
+    MAGIC_TILE_LOADING: "PopupMagicTileLoading"
+
 } as const;

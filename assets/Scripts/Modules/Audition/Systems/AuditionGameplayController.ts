@@ -6,6 +6,8 @@ import { AuditionCharacterAnimation } from '../Systems/AuditionCharacterAnimatio
 import { AuditionUIManager, FeedbackType } from '../UI/AuditionUIManager';
 import { AuditionSongModel } from '../../../Models/Songs/AuditionSongModel';
 import { SongModel } from '../../../Models/Songs/SongModel';
+import { UIManager } from '../../../Common/uiManager';
+import { POPUP } from '../../../Constant/PopupDefine';
 
 // Game state enum
 enum GameState {
@@ -223,6 +225,7 @@ export class AuditionGameplayController extends Component {
      * Start gameplay
      */
     private startGameplay(): void {
+        UIManager.instance.hidePopup(POPUP.AUDITION_LOADING);
         // Record start time
         this.beatSystem.setReadyCallback(() => {
             this.uimanager.playReadyGoAnimation();
