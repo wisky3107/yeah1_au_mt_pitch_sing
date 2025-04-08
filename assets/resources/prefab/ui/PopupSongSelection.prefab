@@ -8259,8 +8259,8 @@
       "__id__": 361
     },
     "indicator": null,
-    "isShowPopupsetting": false,
-    "beginType": 0,
+    "isShowPopupsetting": true,
+    "beginType": 2,
     "beginPosition": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -8273,7 +8273,7 @@
     "showEasingType": 26,
     "hideToPosX": 1080,
     "hideToPosY": 0,
-    "hideToScale": 0,
+    "hideToScale": 1,
     "hideEasingType": 25,
     "showDuration": 0.35,
     "hideDuration": 0.25,

@@ -30,7 +30,7 @@ export class GameEnviromentSetter extends Component {
     lbError: Label = null;
 
     //tmp by pass the onboarding flow
-    private sceneName = SCENE_NAME.HOME;
+    private sceneName = SCENE_NAME.ONBOARDING;
     
     protected onLoad(): void {
         if (DEBUG) {
