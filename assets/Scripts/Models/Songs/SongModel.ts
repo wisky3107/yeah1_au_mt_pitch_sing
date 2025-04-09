@@ -7,10 +7,17 @@ export interface SongModel {
     difficulty: number;
     previewStart: number;
     previewEnd: number;
-
     bpm?: number;
     thumbnail?: string;
     musicPath?: string; //if null use id
+    isLocked?: boolean;
+    unlockCondition?: string;
+}
+
+export interface SongListResponse {
+    maleSongs: SongModel[];
+    femaleSongs: SongModel[];
+    tbtnSongs: SongModel[];
 }
 
 export namespace SongModel {

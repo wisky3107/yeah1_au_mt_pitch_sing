@@ -1,16 +1,16 @@
 import { Color } from 'cc';
 
-export interface ICharacterFeature {
+export interface CharacterFeature {
     id: string;
     isSelected?: boolean;
-    onSelected?: (feature: ICharacterFeature) => void;
+    onSelected?: (feature: CharacterFeature) => void;
 }
 
-export interface ISkinColor extends ICharacterFeature {
+export interface SkinColor extends CharacterFeature {
     color: Color;
 }
 
-export interface IEyeStyle extends ICharacterFeature {
+export interface EyeStyle extends CharacterFeature {
     spritePath: string;
 }
 
@@ -20,18 +20,18 @@ export enum CharacterGender {
 }
 
 export class CharacterCustomizationModel {
-    skinColors: ISkinColor[];
-    eyeStyles: IEyeStyle[];
+    skinColors: SkinColor[];
+    eyeStyles: EyeStyle[];
     selectedSkinColorId?: string;
     selectedEyeStyleId?: string;
     characterName?: string;
     gender: CharacterGender = CharacterGender.Male;
 
-    public getSkinColor(): ISkinColor {
+    public getSkinColor(): SkinColor {
         return this.skinColors.find(color => color.id === this.selectedSkinColorId);
     }
 
-    public getEyeStyle(): IEyeStyle {
+    public getEyeStyle(): EyeStyle {
         return this.eyeStyles.find(style => style.id === this.selectedEyeStyleId);
     }
 }

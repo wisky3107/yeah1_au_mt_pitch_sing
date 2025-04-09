@@ -1,24 +1,24 @@
 import { _decorator, ScrollView, Prefab, Node } from 'cc';
 import { ScrollAdapter, Holder, View, IElement, WrapMode } from '../../../Common/adapter';
-import { ICharacterFeature } from '../../../Models/CharacterCustomizationModel';
+import { CharacterFeature } from '../../../Models/CharacterCustomizationModel';
 import { CustomizationItem } from './CustomizationItem';
 
 const { ccclass, property } = _decorator;
 
 @ccclass('CustomizationScrollView')
-export class CustomizationScrollView extends ScrollAdapter<ICharacterFeature> {
+export class CustomizationScrollView extends ScrollAdapter<CharacterFeature> {
     @property(Node)
     private itemPrefab: Node = null;
 
-    public getView(): View<ICharacterFeature, ScrollAdapter<ICharacterFeature>> {
+    public getView(): View<CharacterFeature, ScrollAdapter<CharacterFeature>> {
         return new CustomizationItemView(this);
     }
 
-    public getHolder(node: Node, code: string): Holder<ICharacterFeature, ScrollAdapter<ICharacterFeature>> {
+    public getHolder(node: Node, code: string): Holder<CharacterFeature, ScrollAdapter<CharacterFeature>> {
         return new CustomizationItemHolder(node, code, this);
     }
 
-    public initElement(element: IElement, data: ICharacterFeature): void {
+    public initElement(element: IElement, data: CharacterFeature): void {
         element.wrapAfterMode = WrapMode.Auto;
     }
 
@@ -26,7 +26,7 @@ export class CustomizationScrollView extends ScrollAdapter<ICharacterFeature> {
         return this.itemPrefab;
     }
 
-    public updateItems(items: ICharacterFeature[]): void {
+    public updateItems(items: CharacterFeature[]): void {
         this.modelManager.clear();
         this.modelManager.insert(items);
     }
@@ -36,7 +36,7 @@ export class CustomizationScrollView extends ScrollAdapter<ICharacterFeature> {
     }
 }
 
-class CustomizationItemHolder extends Holder<ICharacterFeature> {
+class CustomizationItemHolder extends Holder<CharacterFeature> {
     private item: CustomizationItem = null;
 
     protected onCreated(): void {
@@ -52,7 +52,7 @@ class CustomizationItemHolder extends Holder<ICharacterFeature> {
     }
 }
 
-class CustomizationItemView extends View<ICharacterFeature> {
+class CustomizationItemView extends View<CharacterFeature> {
     protected onVisible(): void {
         // Handle view becoming visible
     }

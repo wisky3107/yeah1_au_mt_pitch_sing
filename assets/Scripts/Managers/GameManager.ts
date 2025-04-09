@@ -1,7 +1,7 @@
 ; import { Game, game } from "cc";;
 import { CurrentEnviroment, GameConstant } from "../Constant/Constants";
 import { UserModel } from "../Models/UserModel";
-import { FandomModel } from "../Models/FandomModel";
+import { FandomModel, FandomType } from "../Models/FandomModel";
 
 export class GameManager {
     public static instance: GameManager = null;
@@ -47,7 +47,8 @@ export class GameManager {
     public getFandomModel(): FandomModel {
         if (!this.fandomModel) {
             this.fandomModel = new FandomModel();
-            console.error("GameManager: fandomModel is null");
+            this.fandomModel.selectedFandom = FandomType.KINGDOM;
+            console.error("GameManager: fandomModel is null temp set default fandom");
         }
         return this.fandomModel;
     }

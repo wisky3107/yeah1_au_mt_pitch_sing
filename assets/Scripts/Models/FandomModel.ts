@@ -6,14 +6,14 @@ export enum FandomType {
     FAIRIES = 'FAIRIES'
 }
 
-export interface IFandomCharacter {
+export interface FandomCharacter {
     name: string;
     greeting: string;
     prefabPath: string;
     fandomType: FandomType;
 }
 
-export interface IFandomOption {
+export interface FandomOption {
     id: FandomType;
     name: string;
     isSelected: boolean;
@@ -24,7 +24,7 @@ export class FandomModel {
     public selectedFandom: FandomType = null;
     public currentCharacterIndex: number = 0;
 
-    public readonly characters: IFandomCharacter[] = [
+    public readonly characters: FandomCharacter[] = [
         {
             name: 'Sibun',
             greeting: 'Xin chào!\nTôi là Sibun, trưởng FC KINGDOM',
@@ -45,7 +45,7 @@ export class FandomModel {
         }
     ];
 
-    public readonly fandomOptions: IFandomOption[] = [
+    public readonly fandomOptions: FandomOption[] = [
         {
             id: FandomType.KINGDOM,
             name: 'KINGDOM',
@@ -66,11 +66,11 @@ export class FandomModel {
         }
     ];
 
-    public getCharacterByFandomType(fandomType: FandomType): IFandomCharacter {
+    public getCharacterByFandomType(fandomType: FandomType): FandomCharacter {
         return this.characters.find(character => character.fandomType === fandomType);
     }   
 
-    public getCurrentFandomCharacter(): IFandomCharacter {
+    public getCurrentFandomCharacter(): FandomCharacter {
         return this.characters[this.currentCharacterIndex];
     }
 

@@ -1,3 +1,5 @@
+import { POPUP } from "./PopupDefine";
+
 export const SCENE_NAME = {
     HOME: "Home",
     AUDITION: "Audition",
@@ -7,3 +9,4 @@ export const SCENE_NAME = {
     INVENTORY: "Inventory",
     ONBOARDING: "Onboarding"
 }
+

@@ -187,7 +187,7 @@ export class AnimationPanel extends VisiblePanel {
 
     //#region Internal Properties
     public opMain: UIOpacity = null!;
-    private visibleIndex = -1;
+    protected visibleIndex = -1;
     private visibleTween: Tween<Node> = null!;
     private scheduleDim: void = null!;
     //#endregion
@@ -200,7 +200,7 @@ export class AnimationPanel extends VisiblePanel {
 
     //#region Lifecycle Methods
     protected onLoad(): void {
-        this.node.setPosition(this.beginPosition);
+        // this.node.setPosition(this.beginPosition);
         switch (this.beginType) {
             case ViewBeginType.NONE:
                 this.visibleIndex = -1;
@@ -242,7 +242,7 @@ export class AnimationPanel extends VisiblePanel {
 
     private showAnimation(callback: () => void, timeAction: number) {
         this.node.active = true;
-        
+
         this.node.position = v3(this.showFromPosX, this.showFromPosY, 0.0);
         this.node.setScale(v3(this.showFromScale, this.showFromScale, this.showFromScale));
 

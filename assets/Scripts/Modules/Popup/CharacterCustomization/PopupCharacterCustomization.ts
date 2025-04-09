@@ -5,7 +5,7 @@ import { resourceUtil } from '../../../Common/resourceUtil';
 import { CustomizationScrollView } from './CustomizationScrollView';
 import { UIManager } from '../../../Common/uiManager';
 import { POPUP } from '../../../Constant/PopupDefine';
-import { CharacterCustomizationModel, ICharacterFeature, ISkinColor, CharacterGender } from '../../../Models/CharacterCustomizationModel';
+import { CharacterCustomizationModel, CharacterFeature, SkinColor, CharacterGender } from '../../../Models/CharacterCustomizationModel';
 import { CustomizationTab } from '../../../Models/CharacterCustomizationModel';
 import { CharacterModel } from '../../Character/CharacterModel';
 import { UserManager } from '../../../Managers/UserManager';
@@ -184,8 +184,8 @@ export class PopupCharacterCustomization extends PopupBase {
         }
     }
 
-    public handleItemSelected(item: ICharacterFeature): void {
-        const skinColor = item as ISkinColor;
+    public handleItemSelected(item: CharacterFeature): void {
+        const skinColor = item as SkinColor;
         if (skinColor.color) {
             this.selectedSkinColorId = item.id;
             this.customizationData.skinColors.forEach(s => s.isSelected = s.id === item.id);

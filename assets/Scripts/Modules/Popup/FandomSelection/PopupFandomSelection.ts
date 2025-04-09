@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, Label, Button, Sprite, Color, AnimationClip } from 'cc';
 import { PopupBase } from '../../../Common/UI/PopupBase';
-import { FandomModel, FandomType, IFandomOption } from '../../../Models/FandomModel';
+import { FandomModel, FandomType, FandomOption } from '../../../Models/FandomModel';
 import { requestFandomData, saveFandomSelection } from '../../../Network/FandomAPI';
 import { UIManager } from '../../../Common/uiManager';
 import { POPUP } from '../../../Constant/PopupDefine';
@@ -31,9 +31,6 @@ export class PopupFandomSelection extends PopupBase {
     @property([Node])
     private characterNodes: Node[] = [];
 
-    @property([CharacterModel])
-    private characterModels: CharacterModel[] = [];
-
     @property(AnimationClip)
     private animationClip: AnimationClip = null;
 
@@ -54,10 +51,13 @@ export class PopupFandomSelection extends PopupBase {
     }
 
     private initModels(): void {
-        this.characterModels.forEach(model => {
-            model.setUIMesh(this.node.layer);
-            model.skeletalAnimation?.createState(this.animationClip, 'idle');
-            model.skeletalAnimation?.play('idle');
+        this.characterNodes.forEach(node => {
+            const model = node.getComponentInChildren(CharacterModel);
+            if (model) {    
+                model.setUIMesh(this.node.layer);
+                model.skeletalAnimation?.createState(this.animationClip, 'idle');
+                model.skeletalAnimation?.play('idle');
+            }
         });
     }
 

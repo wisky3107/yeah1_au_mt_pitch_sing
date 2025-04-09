@@ -3187,7 +3187,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 153.67699999999996,
+      "x": 144.058,
       "y": 592.704,
       "z": 0
     },
@@ -3281,7 +3281,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 652.9881674395964,
+      "width": 662.7280000000001,
       "height": 265.86400000000003
     },
     "_anchorPoint": {
@@ -3647,7 +3647,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 652.9881674395964,
+      "width": 662.7280000000001,
       "height": 265.86400000000003
     },
     "_anchorPoint": {
@@ -3678,7 +3678,7 @@
     "beginType": 0,
     "beginPosition": {
       "__type__": "cc.Vec3",
-      "x": 153.677,
+      "x": 144.058,
       "y": 592.704,
       "z": 0
     },
@@ -3719,11 +3719,11 @@
     "__prefab": {
       "__id__": 168
     },
-    "_alignFlags": 44,
+    "_alignFlags": 33,
     "_target": null,
-    "_left": 367.18291628020177,
-    "_right": 59.82891628020181,
-    "_top": 0,
+    "_left": 643.6769999999999,
+    "_right": 64.57799999999995,
+    "_top": 234.36400000000003,
     "_bottom": 1419.772,
     "_horizontalCenter": 0,
     "_verticalCenter": 0,
@@ -3734,7 +3734,7 @@
     "_isAbsHorizontalCenter": true,
     "_isAbsVerticalCenter": true,
     "_originalWidth": 100,
-    "_originalHeight": 0,
+    "_originalHeight": 265.86400000000003,
     "_alignMode": 2,
     "_lockFlags": 0,
     "_id": ""
@@ -4409,7 +4409,7 @@
     },
     "indicator": null,
     "isShowPopupsetting": true,
-    "beginType": 0,
+    "beginType": 2,
     "beginPosition": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -4422,7 +4422,7 @@
     "showEasingType": 26,
     "hideToPosX": 1080,
     "hideToPosY": 0,
-    "hideToScale": 0,
+    "hideToScale": 1,
     "hideEasingType": 25,
     "showDuration": 0.35,
     "hideDuration": 0.25,
@@ -4477,11 +4477,6 @@
         "__id__": 65
       }
     ],
-    "characterModels": [
-      null,
-      null,
-      null
-    ],
     "animationClip": {
       "__uuid__": "43bda13e-4809-4af7-84e5-f9f7ba37b1f8@73b7f",
       "__expectedType__": "cc.AnimationClip"
@@ -4527,9 +4522,7 @@
   },
   {
     "__type__": "cc.TargetOverrideInfo",
-    "source": {
-      "__id__": 200
-    },
+    "source": null,
     "sourceInfo": null,
     "propertyPath": [
       "characterModels",
@@ -4550,9 +4543,7 @@
   },
   {
     "__type__": "cc.TargetOverrideInfo",
-    "source": {
-      "__id__": 200
-    },
+    "source": null,
     "sourceInfo": null,
     "propertyPath": [
       "characterModels",
@@ -4573,9 +4564,7 @@
   },
   {
     "__type__": "cc.TargetOverrideInfo",
-    "source": {
-      "__id__": 200
-    },
+    "source": null,
     "sourceInfo": null,
     "propertyPath": [
       "characterModels",

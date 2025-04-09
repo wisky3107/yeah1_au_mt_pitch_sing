@@ -3,6 +3,7 @@ import { UIRunningLabel } from '../../Common/UI/UIRunningLabel';
 import { UIManager } from '../../Common/uiManager';
 import { POPUP } from '../../Constant/PopupDefine';
 import { SCENE_NAME } from '../../Constant/SceneDefine';
+import { GameType } from '../../Constant/GameDefine';
 const { ccclass, property } = _decorator;
 
 @ccclass('OnboardingController')
